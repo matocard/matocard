@@ -87,6 +87,9 @@ abstract contract CollateralModule is PoolModule, IdentityModule {
         return value - _feeOwed(value, principal);
     }
 
+    // Writes follow the vault deposit because they need the shares it returns.
+    // Every entry point is nonReentrant and the vault is fixed at initialisation.
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function _addCollateral(address account, address payer, uint256 assets, DepositMethod method)
         internal
     {

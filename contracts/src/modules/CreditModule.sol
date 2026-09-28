@@ -75,6 +75,10 @@ abstract contract CreditModule is CollateralModule {
     }
 
     /// @notice Settles from collateral instead of new money.
+    // State is settled after the vault withdrawal so the shares removed are the
+    // ones the vault actually burned. nonReentrant, and the vault is fixed at
+    // initialisation.
+    // slither-disable-next-line reentrancy-no-eth
     function repayFromCollateral(uint256 amount) external nonReentrant {
         CreditAccount storage a = _accountOf(msg.sender);
         if (a.drawn == 0) revert NothingOwed();
