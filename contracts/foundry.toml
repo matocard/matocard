@@ -3,6 +3,8 @@ src = "src"
 test = "test"
 out = "out"
 libs = ["lib"]
+# the gas test reads the limits the TypeScript package publishes
+fs_permissions = [{ access = "read", path = "../packages/contracts/src/gas-limits.json" }]
 solc_version = "0.8.30"
 # Monad runs the Fusaka EVM, so the compiler's default target is fine.
 # Gas is charged on the gas limit there, not gas used: measure on Monad, not here.

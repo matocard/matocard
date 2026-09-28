@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { DepositMethod, matoCreditLineAbi, monadTestnet } from "../src";
+import { DepositMethod, gasLimits, matoCreditLineAbi, monadTestnet, testAusdAbi } from "../src";
 
 /**
  * The same addresses live in this package, the indexer config and the READMEs.
@@ -64,4 +64,15 @@ test("DepositMethod matches the Solidity enum order", () => {
   members.forEach((name, i) => {
     expect(DepositMethod[name as keyof typeof DepositMethod]).toBe(i as 0 | 1);
   });
+});
+
+test("every gas limit names a real function and is a bigint", () => {
+  const callable = [...matoCreditLineAbi, ...testAusdAbi]
+    .filter((item) => item.type === "function")
+    .map((f): string => f.name);
+  for (const [name, gas] of Object.entries(gasLimits)) {
+    expect(callable).toContain(name);
+    expect(typeof gas).toBe("bigint");
+    expect(gas > 0n).toBe(true);
+  }
 });
