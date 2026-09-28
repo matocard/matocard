@@ -48,6 +48,8 @@ jobs:
       - run: forge fmt --check
       - run: forge build --sizes
       - run: forge test -vvv
+      - name: Coverage
+        run: forge coverage --no-match-coverage 'script|test|testnet' --report summary
       - name: Committed ABIs match the contracts
         run: |
           script/export-abi.sh
