@@ -87,7 +87,7 @@ forge test
 forge fmt --check
 ```
 
-CI runs Foundry 1.8.3 and treats lint warnings as failures to fix.
+CI runs Foundry 1.8.3 and treats lint warnings as failures to fix, then [Slither](https://github.com/crytic/slither), which fails on any finding (`slither.config.json`; triage in [TRUST.md](TRUST.md)).
 
 ## Deploy
 
