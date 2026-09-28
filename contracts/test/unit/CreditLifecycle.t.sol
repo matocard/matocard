@@ -11,13 +11,13 @@ contract CreditLifecycleTest is Deployers {
         _topUp(siti, 150 * AUSD, DepositMethod.Card);
         assertEq(line.limitOf(siti), 0, "card deposit counts before its hold");
 
-        vm.warp(block.timestamp + 60);
+        skip(60);
         assertEq(line.limitOf(siti), 100_000_000);
 
         _draw(siti, 50 * AUSD);
         assertEq(ausd.balanceOf(mom), 50 * AUSD, "mom receives the draw");
 
-        vm.warp(block.timestamp + 61);
+        skip(61);
         _repay(siti, 50 * AUSD);
 
         assertEq(line.scoreOf(siti), 17);
@@ -29,7 +29,7 @@ contract CreditLifecycleTest is Deployers {
         for (uint256 i; i < 3; ++i) {
             uint256 amount = (line.limitOf(siti) * 8) / 10;
             _draw(siti, amount);
-            vm.warp(block.timestamp + 1 days);
+            skip(1 days);
             _repay(siti, amount);
         }
         assertEq(line.scoreOf(siti), 55);
@@ -39,7 +39,7 @@ contract CreditLifecycleTest is Deployers {
     function test_shortCycleDoesNotCount() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
-        vm.warp(block.timestamp + 59);
+        skip(59);
         _repay(siti, 50 * AUSD);
         _assertNoCycle();
     }
@@ -47,7 +47,7 @@ contract CreditLifecycleTest is Deployers {
     function test_lowUtilizationDoesNotCount() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 9 * AUSD); // 9% of a 100 limit
-        vm.warp(block.timestamp + 1 days);
+        skip(1 days);
         _repay(siti, 9 * AUSD);
         _assertNoCycle();
     }
@@ -55,7 +55,7 @@ contract CreditLifecycleTest is Deployers {
     function test_lateRepayDoesNotCount() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
-        vm.warp(block.timestamp + 30 days + 1);
+        skip(30 days + 1);
         _repay(siti, 50 * AUSD);
         _assertNoCycle();
     }
@@ -63,7 +63,7 @@ contract CreditLifecycleTest is Deployers {
     function test_partialRepayKeepsCycleOpen() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
-        vm.warp(block.timestamp + 1 days);
+        skip(1 days);
         _repay(siti, 49 * AUSD);
 
         CreditAccount memory a = line.accountOf(siti);
@@ -86,7 +86,7 @@ contract CreditLifecycleTest is Deployers {
     function test_repayForByRelayer() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
-        vm.warp(block.timestamp + 1 days);
+        skip(1 days);
         vm.prank(relayer);
         line.repayFor(siti, 50 * AUSD);
         assertEq(line.scoreOf(siti), 17);
@@ -95,7 +95,7 @@ contract CreditLifecycleTest is Deployers {
     function test_repayFromCollateral() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
-        vm.warp(block.timestamp + 1 days);
+        skip(1 days);
         vm.prank(siti);
         line.repayFromCollateral(50 * AUSD);
 

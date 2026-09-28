@@ -15,22 +15,22 @@ contract CollateralTest is Deployers {
 
     function test_cardDepositWaitsOutTheHold() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Card);
-        vm.warp(block.timestamp + 59);
+        skip(59);
         assertEq(line.collateralValueOf(siti), 0);
         vm.expectRevert(abi.encodeWithSelector(IMatoCreditLine.ExceedsLimit.selector, 1, 0));
         _draw(siti, 1);
 
-        vm.warp(block.timestamp + 1);
+        skip(1);
         assertEq(line.collateralValueOf(siti), 150 * AUSD);
     }
 
     function test_laterCardDepositExtendsTheHold() public {
         _topUp(siti, 100 * AUSD, DepositMethod.Card);
-        vm.warp(block.timestamp + 30);
+        skip(30);
         _topUp(siti, 50 * AUSD, DepositMethod.Card);
-        vm.warp(block.timestamp + 30);
+        skip(30);
         assertEq(line.collateralValueOf(siti), 0, "held until the newest deposit clears");
-        vm.warp(block.timestamp + 30);
+        skip(30);
         assertEq(line.collateralValueOf(siti), 150 * AUSD);
     }
 
@@ -45,14 +45,14 @@ contract CollateralTest is Deployers {
         Collateral memory c = line.collateralOf(siti);
         assertEq(c.pendingShares, 0);
         assertEq(c.pendingPrincipal, 0);
-        vm.warp(block.timestamp + 60);
+        skip(60);
         assertEq(line.collateralValueOf(siti), 0);
     }
 
     function test_cancelPendingCannotTouchClearedCollateral() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Card);
         uint256 shares = line.collateralOf(siti).pendingShares;
-        vm.warp(block.timestamp + 60);
+        skip(60);
 
         vm.prank(relayer);
         vm.expectRevert(

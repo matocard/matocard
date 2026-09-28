@@ -94,7 +94,7 @@ contract Handler is Test {
     }
 
     function warp(uint256 secs) external {
-        vm.warp(block.timestamp + bound(secs, 1, 20 days));
+        skip(bound(secs, 1, 20 days));
     }
 
     function actorCount() external view returns (uint256) {

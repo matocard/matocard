@@ -41,7 +41,7 @@ contract UpgradeTest is Deployers {
     function test_upgradeKeepsEveryModulesState() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
-        vm.warp(block.timestamp + 1 days);
+        skip(1 days);
         _repay(siti, 50 * AUSD);
         _topUp(siti, 10 * AUSD, DepositMethod.Card);
 
@@ -71,7 +71,7 @@ contract UpgradeTest is Deployers {
         vm.expectRevert();
         line.acceptDefaultAdminTransfer();
 
-        vm.warp(block.timestamp + 1 days + 1);
+        skip(1 days + 1);
         vm.prank(stranger);
         line.acceptDefaultAdminTransfer();
         assertEq(line.defaultAdmin(), stranger);
