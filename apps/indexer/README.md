@@ -7,6 +7,7 @@
 | Chain | Monad testnet (`10143`) |
 | Contract | `MatoCreditLine` proxy [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) |
 | Start block | `66373390` (proxy deployment) |
+| GraphQL | `https://indexer.dev.hyperindex.xyz/f7806e8/v1/graphql` (Envio Cloud, deployment `44823cb`) |
 
 ## Entities
 
@@ -35,6 +36,18 @@ Scores come from the contract's own events and are never recomputed here. Limits
 # reconciliation
 { DailyTopUp_by_pk(id: "2026-09-28") { relayerAssets relayerCount reversedShares } }
 ```
+
+## Deploying
+
+Envio Cloud builds from the `envio` branch, not `main`, so unrelated merges do not use up deployments (the development plan keeps three). To ship indexer changes:
+
+```sh
+git push origin main:envio
+bunx envio-cloud indexer commits matocard matocard       # wait for "active"
+bunx envio-cloud deployment promote matocard <commit> matocard
+```
+
+Every deployment gets a new URL. Update the GraphQL row above and tell the app and API owners when it changes. Check progress with a `_meta { progressBlock isReady }` query: `envio-cloud deployment metrics` has shown 0% for a deployment that was fully synced.
 
 ## Development
 
