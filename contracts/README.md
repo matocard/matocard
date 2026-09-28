@@ -9,11 +9,11 @@ Monad testnet (chain `10143`). All contracts verified on [MonadVision](https://t
 | Contract | Address |
 |---|---|
 | MatoCreditLine (proxy) | [`0x39BED14767138AbA87d1F07b64088e1042239C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) |
-| MatoCreditLine (implementation) | [`0x6C0FD5a46C6208f0b7eCf03b754571465fA03891`](https://testnet.monadvision.com/address/0x6C0FD5a46C6208f0b7eCf03b754571465fA03891) |
+| MatoCreditLine (implementation) | [`0x578b2807ea81C429505F1be4743Aec422758A461`](https://testnet.monadvision.com/address/0x578b2807ea81C429505F1be4743Aec422758A461) |
 | MockEarnAUSD (yield vault) | [`0xe6a522DF58cBea4559521Eb6092962Cf87aaEBee`](https://testnet.monadvision.com/address/0xe6a522DF58cBea4559521Eb6092962Cf87aaEBee) |
 | TestAUSD | [`0x0c2470065cAD1CdE95062E1203B631C3a06B4f79`](https://testnet.monadvision.com/address/0x0c2470065cAD1CdE95062E1203B631C3a06B4f79) |
 
-Always talk to the **proxy**. The pool is seeded with 100,000 TestAUSD. TestAUSD and MockEarnAUSD stand in for AUSD and earnAUSD, which have no testnet faucet.
+Always talk to the **proxy**. It has been upgraded once, from [`0x6C0F…3891`](https://testnet.monadvision.com/address/0x6C0FD5a46C6208f0b7eCf03b754571465fA03891), to fix each cycle's rules at its first draw; every balance and score carried over. The pool is seeded with 100,000 TestAUSD. TestAUSD and MockEarnAUSD stand in for AUSD and earnAUSD, which have no testnet faucet.
 
 A full cycle against these addresses, with every transaction: [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 
@@ -105,3 +105,12 @@ Verify on MonadVision through Sourcify:
 forge verify-contract <address> <path>:<Contract> --chain 10143 \
   --verifier sourcify --verifier-url https://sourcify-api-monad.blockvision.org
 ```
+
+Upgrade (admin only):
+
+```sh
+PROXY=0x39BED14767138AbA87d1F07b64088e1042239C59 \
+  forge script script/UpgradeMatoCreditLine.s.sol --rpc-url $MONAD_RPC_URL --broadcast --slow
+```
+
+New state goes at the end of a module's struct or namespace, never between existing fields.

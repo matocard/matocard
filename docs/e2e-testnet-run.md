@@ -38,3 +38,18 @@ Same borrower, a smaller draw. The hosted indexer showed the new score within te
 - Consistency: `20 × 2 / 10 = 4`
 - Volume: `5000 + 1841 = 6841` bps, `40 × 6841 / 100000 = 2`
 - Score `32`, ratio `12760` bps, limit `150 × 10000 / 12760 = 117.554858`
+
+## Third cycle, after the first upgrade
+
+The proxy was upgraded to an implementation that fixes each cycle's rules at its first draw. Before and after, read from the chain: implementation `0x6C0F…3891` → `0x578b…A461`; score 32, limit 117.554858, idle 100,000, totalAssets 100,000 and verification unchanged.
+
+| Step | Transaction | State read back |
+|---|---|---|
+| Upgrade | `forge script script/UpgradeMatoCreditLine.s.sol` | new implementation in the ERC1967 slot, verified on Sourcify |
+| Draw 25 AUSD | [`0xb9cb…c53f`](https://testnet.monadvision.com/tx/0xb9cb90354a0bfa5b4958b3562df4a1a9693dd5573271edca20e93557dee3c53f) | `defaultableAt = dueAt + 3 days`, `cycleMinDuration = 60`, `cycleMinUtilizationBps = 1000` |
+| Repay 25 AUSD, 1 min later | [`0xb04a…f940`](https://testnet.monadvision.com/tx/0xb04a97047ab24d186539523a94beb7b4520bb8ced9adf29feedd1365b9fff940) | fields cleared, `scoreOf = 49`, `limitOf = 129.645635` |
+
+- Record: `40 × 3 × 3 / (3 × 3) = 40`
+- Consistency: `20 × 3 / 10 = 6`
+- Volume: `6841 + 2126 = 8967` bps, `40 × 8967 / 100000 = 3`
+- Score `49`, ratio `11570` bps, limit `150 × 10000 / 11570 = 129.645635`
