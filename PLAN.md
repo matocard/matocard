@@ -392,7 +392,7 @@ packages/
 | # | Question / risk | Impact | Action |
 |---|---|---|---|
 | Q1 | Does the Agora bounty accept testnet AUSD, or want their staging environment / mainnet? | Deploy target | Ask on Discord, day 1 |
-| Q2 | Is there a testnet AUSD faucet? | Without it the pool cannot be funded | Ask Agora. Fallback: mock AUSD token, clearly labelled |
+| Q2 | Is there a testnet AUSD faucet? | Without it the pool cannot be funded | **Yes, but empty.** Agora's faucet `0xd236c18d274e54faccc3dd9dda4b27965a73ee6c` drips 10,000 AUSD per `requestFunds(address)` (60 s apart, up to 100,000 held) and has reverted `InsufficientFunds()` since 25 Sep. Ask Agora to refill it or send AUSD to the deployer. Until then: TestAUSD, clearly labelled |
 | Q3 | Xendit test: MYR (Malaysia) + IDR disbursement from one account? | Decides the persona | If not: top up in IDR, keep cross-border via disbursement to another supported country, or flip the story (family in ID sends to Siti in MY) |
 | Q4 | Does a PWA count as the "mobile application" Agora asks for? | Native app vs PWA | Ask on day 1. Fallback: Mera has a React Native recipe, but only if they insist |
 | Q5 | earnAUSD is not on testnet | Yield is mock-only | Real mechanism in the contract, mock vault stated plainly |
