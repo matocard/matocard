@@ -28,7 +28,7 @@ contract PoolTest is Deployers {
     function test_redeemPoolSharesMovesValueToIdle() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 100 * AUSD);
-        vm.warp(block.timestamp + 33 days + 1);
+        skip(33 days + 1);
         line.markDefaulted(siti);
 
         uint256 shares = line.poolShares();
