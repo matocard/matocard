@@ -13,6 +13,10 @@ optimizer_runs = 200
 [rpc_endpoints]
 monad_testnet = "${MONAD_RPC_URL}"
 
+[lint]
+# `__Module_init` is the OpenZeppelin initializer convention, kept on purpose.
+exclude_lints = ["mixed-case-function"]
+
 [fmt]
 line_length = 100
 tab_width = 4
