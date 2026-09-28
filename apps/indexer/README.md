@@ -7,7 +7,7 @@
 | Chain | Monad testnet (`10143`) |
 | Contract | `MatoCreditLine` proxy [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) |
 | Start block | `66373390` (proxy deployment) |
-| GraphQL | `https://indexer.dev.hyperindex.xyz/f7806e8/v1/graphql` (Envio Cloud, deployment `44823cb`) |
+| GraphQL | `https://indexer.dev.hyperindex.xyz/d788e54/v1/graphql` (Envio Cloud, deployment `13b09e9`) |
 
 ## Entities
 
@@ -47,7 +47,7 @@ bunx envio-cloud indexer commits matocard matocard       # wait for "active"
 bunx envio-cloud deployment promote matocard <commit> matocard
 ```
 
-Every deployment gets a new URL. Update the GraphQL row above and tell the app and API owners when it changes. Check progress with a `_meta { progressBlock isReady }` query: `envio-cloud deployment metrics` has shown 0% for a deployment that was fully synced.
+Every deployment gets a new URL. Update the GraphQL row above and tell the app and API owners when it changes. Check progress with a `_meta { progressBlock isReady }` query: `envio-cloud deployment metrics` has shown 0% for a deployment that was fully synced. A new deployment can also sit at block 0 for well over ten minutes before it starts; `13b09e9` did, then caught up on its own. Give it time before redeploying, and use the self-hosted stack below if it does not move.
 
 ## Self-hosting
 
