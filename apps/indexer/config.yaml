@@ -28,6 +28,13 @@ contracts:
 chains:
   - id: 10143 # Monad testnet
     start_block: 66373390 # proxy deployment
+    # Named explicitly: Envio Cloud does not treat 10143 as a HyperSync chain by
+    # default, and with no source it sits at block 0 without logging an error.
+    hypersync_config:
+      url: https://10143.hypersync.xyz
+    rpc:
+      - url: https://testnet-rpc.monad.xyz
+        for: fallback
     contracts:
       - name: MatoCreditLine
         address:
