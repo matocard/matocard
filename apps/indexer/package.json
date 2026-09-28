@@ -12,7 +12,7 @@
     "clean": "rm -rf generated .envio .turbo"
   },
   "dependencies": {
-    "envio": "3.12.1"
+    "envio": "3.10.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
