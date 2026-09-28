@@ -73,12 +73,18 @@ abstract contract CollateralModule is PoolModule, IdentityModule {
 
     /// @notice Collateral counted toward the limit, net of the yield fee owed,
     ///         including card deposits whose hold has ended.
-    function collateralValueOf(address account) public view returns (uint256 value) {
+    /// @dev Computes exactly what `_value` returns after `_settlePending`, so
+    ///      `availableOf` never promises more than `draw` will allow.
+    function collateralValueOf(address account) public view returns (uint256) {
         Collateral storage c = _collateralOf(account);
-        value = _value(c);
+        uint256 shares = c.shares;
+        uint256 principal = c.principal;
         if (c.pendingShares != 0 && block.timestamp >= c.pendingUntil) {
-            value += yieldVault().convertToAssets(c.pendingShares);
+            shares += c.pendingShares;
+            principal += c.pendingPrincipal;
         }
+        uint256 value = yieldVault().convertToAssets(shares);
+        return value - _feeOwed(value, principal);
     }
 
     function _addCollateral(address account, address payer, uint256 assets, DepositMethod method)
