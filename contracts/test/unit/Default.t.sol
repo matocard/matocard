@@ -6,7 +6,7 @@ import {CreditAccount, DepositMethod} from "../../src/types/CreditTypes.sol";
 import {Deployers} from "../helpers/Deployers.sol";
 
 contract DefaultTest is Deployers {
-    uint256 internal dueAt;
+    uint64 internal dueAt;
 
     function setUp() public override {
         super.setUp();
@@ -16,7 +16,7 @@ contract DefaultTest is Deployers {
     }
 
     function test_notDefaultableInsideGrace() public {
-        uint64 defaultableAt = uint64(dueAt + 3 days);
+        uint64 defaultableAt = dueAt + 3 days;
         vm.warp(defaultableAt);
         vm.expectRevert(abi.encodeWithSelector(IMatoCreditLine.NotOverdue.selector, defaultableAt));
         line.markDefaulted(siti);
@@ -67,9 +67,7 @@ contract DefaultTest is Deployers {
         vm.expectRevert();
         _draw(siti, 1);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IMatoCreditLine.NotOverdue.selector, uint64(dueAt + 3 days))
-        );
+        vm.expectRevert(abi.encodeWithSelector(IMatoCreditLine.NotOverdue.selector, dueAt + 3 days));
         line.markDefaulted(siti);
     }
 
