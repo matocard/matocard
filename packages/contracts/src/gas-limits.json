@@ -1,0 +1,13 @@
+{
+  "setVerified": 140000,
+  "depositFor": 440000,
+  "cancelPending": 160000,
+  "draw": 420000,
+  "repay": 210000,
+  "repayFor": 210000,
+  "repayFromCollateral": 230000,
+  "withdrawCollateral": 230000,
+  "deposit": 210000,
+  "redeem": 210000,
+  "approve": 70000
+}
