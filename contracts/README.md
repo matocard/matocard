@@ -97,7 +97,16 @@ source .env
 forge script script/DeployMatoCreditLine.s.sol --rpc-url $MONAD_RPC_URL --broadcast --slow
 ```
 
-Without `AUSD_ADDRESS` the script deploys TestAUSD and seeds the pool. `--slow` sends one transaction at a time; Monad has no global mempool, so back-to-back sends from one key can be dropped.
+Without `AUSD_ADDRESS` the script deploys TestAUSD and seeds the pool.
+
+To move to real AUSD (`0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`): Agora's testnet faucet `0xd236c18d274e54faccc3dd9dda4b27965a73ee6c` gives 10,000 AUSD per call, once a minute, up to 100,000 per address, when it is funded (it was empty from 25 Sep 2026):
+
+```sh
+cast send 0xd236c18d274e54faccc3dd9dda4b27965a73ee6c 'requestFunds(address)' <deployer> \
+  --rpc-url $MONAD_RPC_URL --private-key $WALLET_PK
+```
+
+Then deploy a new proxy with `AUSD_ADDRESS` set and seed the pool with `deposit`. The pool's asset is fixed at initialisation, so the TestAUSD proxy cannot be switched in place. Update `packages/contracts/src/addresses.ts`, the indexer's `config.yaml` (address and start block) and the READMEs together; the package tests fail if they disagree. `--slow` sends one transaction at a time; Monad has no global mempool, so back-to-back sends from one key can be dropped.
 
 Verify on MonadVision through Sourcify:
 
