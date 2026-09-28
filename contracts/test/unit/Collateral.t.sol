@@ -130,6 +130,17 @@ contract CollateralTest is Deployers {
         assertApproxEqAbs(line.totalAssets() - before, 30 * AUSD, 2);
     }
 
+    function test_availableMatchesDrawAfterYieldDuringHold() public {
+        _topUp(siti, 150 * AUSD, DepositMethod.Card);
+        _distributeYield(150 * AUSD);
+        skip(60);
+
+        uint256 available = line.availableOf(siti);
+        assertApproxEqAbs(available, 180 * AUSD, 2, "yield in the hold is taxed too");
+        _draw(siti, available);
+        assertEq(line.availableOf(siti), 0);
+    }
+
     function _distributeYield(uint256 amount) internal {
         ausd.mint(address(this), amount);
         ausd.approve(address(vault), amount);

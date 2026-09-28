@@ -31,3 +31,6 @@ runs = 512
 [profile.ci.fuzz]
 runs = 2048
 
+[profile.default.invariant]
+# the handler only calls what the views say is allowed, so any revert is a bug
+fail_on_revert = true
