@@ -15,7 +15,8 @@
       "!apps/indexer/abis",
       "!apps/indexer/generated",
       "!apps/indexer/.envio",
-      "!apps/indexer/envio-env.d.ts"
+      "!apps/indexer/envio-env.d.ts",
+      "!packages/contracts/src/abi"
     ]
   },
   "formatter": {
