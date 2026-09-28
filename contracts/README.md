@@ -62,7 +62,7 @@ A cycle counts only if it is repaid to zero by its due date, stays open at least
 | `KYC_ROLE` | Bind an identity hash to a wallet | Rebind or unbind one |
 | `RELAYER_ROLE` | Credit fiat top-ups, reverse a top-up still in its hold | Touch collateral past its hold |
 
-`repay` is never paused.
+`repay` is never paused. What each role and the admin can change, and the risks lenders and borrowers carry: [TRUST.md](TRUST.md).
 
 ## Parameters
 
