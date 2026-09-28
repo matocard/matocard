@@ -30,11 +30,12 @@ Parameters are read at different moments, so a change does not affect every loan
 
 | Parameter | Fixed per loan when | A change affects |
 |---|---|---|
-| `term` | the first draw of a cycle (`dueAt` is stored) | new cycles only |
+| `term`, `grace` | the first draw of a cycle (`dueAt`, `defaultableAt` are stored) | new cycles only |
+| `minCycleDuration`, `minUtilizationBps` | the first draw of a cycle (stored on the account) | new cycles only |
 | `cardHold` | the top-up (`pendingUntil` is stored) | new top-ups only |
-| `grace` | **not fixed**, read at `markDefaulted` | open loans. Shortening it brings existing defaults forward |
-| `minCycleDuration`, `minUtilizationBps` | **not fixed**, read when a cycle closes | whether an open cycle will count |
 | `yieldFeeBps` | **not fixed**, applied when collateral next changes | yield already earned but not yet charged |
+
+Grace and the cycle rules were read late in the first implementation, which let a change reach open loans; the upgrade described in the contracts README fixed them per cycle. The yield fee is still read late.
 
 `setParams` rejects only a zero term and bps above 100%. An upgrade can change any rule, including moving funds. That is why the production admin must sit behind a timelock long enough for users to repay and leave.
 

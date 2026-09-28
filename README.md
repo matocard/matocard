@@ -23,7 +23,7 @@ The record lives on Monad, so the person owns it, anyone can verify it, and it s
 |---|---|
 | Credit line | [`0x39BED14767138AbA87d1F07b64088e1042239C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) |
 | Indexer (GraphQL) | [`indexer.dev.hyperindex.xyz/f7806e8/v1/graphql`](https://indexer.dev.hyperindex.xyz/f7806e8/v1/graphql) |
-| Live cycles | [docs/e2e-testnet-run.md](docs/e2e-testnet-run.md): score 0 → 17 → 32, limit 100.00 → 108.61 → 117.55 AUSD on 150 AUSD collateral |
+| Live cycles | [docs/e2e-testnet-run.md](docs/e2e-testnet-run.md): score 0 → 17 → 32 → 49, limit 100.00 → 108.61 → 117.55 → 129.64 AUSD on 150 AUSD collateral |
 
 All addresses, the contract architecture and the scoring formula are in [contracts/README.md](contracts/README.md). Who is trusted for what is in [contracts/TRUST.md](contracts/TRUST.md).
 
