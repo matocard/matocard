@@ -23,7 +23,7 @@ struct Params {
     uint16 yieldFeeBps;
 }
 
-struct Account {
+struct CreditAccount {
     uint256 drawn;
     uint256 limitAtDraw;
     uint256 peakDrawn;

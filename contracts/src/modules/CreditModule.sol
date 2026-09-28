@@ -6,7 +6,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {CreditScoring} from "../libraries/CreditScoring.sol";
-import {Account, Collateral, Params} from "../types/CreditTypes.sol";
+import {CreditAccount, Collateral, Params} from "../types/CreditTypes.sol";
 import {CollateralModule} from "./CollateralModule.sol";
 
 /// @title CreditModule
@@ -19,7 +19,7 @@ abstract contract CreditModule is CollateralModule {
 
     /// @custom:storage-location erc7201:matocard.storage.Credit
     struct CreditStorage {
-        mapping(address => Account) accounts;
+        mapping(address => CreditAccount) accounts;
     }
 
     // keccak256(abi.encode(uint256(keccak256("matocard.storage.Credit")) - 1)) & ~bytes32(uint256(0xff))
@@ -32,7 +32,7 @@ abstract contract CreditModule is CollateralModule {
         if (amount == 0) revert ZeroAmount();
         if (to == address(0)) revert ZeroAddress();
         _requireVerified(msg.sender);
-        Account storage a = _accountOf(msg.sender);
+        CreditAccount storage a = _accountOf(msg.sender);
         if (a.defaulted) revert AccountInDefault(msg.sender);
 
         Collateral storage c = _collateralOf(msg.sender);
@@ -71,7 +71,7 @@ abstract contract CreditModule is CollateralModule {
 
     /// @notice Settles from collateral instead of new money.
     function repayFromCollateral(uint256 amount) external nonReentrant {
-        Account storage a = _accountOf(msg.sender);
+        CreditAccount storage a = _accountOf(msg.sender);
         if (a.drawn == 0) revert NothingOwed();
         amount = Math.min(amount, a.drawn);
         if (amount == 0) revert ZeroAmount();
@@ -91,7 +91,7 @@ abstract contract CreditModule is CollateralModule {
         if (shares == 0) revert ZeroAmount();
         Collateral storage c = _prepareCollateral(msg.sender);
         _removeShares(c, shares);
-        Account storage a = _accountOf(msg.sender);
+        CreditAccount storage a = _accountOf(msg.sender);
         if (a.drawn > CreditScoring.limit(_value(c), _score(a))) revert OverLimitAfterWithdrawal();
 
         uint256 assets = yieldVault().redeem(shares, msg.sender, address(this));
@@ -103,7 +103,7 @@ abstract contract CreditModule is CollateralModule {
     /// @dev Seizes shares worth the debt and no more; the rest stays the
     ///      borrower's. If the collateral falls short, the pool takes the loss.
     function markDefaulted(address account) external nonReentrant {
-        Account storage a = _accountOf(account);
+        CreditAccount storage a = _accountOf(account);
         if (a.drawn == 0) revert NothingOwed();
         uint64 defaultableAt = a.dueAt + params().grace;
         if (block.timestamp <= defaultableAt) revert NotOverdue(defaultableAt);
@@ -124,7 +124,7 @@ abstract contract CreditModule is CollateralModule {
         emit Defaulted(account, debt, seized, _score(a));
     }
 
-    function accountOf(address account) external view returns (Account memory) {
+    function accountOf(address account) external view returns (CreditAccount memory) {
         return _accountOf(account);
     }
 
@@ -138,7 +138,7 @@ abstract contract CreditModule is CollateralModule {
 
     /// @notice What `draw` would allow right now, including pool liquidity.
     function availableOf(address account) external view returns (uint256) {
-        Account storage a = _accountOf(account);
+        CreditAccount storage a = _accountOf(account);
         if (a.defaulted || !isVerified(account)) return 0;
         uint256 ceiling = limitOf(account);
         uint256 headroom = ceiling > a.drawn ? ceiling - a.drawn : 0;
@@ -146,7 +146,7 @@ abstract contract CreditModule is CollateralModule {
     }
 
     function _repay(address account, address payer, uint256 amount) internal {
-        Account storage a = _accountOf(account);
+        CreditAccount storage a = _accountOf(account);
         if (a.drawn == 0) revert NothingOwed();
         amount = Math.min(amount, a.drawn);
         if (amount == 0) revert ZeroAmount();
@@ -157,7 +157,7 @@ abstract contract CreditModule is CollateralModule {
         emit Repaid(account, payer, amount, a.drawn);
     }
 
-    function _reduceDebt(address account, Account storage a, uint256 amount) internal {
+    function _reduceDebt(address account, CreditAccount storage a, uint256 amount) internal {
         a.drawn -= amount;
         _pool().totalDrawn -= amount;
         if (a.drawn == 0) _closeCycle(account, a);
@@ -166,7 +166,7 @@ abstract contract CreditModule is CollateralModule {
     /// @dev A cycle counts only if it was repaid on time, lasted long enough,
     ///      and used enough of the limit. Anything else settles the debt and
     ///      proves nothing.
-    function _closeCycle(address account, Account storage a) internal {
+    function _closeCycle(address account, CreditAccount storage a) internal {
         Params memory p = params();
         bool qualifying = block.timestamp <= a.dueAt
             && block.timestamp - a.drawnAt >= p.minCycleDuration
@@ -180,18 +180,18 @@ abstract contract CreditModule is CollateralModule {
         emit CycleClosed(account, qualifying, _score(a));
     }
 
-    function _resetCycle(Account storage a) internal {
+    function _resetCycle(CreditAccount storage a) internal {
         a.drawnAt = 0;
         a.dueAt = 0;
         a.limitAtDraw = 0;
         a.peakDrawn = 0;
     }
 
-    function _score(Account storage a) internal view returns (uint256) {
+    function _score(CreditAccount storage a) internal view returns (uint256) {
         return CreditScoring.score(a.cycleCount, a.repayCount, a.volumeBps);
     }
 
-    function _accountOf(address account) internal view returns (Account storage) {
+    function _accountOf(address account) internal view returns (CreditAccount storage) {
         return _credit().accounts[account];
     }
 
