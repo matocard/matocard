@@ -49,6 +49,17 @@ bunx envio-cloud deployment promote matocard <commit> matocard
 
 Every deployment gets a new URL. Update the GraphQL row above and tell the app and API owners when it changes. Check progress with a `_meta { progressBlock isReady }` query: `envio-cloud deployment metrics` has shown 0% for a deployment that was fully synced.
 
+## Self-hosting
+
+The same stack `envio dev` runs (Postgres 18, Hasura 2.43, the indexer), for when a hosted deployment is unavailable:
+
+```sh
+cp .env.example .env   # ENVIO_API_TOKEN, POSTGRES_PASSWORD, HASURA_ADMIN_SECRET
+docker compose up -d --build
+```
+
+GraphQL is on `http://localhost:8080/v1/graphql`; reads need no secret. The indexer keeps its progress in Postgres, so a restart resumes from the last checkpoint rather than from the start block. Put Hasura behind HTTPS before exposing it.
+
 ## Development
 
 ```sh
