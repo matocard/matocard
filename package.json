@@ -2,7 +2,10 @@
   "name": "matocard",
   "private": true,
   "packageManager": "bun@1.3.14",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -14,7 +17,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
+    "@biomejs/biome": "^2.5.14",
     "@types/bun": "^1.3.14",
     "husky": "^9.1.7",
     "turbo": "^2.6.1",
