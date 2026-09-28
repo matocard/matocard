@@ -28,12 +28,10 @@ contracts:
 chains:
   - id: 10143 # Monad testnet
     start_block: 66373390 # proxy deployment
-    # Synced over RPC. On Envio Cloud, every HyperSync-sourced deployment for
-    # this chain either stayed at block 0 or stopped following after minutes,
-    # with nothing in the logs.
-    rpc:
-      - url: https://testnet-rpc.monad.xyz
-        for: sync
+    # HyperSync. The public RPC caps eth_getLogs at 100 blocks, too narrow to
+    # sync from; `envio dev` on this config follows the chain head.
+    hypersync_config:
+      url: https://10143.hypersync.xyz
     contracts:
       - name: MatoCreditLine
         address:
