@@ -48,3 +48,7 @@ jobs:
       - run: forge fmt --check
       - run: forge build --sizes
       - run: forge test -vvv
+      - name: Committed ABIs match the contracts
+        run: |
+          script/export-abi.sh
+          git diff --exit-code -- ../packages/contracts/src/abi
