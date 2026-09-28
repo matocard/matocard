@@ -1,0 +1,61 @@
+# Self-hosted indexer: Postgres, Hasura and the indexer, the same stack
+# `envio dev` runs. From apps/indexer:
+#   docker compose up -d --build
+# GraphQL: http://localhost:8080/v1/graphql (reads need no secret)
+name: matocard-indexer
+
+services:
+  postgres:
+    image: postgres:18.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: envio
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d envio"]
+      interval: 5s
+      retries: 20
+
+  hasura:
+    image: hasura/graphql-engine:v2.43.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/envio
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:?set HASURA_ADMIN_SECRET in .env}
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: public
+      HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES: "true"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "false"
+      HASURA_GRAPHQL_NO_OF_RETRIES: "10"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/8080'"]
+      interval: 5s
+      retries: 30
+
+  indexer:
+    build:
+      context: ../..
+      dockerfile: apps/indexer/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      hasura:
+        condition: service_healthy
+    environment:
+      ENVIO_API_TOKEN: ${ENVIO_API_TOKEN:?set ENVIO_API_TOKEN in .env}
+      ENVIO_PG_HOST: postgres
+      ENVIO_PG_PORT: "5432"
+      ENVIO_PG_USER: postgres
+      ENVIO_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      ENVIO_PG_DATABASE: envio
+      HASURA_GRAPHQL_ENDPOINT: http://hasura:8080/v1/metadata
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}
+
+volumes:
+  pgdata:
