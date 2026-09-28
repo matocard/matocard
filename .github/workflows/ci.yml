@@ -37,6 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          # pinned: new forge releases add lints, and CI must match local
+          version: v1.8.3
       - name: Install dependencies
         run: |
           forge install foundry-rs/forge-std --no-git
