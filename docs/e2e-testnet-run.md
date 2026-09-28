@@ -53,3 +53,23 @@ The proxy was upgraded to an implementation that fixes each cycle's rules at its
 - Consistency: `20 × 3 / 10 = 6`
 - Volume: `6841 + 2126 = 8967` bps, `40 × 8967 / 100000 = 3`
 - Score `49`, ratio `11570` bps, limit `150 × 10000 / 11570 = 129.645635`
+
+## Demo accounts
+
+Prepared with `contracts/script/demo-accounts.sh`, which checks every receipt and reads the state back after each step. Keys are in the deployer's `contracts/.env`, not in git.
+
+| Account | Address | State |
+|---|---|---|
+| Siti, "3 months later" | [`0xc6E0De07b60a412c1bb990B77612754B9254DBDa`](https://testnet.monadvision.com/address/0xc6E0De07b60a412c1bb990B77612754B9254DBDa) | verified, 150 AUSD collateral, three qualifying cycles, score 55, limit 134.529147 |
+| Mom | [`0xcC9c84AF69ff5aD646a6fdCD02D092ee69C6106b`](https://testnet.monadvision.com/address/0xcC9c84AF69ff5aD646a6fdCD02D092ee69C6106b) | verified, holds the 263.490089 AUSD Siti sent |
+
+| Cycle | Draw (80% of limit) | Transactions | Score after |
+|---|---|---|---|
+| 1 | 80.000000 of 100.000000 | [draw](https://testnet.monadvision.com/tx/0x2eb3c161186fb317a0a6435650fd4bd698a35dda72e3a0c08f76d408743bdbae) · [repay](https://testnet.monadvision.com/tx/0x95e597fac08068b9d737efaeaa5af6dce60a4768df52bf026995a18bbf859abc) | 18 |
+| 2 | 87.336244 of 109.170305 | [draw](https://testnet.monadvision.com/tx/0x101f2e542dcb13eb96ff4948c53da14cbb5141d7dfe92c43a57464c10fd6e770) · [repay](https://testnet.monadvision.com/tx/0xa2199f4fa12faabb513a6c8a1d6907d3445d704770b0d9adbbda25e57032c823) | 36 |
+| 3 | 96.153845 of 120.192307 | [draw](https://testnet.monadvision.com/tx/0x6d89d90e076ea0b06db615e391857741ba3c28f9c33ddd4166e836417e6ddada) · [repay](https://testnet.monadvision.com/tx/0xa9b243e5faac94d35dc898aeb650a1d073bb41db0fdf27e1d8e1e71871f2e9eb) | 55 |
+
+- Utilisation: 8000 + 8000 + 7999 = 23999 bps, Volume `40 × 23999 / 100000 = 9`
+- Record 40, Consistency 6, Volume 9: score `55`, ratio `11150` bps, limit `150 × 10000 / 11150 = 134.529147`
+
+These are plain keys, not passkeys. For the demo to show this history in the app, the app needs to sign in as this address, or run the same three cycles from the presenter's passkey account beforehand (about four minutes).
