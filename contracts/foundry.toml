@@ -14,8 +14,12 @@ optimizer_runs = 200
 monad_testnet = "${MONAD_RPC_URL}"
 
 [lint]
-# `__Module_init` is the OpenZeppelin initializer convention, kept on purpose.
-exclude_lints = ["mixed-case-function"]
+# mixed-case-function: `__Module_init` is OpenZeppelin's initializer convention.
+# block-timestamp: holds and due dates are minutes to days long; a few seconds of
+#   validator skew cannot change an outcome.
+# reentrancy-events: every external entry point is nonReentrant, and the events
+#   that follow a vault call carry the figures that call returned.
+exclude_lints = ["mixed-case-function", "block-timestamp", "reentrancy-events"]
 
 [fmt]
 line_length = 100
@@ -26,3 +30,4 @@ runs = 512
 
 [profile.ci.fuzz]
 runs = 2048
+
