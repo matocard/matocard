@@ -1,0 +1,4 @@
+{
+  "extends": "../../packages/tsconfig/library.json",
+  "include": ["src/**/*", "test/**/*", "envio-env.d.ts"]
+}

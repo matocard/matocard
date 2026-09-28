@@ -1,0 +1,20 @@
+{
+  "name": "@matocard/indexer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "envio dev",
+    "start": "envio start",
+    "test": "envio codegen && bun test",
+    "typecheck": "envio codegen && tsc --noEmit",
+    "clean": "rm -rf generated .envio .turbo"
+  },
+  "dependencies": {
+    "envio": "3.12.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -13,7 +13,9 @@
       "!contracts/cache",
       "!bun.lock",
       "!apps/indexer/abis",
-      "!apps/indexer/generated"
+      "!apps/indexer/generated",
+      "!apps/indexer/.envio",
+      "!apps/indexer/envio-env.d.ts"
     ]
   },
   "formatter": {
