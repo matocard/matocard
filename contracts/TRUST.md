@@ -80,7 +80,7 @@ If the vault's share price falls, limits fall with it. New draws are blocked whi
 
 ## What has been checked
 
-- 63 Foundry tests: unit tests per module, the demo figures as literals, an upgrade test that checks every module's state survives, and invariants over random activity (all vault shares assigned to a borrower or the pool, `totalDrawn` equal to the sum of debts, `idle` backed by real AUSD, scores within 0 to 100).
+- 79 Foundry tests, 100% line, branch and function coverage of `src/` (testnet tokens excluded): unit tests per module, every refusal path, the demo figures as literals, an upgrade test that checks every module's state survives, and invariants over random activity (all vault shares assigned to a borrower or the pool, `totalDrawn` equal to the sum of debts, `idle` backed by real AUSD, scores within 0 to 100).
 - Two live cycles on Monad testnet with every figure read back from the chain: [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 - [Slither](https://github.com/crytic/slither) 0.11.6 runs in CI and fails on any finding. The first run found 15, all triaged:
   - 3 reentrancy findings where state is written after a call to the yield vault. Every entry point is `nonReentrant` and the vault is fixed at initialisation; each is suppressed on its own line with that reason.
