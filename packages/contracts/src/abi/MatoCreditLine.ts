@@ -124,6 +124,21 @@ export const matoCreditLineAbi = [
             "name": "defaulted",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "defaultableAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "cycleMinDuration",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "cycleMinUtilizationBps",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }
