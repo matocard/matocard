@@ -52,3 +52,8 @@ jobs:
         run: |
           script/export-abi.sh
           git diff --exit-code -- ../packages/contracts/src/abi
+      - uses: astral-sh/setup-uv@v6
+      # Any finding fails. Triaged ones are suppressed where they occur, with the
+      # reason on the line above; see slither.config.json for global exclusions.
+      - name: Slither
+        run: uvx --from slither-analyzer==0.11.6 slither . --config-file slither.config.json --fail-pedantic
