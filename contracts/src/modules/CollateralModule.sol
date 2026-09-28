@@ -4,6 +4,7 @@ pragma solidity ^0.8.30;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {Collateral, DepositMethod} from "../types/CreditTypes.sol";
 import {IdentityModule} from "./IdentityModule.sol";
@@ -30,15 +31,15 @@ abstract contract CollateralModule is PoolModule, IdentityModule {
     /// @dev The relayer names the method; the contract decides the hold.
     function depositFor(address account, uint256 assets, DepositMethod method)
         external
+        nonReentrant
         onlyRole(RELAYER_ROLE)
         whenNotPaused
-        nonReentrant
     {
         _addCollateral(account, msg.sender, assets, method);
     }
 
     /// @notice Posts AUSD the caller already holds. Counts immediately.
-    function depositCollateral(uint256 assets) external whenNotPaused nonReentrant {
+    function depositCollateral(uint256 assets) external nonReentrant whenNotPaused {
         _addCollateral(msg.sender, msg.sender, assets, DepositMethod.Bank);
     }
 
@@ -52,8 +53,8 @@ abstract contract CollateralModule is PoolModule, IdentityModule {
     ///      cleared its hold is out of reach.
     function cancelPending(address account, uint256 shares)
         external
-        onlyRole(RELAYER_ROLE)
         nonReentrant
+        onlyRole(RELAYER_ROLE)
     {
         Collateral storage c = _collateralOf(account);
         _settlePending(account, c);
@@ -62,8 +63,8 @@ abstract contract CollateralModule is PoolModule, IdentityModule {
 
         c.pendingPrincipal -= Math.mulDiv(c.pendingPrincipal, shares, c.pendingShares);
         c.pendingShares -= shares;
-        IERC20(address(yieldVault())).safeTransfer(msg.sender, shares);
         emit PendingCancelled(account, shares, msg.sender);
+        IERC20(address(yieldVault())).safeTransfer(msg.sender, shares);
     }
 
     function collateralOf(address account) external view returns (Collateral memory) {
@@ -92,7 +93,7 @@ abstract contract CollateralModule is PoolModule, IdentityModule {
         uint256 shares = yieldVault().deposit(assets, address(this));
 
         Collateral storage c = _prepareCollateral(account);
-        uint64 countsFrom = uint64(block.timestamp);
+        uint64 countsFrom = SafeCast.toUint64(block.timestamp);
         uint64 hold = params().cardHold;
         if (method == DepositMethod.Card && hold != 0) {
             countsFrom += hold;

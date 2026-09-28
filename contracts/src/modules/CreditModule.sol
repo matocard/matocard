@@ -4,6 +4,7 @@ pragma solidity ^0.8.30;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {CreditScoring} from "../libraries/CreditScoring.sol";
 import {CreditAccount, Collateral, Params} from "../types/CreditTypes.sol";
@@ -28,7 +29,7 @@ abstract contract CreditModule is CollateralModule {
 
     /// @notice Draws AUSD against the limit and pays it to `to` (a family
     ///         member's account, the payout treasury, or a merchant).
-    function draw(uint256 amount, address to) external whenNotPaused nonReentrant {
+    function draw(uint256 amount, address to) external nonReentrant whenNotPaused {
         if (amount == 0) revert ZeroAmount();
         if (to == address(0)) revert ZeroAddress();
         _requireVerified(msg.sender);
@@ -44,8 +45,8 @@ abstract contract CreditModule is CollateralModule {
         if (amount > pool.idle) revert InsufficientLiquidity(amount, pool.idle);
 
         if (a.drawn == 0) {
-            a.drawnAt = uint64(block.timestamp);
-            a.dueAt = uint64(block.timestamp) + params().term;
+            a.drawnAt = SafeCast.toUint64(block.timestamp);
+            a.dueAt = a.drawnAt + params().term;
             a.limitAtDraw = ceiling;
         }
         a.drawn += amount;
@@ -53,8 +54,8 @@ abstract contract CreditModule is CollateralModule {
         pool.totalDrawn += amount;
         pool.idle -= amount;
 
-        IERC20(asset()).safeTransfer(to, amount);
         emit Drawn(msg.sender, to, amount, a.drawn);
+        IERC20(asset()).safeTransfer(to, amount);
     }
 
     /// @notice Repays the caller's own balance. Anything above it is not taken.
@@ -77,8 +78,8 @@ abstract contract CreditModule is CollateralModule {
         if (amount == 0) revert ZeroAmount();
 
         Collateral storage c = _prepareCollateral(msg.sender);
-        _removeShares(c, yieldVault().previewWithdraw(amount));
-        yieldVault().withdraw(amount, address(this), address(this));
+        // reverts the whole call if the burn exceeds this borrower's shares
+        _removeShares(c, yieldVault().withdraw(amount, address(this), address(this)));
 
         _pool().idle += amount;
         _reduceDebt(msg.sender, a, amount);
@@ -87,7 +88,7 @@ abstract contract CreditModule is CollateralModule {
 
     /// @notice Takes collateral back as AUSD, as long as the limit still covers
     ///         what is owed.
-    function withdrawCollateral(uint256 shares) external whenNotPaused nonReentrant {
+    function withdrawCollateral(uint256 shares) external nonReentrant whenNotPaused {
         if (shares == 0) revert ZeroAmount();
         Collateral storage c = _prepareCollateral(msg.sender);
         _removeShares(c, shares);
@@ -174,7 +175,9 @@ abstract contract CreditModule is CollateralModule {
         if (qualifying) {
             a.cycleCount += 1;
             a.repayCount += 1;
-            a.volumeBps += uint64(CreditScoring.utilizationBps(a.peakDrawn, a.limitAtDraw));
+            a.volumeBps += SafeCast.toUint64(
+                CreditScoring.utilizationBps(a.peakDrawn, a.limitAtDraw)
+            );
         }
         _resetCycle(a);
         emit CycleClosed(account, qualifying, _score(a));
