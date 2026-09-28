@@ -102,7 +102,7 @@ Optional if time allows: **Scan a merchant QR** (demo merchant page) as a second
 | D6 | **Collateral held as yield-vault shares (ERC4626)** | Collateral grows. Value is read via `convertToAssets`, no external oracle |
 | D7 | **Default = collateral shares worth the debt are seized**, not redeemed | earnAUSD has a withdrawal queue of up to 72 hours. Seizing shares is instant, and the pool can redeem later. Anything above the debt stays the user's |
 | D8 | **Interest-free for borrowers.** The protocol keeps `yieldFeeBps` of each user's collateral yield, collected when shares leave | A clear business model, an incentive for LPs, and friendly to Muslim users |
-| D9 | **One core contract** (`MatoCreditLine`) | LP pool (ERC4626 over AUSD), credit accounts, collateral and scoring in one contract. Monad allows 128 KB of code, so size is not a reason to split |
+| D9 | **One UUPS proxy, built from modules** (`MatoCreditLine`) | Governed, PoolModule, IdentityModule, CollateralModule and CreditModule compose one implementation; each keeps its state in its own ERC-7201 namespace, so a module can change in an upgrade without shifting another's slots. One address for the app, the indexer and `/verify` |
 | D10 | **Daily offchain ↔ onchain reconciliation** | Fiat enters via webhooks and the balances must match the contract's records |
 
 ---
@@ -139,10 +139,14 @@ Foundry, default EVM version (Monad runs Fusaka). Measure gas on Monad itself: o
 ### 6.1 Contracts
 | Contract | Contents |
 |---|---|
-| `MatoCreditLine` | ERC4626 (asset AUSD) for LPs, credit accounts, collateral as vault shares, scoring, default |
+| `MatoCreditLine` | UUPS implementation behind an ERC1967 proxy, composed of the modules below |
+| `modules/PoolModule` | Lenders' ERC4626 pool over AUSD, `idle` / `totalDrawn` / `poolShares` accounting |
+| `modules/IdentityModule` | One identity hash per wallet, both ways |
+| `modules/CollateralModule` | Yield-vault shares, card hold, chargeback reversal, yield fee |
+| `modules/CreditModule` | Draw, repay, default, score and limit views |
 | `CreditScoring` (library) | Score and ratio, pure and hand-checkable (§6.3) |
 | `MockEarnAUSD` (testnet only) | ERC4626 over AUSD with a configurable yield. Replaced by earnAUSD (Upshift) on mainnet |
-| `Governed` | Roles + two-step admin handover |
+| `modules/Governed` | Roles, pause, parameters, UUPS upgrade authorisation; two-step admin handover with a one-day delay (OpenZeppelin `AccessControlDefaultAdminRules`) |
 
 ### 6.2 `MatoCreditLine` state and functions
 ```solidity
@@ -173,7 +177,7 @@ uint256 poolShares;                             // vault shares seized on defaul
 | `deposit(ausd)` | user | Direct deposit (crypto path, optional) |
 | `settlePending(user)` | anyone | Moves pending to collateral once due. Also called automatically in `draw` |
 | `draw(amount, to)` | user (verified, not defaulted) | `to` = Mom's account, payout treasury, or a merchant |
-| `repay(amount)` / `repayFor(user, amount)` | user / RELAYER_ROLE | Only repaying to zero closes a cycle. Overpayment is capped at `drawn`, not reverted. **Not pausable** |
+| `repay(amount)` / `repayFor(user, amount)` | user / anyone (the relayer after a fiat settlement) | Only repaying to zero closes a cycle. Overpayment is capped at `drawn`, not reverted. **Not pausable** |
 | `repayFromCollateral(amount)` | user | Autopay from collateral (redeems vault shares; instant on the mock, queued on earnAUSD) |
 | `withdrawCollateral(shares)` | user | Only if `drawn` stays ≤ limit after withdrawal. Yield fee taken here |
 | `markDefaulted(user)` | anyone | After `dueAt + grace`. Seizes shares worth `min(drawn, collateral)` into `poolShares`, writes the debt off, `cycleCount++`. The rest stays the user's. The record stays |
@@ -187,7 +191,7 @@ uint256 poolShares;                             // vault shares seized on defaul
 ### 6.3 Score formula (anti-farming)
 Score 0–100 = **Record (40) + Consistency (20) + Volume (40)**. Integer maths, one floor per component.
 
-- **Qualifying cycle:** repaid to zero, lasted ≥ `minCycleDuration`, and `peakDrawn ≥ 10% × limitAtDraw`. A non-qualifying close settles the debt and counts toward nothing.
+- **Qualifying cycle:** repaid to zero by `dueAt`, lasted ≥ `minCycleDuration`, and `peakDrawn ≥ 10% × limitAtDraw`. A non-qualifying close settles the debt and counts toward nothing.
 - **Record** = `40 × repayCount × min(cycleCount,3) / (cycleCount × 3)`. The confidence ramp means one cycle cannot grant 40 points at once; defaults sit in `cycleCount` and drag it down.
 - **Consistency** = `20 × min(repayCount,10) / 10`.
 - **Volume** = `40 × min(volumeBps, 100_000) / 100_000`. Each qualifying cycle adds `min(peakDrawn × 10000 / limitAtDraw, 10000)`, so the target is 10 full-limit cycles.
@@ -308,7 +312,7 @@ apps/
   app/        Next.js PWA: all screens, /verify, /merchant
   landing/    marketing site (optional)
   indexer/    Envio: config.yaml, schema.graphql, handlers, tests
-contracts/    Foundry: MatoCreditLine, CreditScoring, Governed, MockEarnAUSD, test token
+contracts/    Foundry: MatoCreditLine (UUPS) + modules/, CreditScoring, MockEarnAUSD, TestAUSD
 packages/
   core/       shared types, money helpers, FX
   tsconfig/   shared TypeScript config
