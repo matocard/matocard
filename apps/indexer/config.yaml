@@ -1,0 +1,34 @@
+# Matocard indexer: the credit line on Monad testnet.
+name: matocard
+description: Credit history, activity and pool totals for the Matocard credit line
+
+# Only what the handlers read.
+field_selection:
+  transaction_fields:
+    - hash
+
+contracts:
+  - name: MatoCreditLine
+    events:
+      - event: Verified(address indexed wallet, bytes32 indexed identityHash)
+      - event: CollateralDeposited(address indexed account, address indexed payer, uint8 method, uint256 assets, uint256 shares, uint64 countsFrom)
+      - event: PendingSettled(address indexed account, uint256 shares)
+      - event: PendingCancelled(address indexed account, uint256 shares, address indexed to)
+      - event: CollateralWithdrawn(address indexed account, uint256 shares, uint256 assets)
+      - event: YieldFeeTaken(address indexed account, uint256 shares)
+      - event: Drawn(address indexed account, address indexed to, uint256 amount, uint256 drawn)
+      - event: Repaid(address indexed account, address indexed payer, uint256 amount, uint256 drawn)
+      - event: CycleClosed(address indexed account, bool qualifying, uint256 score)
+      - event: Defaulted(address indexed account, uint256 writtenOff, uint256 sharesSeized, uint256 score)
+      - event: PoolSharesRedeemed(uint256 shares, uint256 assets)
+      # ERC4626: lenders entering and leaving the pool
+      - event: Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares)
+      - event: Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares)
+
+chains:
+  - id: 10143 # Monad testnet
+    start_block: 66373390 # proxy deployment
+    contracts:
+      - name: MatoCreditLine
+        address:
+          - 0x39BED14767138AbA87d1F07b64088e1042239C59 # proxy, never the implementation

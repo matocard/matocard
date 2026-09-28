@@ -1,0 +1,146 @@
+enum ActivityKind {
+  Verified
+  TopUp
+  TopUpCleared
+  TopUpReversed
+  Draw
+  Repay
+  CollateralWithdrawn
+  YieldFee
+  Default
+}
+
+enum CycleOutcome {
+  Open
+  Qualified
+  NotQualified
+  Defaulted
+}
+
+enum ScoreReason {
+  Cycle
+  Default
+}
+
+"""
+A borrower, as the credit line's events describe them.
+
+Score comes from the contract's own events and is never recomputed here.
+Limits are not stored: they move with collateral yield without an event, so
+read `limitOf` from the contract for a live figure.
+"""
+type Account {
+  id: ID! # wallet, lowercase
+  identityHash: String
+  verifiedAt: BigInt
+
+  score: BigInt!
+  drawn: BigInt!
+  """
+  Card top-ups still inside their hold, in vault shares. Zero once the hold
+  clears or the top-up is reversed.
+  """
+  pendingShares: BigInt!
+  pendingUntil: BigInt
+
+  "Qualifying cycles plus defaults, as the contract counts them."
+  cycleCount: Int!
+  "Qualifying cycles repaid on time."
+  repayCount: Int!
+  "Every cycle opened, including ones that did not qualify."
+  cyclesOpened: Int!
+  defaulted: Boolean!
+
+  totalToppedUp: BigInt!
+  totalDrawn: BigInt!
+  totalRepaid: BigInt!
+  totalWrittenOff: BigInt!
+
+  firstSeenAt: BigInt!
+  lastActiveAt: BigInt!
+
+  activity: [Activity!]! @derivedFrom(field: "account")
+  cycles: [Cycle!]! @derivedFrom(field: "account")
+  scoreChanges: [ScoreChange!]! @derivedFrom(field: "account")
+}
+
+"""
+One row per thing that happened to an account, newest first by timestamp.
+This is the app's history screen.
+"""
+type Activity {
+  id: ID! # chainId-txHash-logIndex
+  account: Account!
+  kind: ActivityKind!
+  "AUSD, 6 decimals. Null where the event only carries vault shares."
+  amount: BigInt
+  shares: BigInt
+  "Payer of a top-up or repayment, or recipient of a draw."
+  counterparty: String
+  "Bank or Card, for top-ups."
+  method: String
+  timestamp: BigInt! @index
+  blockNumber: BigInt!
+  txHash: String!
+}
+
+"""
+A borrowing cycle: opened by a draw from zero, closed by repaying to zero or by
+default. This is what `/verify` shows.
+"""
+type Cycle {
+  id: ID! # account-number
+  account: Account!
+  number: Int!
+  outcome: CycleOutcome!
+  openedAt: BigInt!
+  closedAt: BigInt
+  "Largest balance reached during the cycle."
+  peakDrawn: BigInt!
+  totalDrawn: BigInt!
+  totalRepaid: BigInt!
+  writtenOff: BigInt!
+  scoreAfter: BigInt
+  openTxHash: String!
+  closeTxHash: String
+}
+
+"Every score the contract reported, so the history is kept, not only the latest."
+type ScoreChange {
+  id: ID! # chainId-txHash-logIndex
+  account: Account!
+  reason: ScoreReason!
+  previous: BigInt!
+  score: BigInt!
+  timestamp: BigInt!
+  txHash: String!
+}
+
+"""
+Top-ups credited per UTC day. `relayer*` counts only fiat top-ups the relayer
+credited for someone else, which is the figure the payments service reconciles
+against its own ledger every day.
+"""
+type DailyTopUp {
+  id: ID! # YYYY-MM-DD
+  relayerAssets: BigInt!
+  relayerCount: Int!
+  directAssets: BigInt!
+  directCount: Int!
+  reversedShares: BigInt!
+}
+
+"The whole line in one row."
+type Pool {
+  id: ID! # "matocard"
+  verifiedAccounts: Int!
+  outstanding: BigInt!
+  lifetimeDrawn: BigInt!
+  lifetimeRepaid: BigInt!
+  lifetimeWrittenOff: BigInt!
+  defaultCount: Int!
+  totalToppedUp: BigInt!
+  lenderDeposits: BigInt!
+  lenderWithdrawals: BigInt!
+  seizedRedeemed: BigInt!
+}
