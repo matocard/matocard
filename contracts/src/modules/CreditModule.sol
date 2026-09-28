@@ -45,8 +45,12 @@ abstract contract CreditModule is CollateralModule {
         if (amount > pool.idle) revert InsufficientLiquidity(amount, pool.idle);
 
         if (a.drawn == 0) {
+            Params memory p = params();
             a.drawnAt = SafeCast.toUint64(block.timestamp);
-            a.dueAt = a.drawnAt + params().term;
+            a.dueAt = a.drawnAt + p.term;
+            a.defaultableAt = a.dueAt + p.grace;
+            a.cycleMinDuration = p.minCycleDuration;
+            a.cycleMinUtilizationBps = p.minUtilizationBps;
             a.limitAtDraw = ceiling;
         }
         a.drawn += amount;
@@ -106,7 +110,7 @@ abstract contract CreditModule is CollateralModule {
     function markDefaulted(address account) external nonReentrant {
         CreditAccount storage a = _accountOf(account);
         if (a.drawn == 0) revert NothingOwed();
-        uint64 defaultableAt = a.dueAt + params().grace;
+        uint64 defaultableAt = _fixedRules(a) ? a.defaultableAt : a.dueAt + params().grace;
         if (block.timestamp <= defaultableAt) revert NotOverdue(defaultableAt);
 
         Collateral storage c = _prepareCollateral(account);
@@ -165,13 +169,14 @@ abstract contract CreditModule is CollateralModule {
     }
 
     /// @dev A cycle counts only if it was repaid on time, lasted long enough,
-    ///      and used enough of the limit. Anything else settles the debt and
-    ///      proves nothing.
+    ///      and used enough of the limit, judged by the rules in force when the
+    ///      cycle opened. Anything else settles the debt and proves nothing.
     function _closeCycle(address account, CreditAccount storage a) internal {
-        Params memory p = params();
-        bool qualifying = block.timestamp <= a.dueAt
-            && block.timestamp - a.drawnAt >= p.minCycleDuration
-            && a.peakDrawn * BPS >= uint256(p.minUtilizationBps) * a.limitAtDraw;
+        (uint256 minDuration, uint256 minUtilizationBps) = _fixedRules(a)
+            ? (uint256(a.cycleMinDuration), uint256(a.cycleMinUtilizationBps))
+            : (uint256(params().minCycleDuration), uint256(params().minUtilizationBps));
+        bool qualifying = block.timestamp <= a.dueAt && block.timestamp - a.drawnAt >= minDuration
+            && a.peakDrawn * BPS >= minUtilizationBps * a.limitAtDraw;
         if (qualifying) {
             a.cycleCount += 1;
             a.repayCount += 1;
@@ -186,8 +191,17 @@ abstract contract CreditModule is CollateralModule {
     function _resetCycle(CreditAccount storage a) internal {
         a.drawnAt = 0;
         a.dueAt = 0;
+        a.defaultableAt = 0;
+        a.cycleMinDuration = 0;
+        a.cycleMinUtilizationBps = 0;
         a.limitAtDraw = 0;
         a.peakDrawn = 0;
+    }
+
+    /// @dev False only for a cycle opened by the first implementation, which
+    ///      fixed nothing; those fall back to the current parameters.
+    function _fixedRules(CreditAccount storage a) internal view returns (bool) {
+        return a.defaultableAt != 0;
     }
 
     function _score(CreditAccount storage a) internal view returns (uint256) {
