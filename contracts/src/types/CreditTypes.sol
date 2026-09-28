@@ -36,6 +36,14 @@ struct CreditAccount {
     /// @notice Sum of utilisation over qualifying cycles, in bps.
     uint64 volumeBps;
     bool defaulted;
+    // ---- appended in the second implementation; keep new fields below ----
+    /// @notice When the open cycle becomes defaultable (`dueAt + grace`), fixed
+    ///         at its first draw. Zero on cycles opened before this field existed.
+    uint64 defaultableAt;
+    /// @notice The open cycle's qualification rules, fixed at its first draw so
+    ///         a later parameter change cannot reach it.
+    uint64 cycleMinDuration;
+    uint16 cycleMinUtilizationBps;
 }
 
 struct Collateral {
