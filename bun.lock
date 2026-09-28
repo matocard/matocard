@@ -22,6 +22,13 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/contracts": {
+      "name": "@matocard/contracts",
+      "version": "0.0.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/tsconfig": {
       "name": "@matocard/tsconfig",
       "version": "0.0.0",
@@ -119,6 +126,8 @@
     "@fuel-ts/utils": ["@fuel-ts/utils@0.96.1", "", { "dependencies": { "@fuel-ts/errors": "0.96.1", "@fuel-ts/interfaces": "0.96.1", "@fuel-ts/math": "0.96.1", "@fuel-ts/versions": "0.96.1", "fflate": "^0.8.2" } }, "sha512-XXZNEUPf7qtKpVO3ak2CSroBYEKh1Gne1zlmVSNUoVPqQvglcu0I2pu/QmVnZBN4m3yVSyHUoWR2Kbo8/Dh7sA=="],
 
     "@fuel-ts/versions": ["@fuel-ts/versions@0.96.1", "", { "dependencies": { "chalk": "4", "cli-table": "^0.3.11" }, "bin": { "fuels-versions": "versions.js" } }, "sha512-C//ZT7U68Gksz9PzUJVzdzUARK7mfXf3MsF5ZqZaMegkE2tCy+twjy8PBdeVserY0uX6mEHRJyZJwcspk34ixg=="],
+
+    "@matocard/contracts": ["@matocard/contracts@workspace:packages/contracts"],
 
     "@matocard/indexer": ["@matocard/indexer@workspace:apps/indexer"],
 
