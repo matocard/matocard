@@ -47,3 +47,6 @@ lcov.info
 
 # ---------- misc ----------
 .vercel
+
+# database dumps from the backup service
+apps/backend/backups/
