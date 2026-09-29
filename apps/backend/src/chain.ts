@@ -67,7 +67,8 @@ export function createChain(sql: SQL, config: Config) {
     rpcUrls: { default: { http: [c.rpcUrl] } },
   });
   const account = privateKeyToAccount(c.relayerKey);
-  const client = createPublicClient({ chain, transport: http(c.rpcUrl) });
+  // Monad makes a block about every 0.4 s; viem's default 4 s poll would idle most of that
+  const client = createPublicClient({ chain, transport: http(c.rpcUrl), pollingInterval: 500 });
   const wallet = createWalletClient({ account, chain, transport: http(c.rpcUrl) });
   const line = { address: c.creditLine, abi: matoCreditLineAbi } as const;
   const ausd = { address: c.ausd, abi: testAusdAbi } as const;
