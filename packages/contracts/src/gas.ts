@@ -7,6 +7,9 @@ import limits from "./gas-limits.json";
  * rounded up. Sending these skips an estimate round trip per transaction.
  *
  * `markDefaulted` is not listed: it has never run on testnet, so estimate it.
+ * `repayWithPermit` is provisional: the deployed TestAUSD has no permit yet, so
+ * it is the local measurement scaled by Monad's ratio for `repay`, plus 25%.
+ * Re-measure after the next redeploy.
  * `approve` is the AUSD approval before `depositFor`, `repay` or `deposit`.
  */
 export const gasLimits: Readonly<Record<keyof typeof limits, bigint>> = Object.fromEntries(

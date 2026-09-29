@@ -80,6 +80,36 @@ contract GasLimitsTest is Deployers {
         _check("repayFor", used);
     }
 
+    function test_repayWithPermit() public {
+        uint256 key = 0xB0770;
+        address borrower = vm.addr(key);
+        _verify(borrower, "gas permit borrower");
+        _topUp(borrower, 150 * AUSD, DepositMethod.Bank);
+        _draw(borrower, 50 * AUSD);
+        skip(61);
+        ausd.mint(borrower, 50 * AUSD);
+        uint256 deadline = block.timestamp + 1 hours;
+        bytes32 structHash = keccak256(
+            abi.encode(
+                keccak256(
+                    "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+                ),
+                borrower,
+                address(line),
+                50 * AUSD,
+                ausd.nonces(borrower),
+                deadline
+            )
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            key, keccak256(abi.encodePacked("\x19\x01", ausd.DOMAIN_SEPARATOR(), structHash))
+        );
+        vm.prank(borrower);
+        uint256 g = gasleft();
+        line.repayWithPermit(50 * AUSD, deadline, v, r, s);
+        _check("repayWithPermit", g - gasleft());
+    }
+
     function test_repayFromCollateral() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
@@ -124,13 +154,14 @@ contract GasLimitsTest is Deployers {
 
     /// @dev Every limit in the file has a test here, so none goes unchecked.
     function test_everyLimitIsExercised() public view {
-        string[11] memory names = [
+        string[12] memory names = [
             "setVerified",
             "depositFor",
             "cancelPending",
             "draw",
             "repay",
             "repayFor",
+            "repayWithPermit",
             "repayFromCollateral",
             "withdrawCollateral",
             "deposit",

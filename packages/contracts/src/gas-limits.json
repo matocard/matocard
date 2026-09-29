@@ -9,5 +9,6 @@
   "withdrawCollateral": 230000,
   "deposit": 210000,
   "redeem": 210000,
-  "approve": 70000
+  "approve": 70000,
+  "repayWithPermit": 330000
 }
