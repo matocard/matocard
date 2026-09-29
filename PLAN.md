@@ -27,7 +27,7 @@ Everything in this repo is built during the hackathon window (see §14).
 
 | Bounty | Value | Hard requirement | How we meet it |
 |---|---|---|---|
-| Agora: Best Cross-Border Payments App on Monad | $10k | Track 02 only. Mobile app, **Mera passkey onboarding**, AUSD balance, a completed send/receive settled instantly | Passkey signup (D3), AUSD everywhere (D1), Siti draws AUSD straight to Mom's Matocard (§3 step 5) |
+| Agora: Best Cross-Border Payments App on Monad | $10k | Track 02 only. Mobile app, **Mera passkey onboarding**, AUSD balance, a completed send/receive settled instantly | Passkey signup (D3), AUSD everywhere (D1), Siti draws AUSD straight to Mom's Matocard (§3 step 5), and anyone sends AUSD from their balance with a gasless ERC-3009 transfer (D11). The demo must show an AUSD balance (§3 copy rules) |
 | Monad Foundation: Best Community Team Project | $5k | Team members pick an onboarded community on their profile | DevWeb3Jogja is on the list. Pick it on day 1 |
 | Envio: Best Use of Envio | $1k | Indexer drives a real feature; depth (derived entities) scores higher | Activity feed, `/verify` score history, reconciliation totals |
 | (stretch) Mera: Best Mera-Powered UX | $2.5k | Mera is the whole account layer, stateless test | Weak fit: fiat top-up needs a custodial treasury. Enter only if the passkey flow turns out very clean |
@@ -84,6 +84,7 @@ Optional if time allows: **Scan a merchant QR** (demo merchant page) as a second
 
 ### Copywriting rules
 - Words banned from user-facing screens: wallet, gas, chain, token, onchain transaction, seed, AUSD (except in detail/breakdown views).
+- The Agora bounty needs **an AUSD balance on screen** in the demo: show the headline in local currency, with "AUSD" on the balance's detail row (e.g. `Balance 50.00 USD · AUSD`). Wording is the app owner's call.
 - Headline amounts are in local currency with "≈". Debt is always shown in its locked dollar value, to be honest about FX risk (§7.4).
 - Always show **why** the limit is what it is (collateral, score, ratio).
 - Never say "dividend" or "interest". Say "collateral yield" and "interest-free".
@@ -104,6 +105,8 @@ Optional if time allows: **Scan a merchant QR** (demo merchant page) as a second
 | D8 | **Interest-free for borrowers.** The protocol keeps `yieldFeeBps` of each user's collateral yield, collected when shares leave | A clear business model, an incentive for LPs, and friendly to Muslim users |
 | D9 | **One UUPS proxy, built from modules** (`MatoCreditLine`) | Governed, PoolModule, IdentityModule, CollateralModule and CreditModule compose one implementation; each keeps its state in its own ERC-7201 namespace, so a module can change in an upgrade without shifting another's slots. One address for the app, the indexer and `/verify` |
 | D10 | **Daily offchain ↔ onchain reconciliation** | Fiat enters via webhooks and the balances must match the contract's records |
+| D11 | **Plain sends use AUSD's ERC-3009.** The sender signs `transferWithAuthorization`; the relayer submits it and pays the gas | "Send AUSD to another person, settled instantly" is the Agora bounty's first requirement. No approval, no MON needed for a send, one transaction. TestAUSD mirrors this so app code is the same on both tokens |
+| D12 | **Production fiat rail is Agora's Routes API** (fiat ↔ AUSD mint and redeem). Xendit test mode stands in for the demo | The bounty asks teams to build against Agora's public API, and minting at the issuer removes our own treasury float. The API is production-only and needs an Agora organisation account (Q8) |
 
 ---
 
@@ -231,8 +234,8 @@ Score 0–100 = **Record (40) + Consistency (20) + Volume (40)**. Integer maths,
 |---|---|
 | `api` | Per-screen endpoints: `/me`, `/me/activity`, `/quote`, `/verify/:id` |
 | `kyc` | Didit session + webhook, then `setVerified` + MON drip |
-| `payments` | Xendit: card/FPX/DuitNow QR (top-up + settlement), disbursement (cash out to an Indonesian bank) |
-| `relayer` | Tx queue: `depositFor`, `repayFor`, `cancelPending`, `setVerified`, MON drip |
+| `payments` | Xendit: card/FPX/DuitNow QR (top-up + settlement), disbursement (cash out to an Indonesian bank). Production: Agora Routes for fiat ↔ AUSD (D12) |
+| `relayer` | Tx queue: `depositFor`, `repayFor`, `cancelPending`, `setVerified`, ERC-3009 sends (D11), MON drip. Sends the published gas limits (`@matocard/contracts`) |
 | `fx` | MYR/IDR/USD quotes, locked for 60 seconds |
 
 ### 7.2 Money-handling rules (mandatory)
@@ -398,6 +401,7 @@ packages/
 | Q5 | earnAUSD is not on testnet | Yield is mock-only | Real mechanism in the contract, mock vault stated plainly |
 | Q6 | Is the Record ramp (N=3) too slow for the demo? | Small limit jump on stage (100 → 108.61) | Also show the aged account (134.52); do not weaken the anti-farming standard |
 | Q7 | Agora partner yield-sharing programme | Extra business model (roadmap) | Mention in the write-up; negotiated per partner |
+| Q8 | Can we get sandbox access to Agora's Routes API? Docs list production only | D12 stays a write-up item unless we can call it | Ask Agora with Q1 and Q2 |
 | R1 | Card chargebacks | Pool losses | Contract hold + `cancelPending` + 3DS + debit only + amount caps. Chargebacks after the hold (up to ~120 days) remain an operator loss |
 | R2 | Relayer key leak | Fake deposits, drained drip funds | Minimum roles, daily caps, pause, reconciliation |
 | R3 | Vault value drops | Limit drops, user may go over-limit | Block new draws, no auto-default |
