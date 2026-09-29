@@ -1,0 +1,41 @@
+# Backend and its Postgres. From apps/backend:
+#   cp .env.example .env
+#   docker compose up -d --build        # everything in Docker
+#   docker compose up -d postgres       # only the database, for `bun run dev` and tests
+# The VPS runs this same file (#50).
+name: matocard-backend
+
+services:
+  postgres:
+    image: postgres:18.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: matocard
+    # localhost only: the database is never reachable from the internet
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d matocard"]
+      interval: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/matocard
+      PORT: "3000"
+
+volumes:
+  pgdata:

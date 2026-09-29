@@ -8,9 +8,12 @@ ENV HUSKY=0
 
 WORKDIR /repo
 COPY package.json bun.lock bunfig.toml ./
+# every workspace's manifest, or the frozen lockfile refuses to install
 COPY packages/tsconfig packages/tsconfig
+COPY packages/core/package.json packages/core/
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/indexer/package.json apps/indexer/
+COPY apps/backend/package.json apps/backend/
 RUN bun install --frozen-lockfile --filter @matocard/indexer
 
 COPY apps/indexer apps/indexer
