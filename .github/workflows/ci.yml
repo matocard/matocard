@@ -36,6 +36,16 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run typecheck
+      # the backend's relayer and end-to-end tests deploy the contracts to anvil
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.3
+      - name: Contract dependencies
+        working-directory: contracts
+        run: |
+          forge install foundry-rs/forge-std --no-git
+          forge install OpenZeppelin/openzeppelin-contracts@v5.4.0 --no-git
+          forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v5.4.0 --no-git
       - run: bun run test
 
   contracts:
