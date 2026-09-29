@@ -3,7 +3,13 @@
   "ui": "tui",
   "agentGuidance": false,
   "globalDependencies": [".env"],
-  "globalEnv": ["NODE_ENV", "MONAD_RPC_URL", "INDEXER_URL", "MATO_CREDIT_LINE_ADDRESS"],
+  "globalEnv": [
+    "NODE_ENV",
+    "MONAD_RPC_URL",
+    "INDEXER_URL",
+    "MATO_CREDIT_LINE_ADDRESS",
+    "DATABASE_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
