@@ -27,3 +27,55 @@ export function formatAmount(amount: bigint, currency: Currency): string {
     .padEnd(Math.min(2, decimals), "0");
   return fraction ? `${sign}${whole}.${fraction}` : `${sign}${whole}`;
 }
+
+const RATE_SCALE = 10n ** 18n;
+export type Rounding = "down" | "up";
+
+/** A decimal rate such as "4.4567" as a bigint scaled by 1e18, refusing zero and garbage. */
+function scaleRate(rate: string): bigint {
+  const match = /^(\d+)(?:\.(\d{1,18}))?$/.exec(rate.trim());
+  if (!match) throw new Error(`not a rate: "${rate}"`);
+  const scaled = BigInt(match[1] + (match[2] ?? "").padEnd(18, "0"));
+  if (scaled === 0n) throw new Error("rate is zero");
+  return scaled;
+}
+
+function mulDiv(a: bigint, b: bigint, d: bigint, rounding: Rounding): bigint {
+  const q = (a * b) / d;
+  return rounding === "up" && q * d < a * b ? q + 1n : q;
+}
+
+/**
+ * A quoted pair BASE/QUOTE with `rate` units of QUOTE per one BASE, e.g.
+ * USD/MYR at "4.45". AUSD counts as USD. Round "down" for what the user
+ * receives, "up" for what the user is charged.
+ */
+export function baseToQuote(
+  amount: bigint,
+  base: Currency,
+  quote: Currency,
+  rate: string,
+  rounding: Rounding,
+) {
+  return mulDiv(
+    amount,
+    scaleRate(rate) * 10n ** BigInt(DECIMALS[quote]),
+    RATE_SCALE * 10n ** BigInt(DECIMALS[base]),
+    rounding,
+  );
+}
+
+export function quoteToBase(
+  amount: bigint,
+  quote: Currency,
+  base: Currency,
+  rate: string,
+  rounding: Rounding,
+) {
+  return mulDiv(
+    amount,
+    RATE_SCALE * 10n ** BigInt(DECIMALS[base]),
+    scaleRate(rate) * 10n ** BigInt(DECIMALS[quote]),
+    rounding,
+  );
+}
