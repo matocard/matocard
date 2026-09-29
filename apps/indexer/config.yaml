@@ -27,7 +27,7 @@ contracts:
 
 chains:
   - id: 10143 # Monad testnet
-    start_block: 66373390 # proxy deployment
+    start_block: 66642498 # proxy deployment
     # HyperSync. The public RPC caps eth_getLogs at 100 blocks, too narrow to
     # sync from; `envio dev` on this config follows the chain head.
     hypersync_config:
@@ -35,4 +35,4 @@ chains:
     contracts:
       - name: MatoCreditLine
         address:
-          - 0x39BED14767138AbA87d1F07b64088e1042239C59 # proxy, never the implementation
+          - 0x142A155055b8aE415118f605e2c85B71c029394C # proxy, never the implementation

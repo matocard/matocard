@@ -3,7 +3,7 @@ import { createTestIndexer } from "envio";
 import "../src/handlers/MatoCreditLine";
 
 const CHAIN = 10143;
-const START = 66_373_390;
+const START = 66_642_498;
 const AUSD = 1_000_000n;
 
 const siti = "0x00000000000000000000000000000000000051d1";
