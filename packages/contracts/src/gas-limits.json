@@ -10,5 +10,6 @@
   "deposit": 210000,
   "redeem": 210000,
   "approve": 70000,
-  "repayWithPermit": 330000
+  "repayWithPermit": 250000,
+  "transferWithAuthorization": 150000
 }

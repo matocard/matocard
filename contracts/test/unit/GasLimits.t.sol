@@ -110,6 +110,34 @@ contract GasLimitsTest is Deployers {
         _check("repayWithPermit", g - gasleft());
     }
 
+    /// @dev The relayer submitting a user's ERC-3009 send, to a fresh recipient.
+    function test_transferWithAuthorization() public {
+        uint256 key = 0x5E4D;
+        address sender = vm.addr(key);
+        ausd.mint(sender, 10 * AUSD);
+        uint256 validBefore = block.timestamp + 1 hours;
+        bytes32 structHash = keccak256(
+            abi.encode(
+                ausd.TRANSFER_WITH_AUTHORIZATION_TYPEHASH(),
+                sender,
+                stranger,
+                10 * AUSD,
+                0,
+                validBefore,
+                bytes32("gas")
+            )
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            key, keccak256(abi.encodePacked("\x19\x01", ausd.DOMAIN_SEPARATOR(), structHash))
+        );
+        vm.prank(relayer);
+        uint256 g = gasleft();
+        ausd.transferWithAuthorization(
+            sender, stranger, 10 * AUSD, 0, validBefore, bytes32("gas"), abi.encodePacked(r, s, v)
+        );
+        _check("transferWithAuthorization", g - gasleft());
+    }
+
     function test_repayFromCollateral() public {
         _topUp(siti, 150 * AUSD, DepositMethod.Bank);
         _draw(siti, 50 * AUSD);
@@ -154,7 +182,7 @@ contract GasLimitsTest is Deployers {
 
     /// @dev Every limit in the file has a test here, so none goes unchecked.
     function test_everyLimitIsExercised() public view {
-        string[12] memory names = [
+        string[13] memory names = [
             "setVerified",
             "depositFor",
             "cancelPending",
@@ -166,7 +194,8 @@ contract GasLimitsTest is Deployers {
             "withdrawCollateral",
             "deposit",
             "redeem",
-            "approve"
+            "approve",
+            "transferWithAuthorization"
         ];
         assertEq(vm.parseJsonKeys(limits, "$").length, names.length);
         for (uint256 i; i < names.length; ++i) {
