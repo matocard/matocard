@@ -43,15 +43,18 @@ services:
       - "host.docker.internal:host-gateway"
 
   caddy:
-    image: caddy:2.10
+    build:
+      context: .
+      dockerfile: Caddy.Dockerfile
     profiles: [vps]
     restart: unless-stopped
     depends_on: [backend]
+    # HTTPS only; 8443 on the Hostinger VPS, where another project holds 443
     ports:
-      - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
     environment:
       API_DOMAIN: ${API_DOMAIN:-localhost}
+      HOSTINGER_API_TOKEN: ${HOSTINGER_API_TOKEN:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy:/data

@@ -25,20 +25,23 @@ bun test          # needs DATABASE_URL; the relayer and end-to-end tests also ne
 
 ## Deploy to the VPS
 
-The Hostinger VPS runs the same compose file with the `vps` profile, which adds Caddy (HTTPS, certificate renewed automatically) and a daily `pg_dump` into `backups/` (14 days kept).
+The Hostinger VPS runs the same compose file with the `vps` profile, which adds Caddy (HTTPS) and a daily `pg_dump` into `backups/` (14 days kept).
 
-1. **DNS:** `api.matocard.xyz` → the VPS. An `A` record to the VPS's IP, or a `CNAME` to the hostname Hostinger gives the VPS (e.g. `srv123456.hstgr.cloud`).
-2. **On the VPS** (Docker installed, ports 80 and 443 open, nothing else on them):
+Caddy gets its certificate through DNS (ACME DNS-01, Hostinger's API), not through port 80, so it can serve HTTPS on any port. Our VPS also hosts another project whose Caddy holds 80 and 443, so ours listens on **8443** and the API is `https://api.matocard.xyz:8443`. Nothing of the other project is touched.
+
+1. **DNS:** an `A` record `api` → `201.18.211.8` in the `matocard.xyz` zone (Hostinger).
+2. **Hostinger API token** (hPanel → Profile → API) in `.env` as `HOSTINGER_API_TOKEN`, so Caddy can write the challenge record.
+3. **On the VPS** (Docker installed, port 8443 open):
    ```sh
-   git clone https://github.com/matocard/matocard && cd matocard/apps/backend
-   cp .env.example .env && chmod 600 .env      # fill in; API_DOMAIN=api.matocard.xyz
+   cd /opt/matocard/apps/backend
+   cp .env.example .env && chmod 600 .env      # fill in; API_DOMAIN=api.matocard.xyz, HTTPS_PORT=8443
    docker compose --profile vps up -d --build
-   curl https://api.matocard.xyz/health
+   curl https://api.matocard.xyz:8443/health
    ```
-3. **Webhooks:** Didit → a webhook destination `https://api.matocard.xyz/webhooks/didit` subscribed to `status.updated`; its secret is `DIDIT_WEBHOOK_SECRET`. Xendit → `https://api.matocard.xyz/webhooks/xendit` for payment sessions, payments, refunds, disputes and payouts; its callback token is `XENDIT_CALLBACK_TOKEN`.
-4. **Chain:** on Monad testnet, `RELAYER_PK` needs `KYC_ROLE` and `RELAYER_ROLE` on the credit line and holds the treasury's AUSD, plus MON for gas and drips.
+4. **Webhooks:** Didit → a webhook destination `https://api.matocard.xyz:8443/webhooks/didit` subscribed to `status.updated`; its secret is `DIDIT_WEBHOOK_SECRET`. Xendit → `https://api.matocard.xyz:8443/webhooks/xendit`; its callback token is `XENDIT_CALLBACK_TOKEN`.
+5. **Chain:** on Monad testnet, `RELAYER_PK` needs `KYC_ROLE` and `RELAYER_ROLE` on the credit line and holds the treasury's AUSD, plus MON for gas and drips.
 
-Update: `git pull && docker compose --profile vps up -d --build`. Postgres and the backend listen on localhost only; Caddy is the one public door.
+Postgres and the backend listen on localhost only; Caddy is the one public door. The code reaches the VPS with `git archive <branch> | ssh root@201.18.211.8 'tar -x -C /opt/matocard'` (`.env` is not in git, so it stays), then `docker compose --profile vps up -d --build`.
 
 ## API
 
