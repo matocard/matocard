@@ -21,7 +21,7 @@ The record lives on Monad, so the person owns it, anyone can verify it, and it s
 
 | | |
 |---|---|
-| Credit line | [`0x39BED14767138AbA87d1F07b64088e1042239C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) |
+| Credit line | [`0x142A155055b8aE415118f605e2c85B71c029394C`](https://testnet.monadvision.com/address/0x142A155055b8aE415118f605e2c85B71c029394C) |
 | Indexer (GraphQL) | [`indexer.dev.hyperindex.xyz/d788e54/v1/graphql`](https://indexer.dev.hyperindex.xyz/d788e54/v1/graphql) |
 | Live cycles | [docs/e2e-testnet-run.md](docs/e2e-testnet-run.md): score 0 → 17 → 32 → 49, limit 100.00 → 108.61 → 117.55 → 129.64 AUSD on 150 AUSD collateral |
 

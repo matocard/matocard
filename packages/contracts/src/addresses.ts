@@ -2,11 +2,12 @@
 export const monadTestnet = {
   chainId: 10143,
   /** MatoCreditLine proxy (UUPS). */
-  matoCreditLine: "0x39BED14767138AbA87d1F07b64088e1042239C59",
-  /** Stand-in for AUSD until a testnet faucet exists. 6 decimals, anyone can mint. */
-  ausd: "0x0c2470065cAD1CdE95062E1203B631C3a06B4f79",
+  matoCreditLine: "0x142A155055b8aE415118f605e2c85B71c029394C",
+  /** Stand-in for AUSD until a testnet faucet exists. 6 decimals, anyone can mint,
+   *  with AUSD's permit and ERC-3009 functions. */
+  ausd: "0x642dA38444cd6C51a126549ba72b7D3d51E37C9a",
   /** Stand-in for earnAUSD. */
-  yieldVault: "0xe6a522DF58cBea4559521Eb6092962Cf87aaEBee",
+  yieldVault: "0xA5238544faa35C9768bA9984aEd018A96b4A72Ba",
   /** Block of the proxy deployment; the indexer starts here. */
-  deployBlock: 66_373_390,
+  deployBlock: 66_642_498,
 } as const;

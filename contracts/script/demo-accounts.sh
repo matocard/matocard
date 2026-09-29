@@ -14,8 +14,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; source .env; set +a
 
-LINE=0x39BED14767138AbA87d1F07b64088e1042239C59
-AUSD=0x0c2470065cAD1CdE95062E1203B631C3a06B4f79
+LINE=0x142A155055b8aE415118f605e2c85B71c029394C
+AUSD=0x642dA38444cd6C51a126549ba72b7D3d51E37C9a
 RPC=$MONAD_RPC_URL
 
 new_key() { cast wallet new --json | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"][0]["private_key"])'; }

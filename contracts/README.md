@@ -8,12 +8,14 @@ Monad testnet (chain `10143`). All contracts verified on [MonadVision](https://t
 
 | Contract | Address |
 |---|---|
-| MatoCreditLine (proxy) | [`0x39BED14767138AbA87d1F07b64088e1042239C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) |
-| MatoCreditLine (implementation) | [`0x578b2807ea81C429505F1be4743Aec422758A461`](https://testnet.monadvision.com/address/0x578b2807ea81C429505F1be4743Aec422758A461) |
-| MockEarnAUSD (yield vault) | [`0xe6a522DF58cBea4559521Eb6092962Cf87aaEBee`](https://testnet.monadvision.com/address/0xe6a522DF58cBea4559521Eb6092962Cf87aaEBee) |
-| TestAUSD | [`0x0c2470065cAD1CdE95062E1203B631C3a06B4f79`](https://testnet.monadvision.com/address/0x0c2470065cAD1CdE95062E1203B631C3a06B4f79) |
+| MatoCreditLine (proxy) | [`0x142A155055b8aE415118f605e2c85B71c029394C`](https://testnet.monadvision.com/address/0x142A155055b8aE415118f605e2c85B71c029394C) |
+| MatoCreditLine (implementation) | [`0xB10f1D1d7Ada02267CB45203d8eB120983700528`](https://testnet.monadvision.com/address/0xB10f1D1d7Ada02267CB45203d8eB120983700528) |
+| MockEarnAUSD (yield vault) | [`0xA5238544faa35C9768bA9984aEd018A96b4A72Ba`](https://testnet.monadvision.com/address/0xA5238544faa35C9768bA9984aEd018A96b4A72Ba) |
+| TestAUSD | [`0x642dA38444cd6C51a126549ba72b7D3d51E37C9a`](https://testnet.monadvision.com/address/0x642dA38444cd6C51a126549ba72b7D3d51E37C9a) |
 
-Always talk to the **proxy**. It has been upgraded once, from [`0x6C0F…3891`](https://testnet.monadvision.com/address/0x6C0FD5a46C6208f0b7eCf03b754571465fA03891), to fix each cycle's rules at its first draw; every balance and score carried over. The pool is seeded with 100,000 TestAUSD. TestAUSD and MockEarnAUSD stand in for AUSD and earnAUSD, which have no testnet faucet.
+Always talk to the **proxy**. The pool is seeded with 100,000 TestAUSD. TestAUSD and MockEarnAUSD stand in for AUSD and earnAUSD; TestAUSD has AUSD's `permit` and ERC-3009 functions with the same selectors.
+
+This is the second deployment (29 Sep 2026), made to switch to that TestAUSD. The first, proxy [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59), is retired; its runs are recorded in [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 
 A full cycle against these addresses, with every transaction: [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 
@@ -118,7 +120,7 @@ forge verify-contract <address> <path>:<Contract> --chain 10143 \
 Upgrade (admin only):
 
 ```sh
-PROXY=0x39BED14767138AbA87d1F07b64088e1042239C59 \
+PROXY=0x142A155055b8aE415118f605e2c85B71c029394C \
   forge script script/UpgradeMatoCreditLine.s.sol --rpc-url $MONAD_RPC_URL --broadcast --slow
 ```
 
