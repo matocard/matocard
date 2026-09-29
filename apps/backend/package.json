@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@matocard/core": "workspace:*"
+    "@matocard/contracts": "workspace:*",
+    "@matocard/core": "workspace:*",
+    "viem": "^2.38.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
