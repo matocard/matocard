@@ -1,5 +1,7 @@
 # End-to-end run on Monad testnet
 
+> The runs below the demo-accounts section were made on the **first deployment** (proxy `0x39BE…9C59`), retired on 29 Sep 2026 when the stack moved to a TestAUSD with permit and ERC-3009. The current deployment's runs are in the last section.
+
 One full credit cycle against the deployed contracts, 28 September 2026. Every figure was read back from the chain after its transaction.
 
 | | |
@@ -73,3 +75,25 @@ Prepared with `contracts/script/demo-accounts.sh`, which checks every receipt an
 - Record 40, Consistency 6, Volume 9: score `55`, ratio `11150` bps, limit `150 × 10000 / 11150 = 134.529147`
 
 These are plain keys, not passkeys. For the demo to show this history in the app, the app needs to sign in as this address, or run the same three cycles from the presenter's passkey account beforehand (about four minutes).
+
+## Current deployment (29 Sep 2026)
+
+Redeployed so the stand-in token has AUSD's `permit` and ERC-3009. State read back after deploy: implementation in the ERC1967 slot, asset and vault asset equal, admin and roles, testnet params, 100,000 in the pool, and the token's EIP-712 domain. All four contracts verified on Sourcify.
+
+| | |
+|---|---|
+| MatoCreditLine (proxy) | [`0x142A155055b8aE415118f605e2c85B71c029394C`](https://testnet.monadvision.com/address/0x142A155055b8aE415118f605e2c85B71c029394C), block 66642498 |
+| TestAUSD | [`0x642dA38444cd6C51a126549ba72b7D3d51E37C9a`](https://testnet.monadvision.com/address/0x642dA38444cd6C51a126549ba72b7D3d51E37C9a) |
+| MockEarnAUSD | [`0xA5238544faa35C9768bA9984aEd018A96b4A72Ba`](https://testnet.monadvision.com/address/0xA5238544faa35C9768bA9984aEd018A96b4A72Ba) |
+
+**Demo accounts**, recreated by `demo-accounts.sh` with the same keys: Siti at score 18 → 36 → 55, limit 134.529147; Mom holds 263.490089 AUSD.
+
+| Cycle | Draw | Repay | Score after |
+|---|---|---|---|
+| 1 | [`0xe71a…468d`](https://testnet.monadvision.com/tx/0xe71a1a5e0dd30989a90cdff138c68f3fccdff3f1d4414c8e29dd7f8dafe0468d) | [`0xe676…82f9`](https://testnet.monadvision.com/tx/0xe676e4bff3cf17f62b4fbd8d454fb60c07e1bb8ccca9de74abaf5370494682f9) | 18 |
+| 2 | [`0xc7f7…b3a1`](https://testnet.monadvision.com/tx/0xc7f7cbc2c036f6acc2127ed88211c85dd8d8e33718a2693d16d23bd5872cb3a1) | [`0x102b…57c2`](https://testnet.monadvision.com/tx/0x102bbecde4e394404ba4fffd269175ad569440d00b95886c1b111286083957c2) | 36 |
+| 3 | [`0xe92a…380d`](https://testnet.monadvision.com/tx/0xe92a5d87b3a6be4a0dd3d6fef566eb77033c92e1818048b68c1aa8653d9b380d) | [`0x267f…9b8b`](https://testnet.monadvision.com/tx/0x267f32826882c96f3c4fb80f21a31b7c437775df6faf90022a04cf6f386f9b8b) | 55 |
+
+**Gasless send (ERC-3009).** Mom signed a `TransferWithAuthorization` for 10 AUSD; the relayer submitted it ([`0x2bba…fbee8`](https://testnet.monadvision.com/tx/0x2bba0739ed68a832c2a86f34d68594dcf33b6f622bffc110f3c072502b0fbee8)). The recipient's balance went 0 → 10, the nonce reads as used, and Mom's MON did not move: she sent no transaction.
+
+**One-transaction repayment (`repayWithPermit`).** A borrower drew 20 and repaid with a signed permit ([`0x5d5e…0c53`](https://testnet.monadvision.com/tx/0x5d5e82506834cfa6bca887b5108961f4131205f3d6cf6b87653be27678f10c53)): balance owed 0, allowance used up exactly, permit nonce 0 → 1.
