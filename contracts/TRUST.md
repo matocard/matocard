@@ -45,7 +45,7 @@ Pausing stops new risk and nothing a user needs to get out of debt.
 
 | Paused | Never paused |
 |---|---|
-| `draw`, `depositFor`, `depositCollateral`, `withdrawCollateral` | `repay`, `repayFor`, `repayFromCollateral`, `markDefaulted`, `settlePending`, `cancelPending`, `redeemPoolShares`, lender deposits and withdrawals |
+| `draw`, `depositFor`, `depositCollateral`, `withdrawCollateral` | `repay`, `repayWithPermit`, `repayFor`, `repayFromCollateral`, `markDefaulted`, `settlePending`, `cancelPending`, `redeemPoolShares`, lender deposits and withdrawals |
 
 `markDefaulted` also keeps running, so a long pause does not extend a due date. Repayment stays open throughout, so no one is defaulted for want of a way to pay.
 
@@ -80,10 +80,10 @@ If the vault's share price falls, limits fall with it. New draws are blocked whi
 
 ## What has been checked
 
-- 79 Foundry tests, 100% line, branch and function coverage of `src/` (testnet tokens excluded): unit tests per module, every refusal path, the demo figures as literals, an upgrade test that checks every module's state survives, and invariants over random activity (all vault shares assigned to a borrower or the pool, `totalDrawn` equal to the sum of debts, `idle` backed by real AUSD, scores within 0 to 100).
+- 108 Foundry tests, 100% line, branch and function coverage of `src/` (testnet tokens excluded): unit tests per module, every refusal path, the demo figures as literals, an upgrade test that checks every module's state survives, and invariants over random activity (all vault shares assigned to a borrower or the pool, `totalDrawn` equal to the sum of debts, `idle` backed by real AUSD, scores within 0 to 100).
 - Two live cycles on Monad testnet with every figure read back from the chain: [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 - [Slither](https://github.com/crytic/slither) 0.11.6 runs in CI and fails on any finding. The first run found 15, all triaged:
-  - 3 reentrancy findings where state is written after a call to the yield vault. Every entry point is `nonReentrant` and the vault is fixed at initialisation; each is suppressed on its own line with that reason.
+  - 3 reentrancy findings where state is written after a call to the yield vault, and 1 after `repayWithPermit` calls the pool asset's `permit`. Every entry point is `nonReentrant`, and the vault and asset are fixed at initialisation; each is suppressed on its own line with that reason.
   - 5 uses of `block.timestamp`: holds and due dates are minutes to days long.
   - 5 uses of assembly: the ERC-7201 storage pointers, one per module.
   - 2 names: OpenZeppelin's `__Module_init` convention.
