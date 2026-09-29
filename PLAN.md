@@ -117,7 +117,7 @@ Optional if time allows: **Scan a merchant QR** (demo merchant page) as a second
 │  Next.js app + Mera passkey (signing session)                                │
 └───────────────┬──────────────────────────────┬───────────────────────────────┘
                 │ HTTPS                        │ tx (draw, repay, withdraw)
-┌───────────────▼────────────── Backend (Railway) ─────────────────────────────┐
+┌───────────────▼────────────── Backend (Hostinger VPS, Docker) ───────────────┐
 │  api        : one response per screen, combining indexer + contract + DB     │
 │  kyc        : Didit sessions + webhook                                       │
 │  payments   : Xendit card/FPX/QR + disbursement, webhooks, ledger (Postgres) │
@@ -344,7 +344,7 @@ packages/
 | [Xendit](https://docs.xendit.co/docs/available-payment-channels) | Card, FPX / DuitNow QR (MY), disbursement (ID) | Countries: ID, MY, PH, TH, VN. Test key `xnd_development_…` |
 | [Didit](https://didit.me) | Document + liveness KYC | Use the sandbox |
 | [Envio](https://envio.dev) | Indexer | Monad testnet. Dev tier keeps 3 deployments: a redeploy deletes the oldest URL |
-| Railway | api, kyc, payments, relayer, Postgres | |
+| Hostinger VPS (Docker) | api, kyc, payments, relayer, Postgres | docker compose + Caddy for HTTPS |
 | Vercel | App | |
 | Public FX API | Demo FX quotes | Pick a free one |
 
@@ -353,7 +353,7 @@ packages/
 - [ ] Join the Monad Discord, get the Metropolis role
 - [ ] Xendit test account: **check whether one account can accept MYR and disburse IDR** (§13)
 - [ ] Didit sandbox
-- [ ] Railway + Postgres, Vercel, Envio
+- [ ] Hostinger VPS (Docker) + Postgres, Vercel, Envio
 - [ ] Deployer + relayer + treasury wallets, funded with testnet MON (the relayer also funds user drips)
 - [ ] **Testnet AUSD**: no documented faucet. Ask Agora (Discord / bounty channel)
 
@@ -362,7 +362,7 @@ packages/
 |---|---|
 | Contracts + tests (`contracts/`) | FjrREPO |
 | Indexer (`apps/indexer`) | FjrREPO |
-| Backend (`api`, `kyc`, `payments`, `relayer`) | |
+| Backend (`api`, `kyc`, `payments`, `relayer`) | Yeheskiel Yunus Tame |
 | Frontend + UX (`app`, `landing`) | |
 | Demo, video, user testing, write-up | |
 
