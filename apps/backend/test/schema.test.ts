@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { SQL } from "bun";
-import { connect, migrate } from "../src/db";
+import { migrate } from "../src/db";
+import { hasDatabase, testDatabase } from "./harness";
 
 // Runs against a throwaway database next to DATABASE_URL (docker compose up -d postgres).
-const url = process.env.DATABASE_URL;
-const name = `matocard_test_${process.pid}`;
-let admin: SQL;
+let db: Awaited<ReturnType<typeof testDatabase>>;
 let sql: SQL;
 let userId: string;
 
@@ -16,23 +15,15 @@ const errorOf = (query: PromiseLike<unknown>) =>
     (e: Error) => e.message,
   );
 
-describe.skipIf(!url)("schema", () => {
+describe.skipIf(!hasDatabase)("schema", () => {
   beforeAll(async () => {
-    admin = connect(url!);
-    await admin.unsafe(`CREATE DATABASE ${name}`);
-    const testUrl = new URL(url!);
-    testUrl.pathname = `/${name}`;
-    sql = connect(testUrl.toString());
-    await migrate(sql);
+    db = await testDatabase();
+    sql = db.sql;
     [{ id: userId }] = await sql`
       INSERT INTO users (wallet) VALUES (${`0x${"a".repeat(40)}`}) RETURNING id`;
   });
 
-  afterAll(async () => {
-    await sql?.close();
-    await admin?.unsafe(`DROP DATABASE IF EXISTS ${name}`);
-    await admin?.close();
-  });
+  afterAll(() => db?.drop());
 
   const topup = (eventId: string | null) => sql`
     INSERT INTO payments (user_id, kind, method, provider_event_id, fiat_amount, currency, ausd_amount)
