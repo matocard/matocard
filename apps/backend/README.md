@@ -23,6 +23,23 @@ bun run dev
 bun test          # needs DATABASE_URL; the relayer and end-to-end tests also need anvil and forge
 ```
 
+## Deploy to the VPS
+
+The Hostinger VPS runs the same compose file with the `vps` profile, which adds Caddy (HTTPS, certificate renewed automatically) and a daily `pg_dump` into `backups/` (14 days kept).
+
+1. **DNS:** `api.matocard.xyz` → the VPS. An `A` record to the VPS's IP, or a `CNAME` to the hostname Hostinger gives the VPS (e.g. `srv123456.hstgr.cloud`).
+2. **On the VPS** (Docker installed, ports 80 and 443 open, nothing else on them):
+   ```sh
+   git clone https://github.com/matocard/matocard && cd matocard/apps/backend
+   cp .env.example .env && chmod 600 .env      # fill in; API_DOMAIN=api.matocard.xyz
+   docker compose --profile vps up -d --build
+   curl https://api.matocard.xyz/health
+   ```
+3. **Webhooks:** Didit → a webhook destination `https://api.matocard.xyz/webhooks/didit` subscribed to `status.updated`; its secret is `DIDIT_WEBHOOK_SECRET`. Xendit → `https://api.matocard.xyz/webhooks/xendit` for payment sessions, payments, refunds, disputes and payouts; its callback token is `XENDIT_CALLBACK_TOKEN`.
+4. **Chain:** on Monad testnet, `RELAYER_PK` needs `KYC_ROLE` and `RELAYER_ROLE` on the credit line and holds the treasury's AUSD, plus MON for gas and drips.
+
+Update: `git pull && docker compose --profile vps up -d --build`. Postgres and the backend listen on localhost only; Caddy is the one public door.
+
 ## API
 
 Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`, where the account signs `sessionMessage(wallet, until)` from `src/api.ts` (at most 7 days ahead). Amounts are strings in the smallest unit (AUSD: 6 decimals, MYR: sen, IDR: rupiah).
