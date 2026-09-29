@@ -32,6 +32,8 @@ await walletClient.writeContract({ /* … */ functionName: "draw", args, gas: ga
 
 Each limit is the largest estimate Monad testnet gave for that call (first-time accounts, cycle-closing repayments) plus 25%. `markDefaulted` has never run on testnet, so estimate it. A Foundry test fails if a call's heaviest case outgrows its limit.
 
+**TestAUSD and ERC-3009.** `testAusdAbi` includes `permit` and the ERC-3009 functions (`transferWithAuthorization`, `receiveWithAuthorization`, `cancelAuthorization`) with the same selectors as AUSD on Monad testnet. The TestAUSD at the current `monadTestnet.ausd` address predates them and only gains them with the next full redeploy (#37); calls to them there revert.
+
 Add it to a workspace with `"@matocard/contracts": "workspace:*"`.
 
 The files in `src/abi` are generated; after changing a contract run `contracts/script/export-abi.sh`. CI fails if they are out of date.
