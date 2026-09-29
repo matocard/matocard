@@ -2,6 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -65,6 +66,24 @@ abstract contract CreditModule is CollateralModule {
     /// @notice Repays the caller's own balance. Anything above it is not taken.
     /// @dev Never pausable: a pause must not push anyone into default.
     function repay(uint256 amount) external nonReentrant {
+        _repay(msg.sender, msg.sender, amount);
+    }
+
+    /// @notice Repays with an AUSD permit instead of a prior approval, so paying
+    ///         back is one transaction.
+    /// @dev The permit is attempted, not required. Its signature is public once
+    ///      submitted, so someone can use it first; the allowance is then already
+    ///      in place and the repayment still goes through. Without an allowance
+    ///      the transfer reverts.
+    // The permit call goes to the pool's own asset, fixed at initialisation, and
+    // the function is nonReentrant.
+    // slither-disable-next-line reentrancy-benign
+    function repayWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external
+        nonReentrant
+    {
+        try IERC20Permit(asset()).permit(msg.sender, address(this), amount, deadline, v, r, s) {}
+            catch {}
         _repay(msg.sender, msg.sender, amount);
     }
 
