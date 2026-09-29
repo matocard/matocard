@@ -12,6 +12,16 @@
         "typescript": "^5.9.3",
       },
     },
+    "apps/backend": {
+      "name": "@matocard/backend",
+      "version": "0.0.0",
+      "dependencies": {
+        "@matocard/core": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "apps/indexer": {
       "name": "@matocard/indexer",
       "version": "0.0.0",
@@ -24,6 +34,13 @@
     },
     "packages/contracts": {
       "name": "@matocard/contracts",
+      "version": "0.0.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/core": {
+      "name": "@matocard/core",
       "version": "0.0.0",
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -127,7 +144,11 @@
 
     "@fuel-ts/versions": ["@fuel-ts/versions@0.96.1", "", { "dependencies": { "chalk": "4", "cli-table": "^0.3.11" }, "bin": { "fuels-versions": "versions.js" } }, "sha512-C//ZT7U68Gksz9PzUJVzdzUARK7mfXf3MsF5ZqZaMegkE2tCy+twjy8PBdeVserY0uX6mEHRJyZJwcspk34ixg=="],
 
+    "@matocard/backend": ["@matocard/backend@workspace:apps/backend"],
+
     "@matocard/contracts": ["@matocard/contracts@workspace:packages/contracts"],
+
+    "@matocard/core": ["@matocard/core@workspace:packages/core"],
 
     "@matocard/indexer": ["@matocard/indexer@workspace:apps/indexer"],
 
