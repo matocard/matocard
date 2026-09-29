@@ -1,6 +1,10 @@
-# HTTPS in front of the backend. Caddy gets and renews the certificate itself
-# once API_DOMAIN's DNS points at this machine and ports 80 and 443 are open.
+# HTTPS in front of the backend. The certificate comes from Let's Encrypt through
+# a DNS record Caddy writes with HOSTINGER_API_TOKEN, so no port 80 is needed and
+# the VPS's other sites keep 80 and 443.
 {$API_DOMAIN} {
+	tls {
+		dns hostinger {env.HOSTINGER_API_TOKEN}
+	}
 	encode gzip
 	reverse_proxy backend:3000
 }
