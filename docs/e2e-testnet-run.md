@@ -1,6 +1,6 @@
 # End-to-end run on Monad testnet
 
-> The runs below the demo-accounts section were made on the **first deployment** (proxy `0x39BE…9C59`), retired on 29 Sep 2026 when the stack moved to a TestAUSD with permit and ERC-3009. The current deployment's runs are in the last section.
+> Three deployments so far. The first (proxy `0x39BE…9C59`) and second (`0x142A…394C`) ran on TestAUSD and are retired. The current one runs on Agora's real AUSD; its runs are in the last section.
 
 One full credit cycle against the deployed contracts, 28 September 2026. Every figure was read back from the chain after its transaction.
 
@@ -76,7 +76,7 @@ Prepared with `contracts/script/demo-accounts.sh`, which checks every receipt an
 
 These are plain keys, not passkeys. For the demo to show this history in the app, the app needs to sign in as this address, or run the same three cycles from the presenter's passkey account beforehand (about four minutes).
 
-## Current deployment (29 Sep 2026)
+## Second deployment (29 Sep 2026, retired)
 
 Redeployed so the stand-in token has AUSD's `permit` and ERC-3009. State read back after deploy: implementation in the ERC1967 slot, asset and vault asset equal, admin and roles, testnet params, 100,000 in the pool, and the token's EIP-712 domain. All four contracts verified on Sourcify.
 
@@ -97,3 +97,27 @@ Redeployed so the stand-in token has AUSD's `permit` and ERC-3009. State read ba
 **Gasless send (ERC-3009).** Mom signed a `TransferWithAuthorization` for 10 AUSD; the relayer submitted it ([`0x2bba…fbee8`](https://testnet.monadvision.com/tx/0x2bba0739ed68a832c2a86f34d68594dcf33b6f622bffc110f3c072502b0fbee8)). The recipient's balance went 0 → 10, the nonce reads as used, and Mom's MON did not move: she sent no transaction.
 
 **One-transaction repayment (`repayWithPermit`).** A borrower drew 20 and repaid with a signed permit ([`0x5d5e…0c53`](https://testnet.monadvision.com/tx/0x5d5e82506834cfa6bca887b5108961f4131205f3d6cf6b87653be27678f10c53)): balance owed 0, allowance used up exactly, permit nonce 0 → 1.
+
+## Current deployment: real AUSD (30 Sep 2026)
+
+Agora refilled its testnet faucet (`0xd236…e6C`) and confirmed that Monad testnet AUSD is enough for the bounty. The deployer collected 100,000 AUSD from it and deployed with `AUSD_ADDRESS` set; 90,000 went into the pool. State read back: implementation slot, asset and vault asset both AUSD, admin and roles, params, 90,000 idle and in the contract. Proxy, implementation and vault verified on Sourcify.
+
+| | |
+|---|---|
+| MatoCreditLine (proxy) | [`0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a`](https://testnet.monadvision.com/address/0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a), block 66922881 |
+| AUSD (Agora) | [`0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`](https://testnet.monadvision.com/address/0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC) |
+| MockEarnAUSD | [`0xF93Dc9038F4209675C3ab7909d0FEE4738Dd7C08`](https://testnet.monadvision.com/address/0xF93Dc9038F4209675C3ab7909d0FEE4738Dd7C08) |
+
+**Demo accounts**, funded by transfer from the treasury since real AUSD cannot be minted: Siti 18 → 36 → 55, limit 134.529147; Mom holds 263.490089 AUSD.
+
+| Cycle | Draw | Repay | Score after |
+|---|---|---|---|
+| 1 | [`0x864a…abd8`](https://testnet.monadvision.com/tx/0x864a02af32f448b515d8e8719d2dffdbd65d657cff2dd1289ee82d0b55aeabd8) | [`0x503c…ed96`](https://testnet.monadvision.com/tx/0x503c2d23ffa8d79d9db7a3a042b5155f14d14d5155e4979ab36581357c75ed96) | 18 |
+| 2 | [`0x64f8…95fb`](https://testnet.monadvision.com/tx/0x64f8a31444125afca3357f350f00998c9d1e97653be2164d3b54f95e2bd595fb) | [`0x8595…73c1`](https://testnet.monadvision.com/tx/0x8595b4a615742e00a0e20d1faf3f7f88fc943094da873ccebd11651dbda273c1) | 36 |
+| 3 | [`0x180c…b39e`](https://testnet.monadvision.com/tx/0x180cb7e81ae54c0debbbb3ee676cccdbc96138125a9320c516aed03d9c83b39e) | [`0x5052…0612`](https://testnet.monadvision.com/tx/0x5052a03ed7e727013354fb9455352425ce67bdb58dfb000817293effb4af0612) | 55 |
+
+**Gasless send on AUSD (ERC-3009).** Mom signed a `TransferWithAuthorization` under AUSD's EIP-712 domain, which is named `Agora Dollar` (not `AUSD`); the relayer submitted it ([`0x203c…209d`](https://testnet.monadvision.com/tx/0x203c0de041f503dcc47870f692cbb13c36e4c7e0b88e67c638cb7c48167d209d)). Recipient 0 → 10 AUSD, nonce used.
+
+**Card top-up, then a one-transaction repayment.** A card top-up of 150 ([`0x4100…738c`](https://testnet.monadvision.com/tx/0x41001bcd6b7e88537b27271db068001d69bc5596d55ef2e2c70262a00f9b738c)), a draw of 20 once the hold ended ([`0xdb72…179a`](https://testnet.monadvision.com/tx/0xdb72cb0e62219efcaff5c269e69bd449b0dd17bba1e14021f71a3e2b0179179a)), and `repayWithPermit` with an AUSD permit ([`0xeffa…d8df`](https://testnet.monadvision.com/tx/0xeffa36015c815515fb2e0c1ba766f44a8b4cd3989ecf701df3eefc52fce4d8df)): owed 0, allowance used exactly, permit nonce 0 → 1.
+
+**Gas on real AUSD** is higher than on TestAUSD. Its `approve` alone is 71,075, above the 70,000 limit published before; `draw` settling a hold is 356,244. Every limit in `@matocard/contracts` was re-measured here and raised where needed.
