@@ -9,13 +9,14 @@
 # and reads the state back; it stops at the first mismatch.
 #
 # Env (contracts/.env): MONAD_RPC_URL, WALLET_PK (admin, KYC and relayer).
+# LINE and AUSD default to the current deployment and can be overridden.
 # DEMO_SITI_PK and DEMO_MOM_PK are created and appended if missing.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; source .env; set +a
 
-LINE=0x142A155055b8aE415118f605e2c85B71c029394C
-AUSD=0x642dA38444cd6C51a126549ba72b7D3d51E37C9a
+LINE=${LINE:-0x142A155055b8aE415118f605e2c85B71c029394C}
+AUSD=${AUSD:-0x642dA38444cd6C51a126549ba72b7D3d51E37C9a}
 RPC=$MONAD_RPC_URL
 
 new_key() { cast wallet new --json | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"][0]["private_key"])'; }
@@ -60,7 +61,8 @@ for pair in "$SITI:demo-siti" "$MOM:demo-mom"; do
 done
 
 echo "top up 150 AUSD by bank transfer"
-send "$WALLET_PK" "$AUSD" 'mint(address,uint256)' "$RELAYER" 150000000 >/dev/null
+# Real AUSD cannot be minted: the relayer's treasury pays for the top-up and
+# for Siti's repayments, so it must hold about 420 AUSD before this runs.
 send "$WALLET_PK" "$AUSD" 'approve(address,uint256)' "$LINE" 150000000 >/dev/null
 send "$WALLET_PK" "$LINE" 'depositFor(address,uint256,uint8)' "$SITI" 150000000 0 >/dev/null
 expect limitOf "$(call 'limitOf(address)(uint256)' "$SITI")" 100000000
@@ -72,7 +74,7 @@ for i in 0 1 2; do
   echo "cycle $((i + 1)): draw $amount of $limit to mom"
   draw=$(send "$DEMO_SITI_PK" "$LINE" 'draw(uint256,address)' "$amount" "$MOM")
   sleep 62
-  send "$DEMO_SITI_PK" "$AUSD" 'mint(address,uint256)' "$SITI" "$amount" >/dev/null
+  send "$WALLET_PK" "$AUSD" 'transfer(address,uint256)' "$SITI" "$amount" >/dev/null
   send "$DEMO_SITI_PK" "$AUSD" 'approve(address,uint256)' "$LINE" "$amount" >/dev/null
   repay=$(send "$DEMO_SITI_PK" "$LINE" 'repay(uint256)' "$amount")
   echo "  draw $draw"
