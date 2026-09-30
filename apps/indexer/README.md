@@ -49,6 +49,10 @@ bunx envio-cloud deployment promote matocard <commit> matocard
 
 Every deployment gets a new URL. Update the GraphQL row above and tell the app and API owners when it changes. Check progress with a `_meta { progressBlock isReady }` query: `envio-cloud deployment metrics` has shown 0% for a deployment that was fully synced. A new deployment can also sit at block 0 for well over ten minutes before it starts; `13b09e9` did, then caught up on its own. Give it time before redeploying, and use the self-hosted stack below if it does not move.
 
+## Health check
+
+`.github/workflows/indexer-health.yml` runs `scripts/health.sh` every 30 minutes. If the hosted indexer is more than 1,500 blocks behind the chain head (about ten minutes) or does not answer, it opens one issue titled *Indexer is behind the chain*; when the indexer catches up, it closes that issue. The endpoint it checks is `INDEXER_URL` in `.env.example`, so update that line whenever the deployment changes. `DRY_RUN=1 scripts/health.sh` checks by hand.
+
 ## Self-hosting
 
 The same stack `envio dev` runs (Postgres 18, Hasura 2.43, the indexer), for when a hosted deployment is unavailable:
