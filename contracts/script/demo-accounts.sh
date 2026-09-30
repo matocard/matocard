@@ -15,8 +15,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; source .env; set +a
 
-LINE=${LINE:-0x142A155055b8aE415118f605e2c85B71c029394C}
-AUSD=${AUSD:-0x642dA38444cd6C51a126549ba72b7D3d51E37C9a}
+LINE=${LINE:-0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a}
+AUSD=${AUSD:-0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC}
 RPC=$MONAD_RPC_URL
 
 new_key() { cast wallet new --json | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"][0]["private_key"])'; }
@@ -83,4 +83,4 @@ for i in 0 1 2; do
 done
 
 expect limitOf "$(call 'limitOf(address)(uint256)' "$SITI")" 134529147
-echo "mom holds $(cast call "$AUSD" 'balanceOf(address)(uint256)' "$MOM" --rpc-url "$RPC" | cut -d' ' -f1) tAUSD"
+echo "mom holds $(cast call "$AUSD" 'balanceOf(address)(uint256)' "$MOM" --rpc-url "$RPC" | cut -d' ' -f1) AUSD (6 decimals)"

@@ -8,14 +8,14 @@ Monad testnet (chain `10143`). All contracts verified on [MonadVision](https://t
 
 | Contract | Address |
 |---|---|
-| MatoCreditLine (proxy) | [`0x142A155055b8aE415118f605e2c85B71c029394C`](https://testnet.monadvision.com/address/0x142A155055b8aE415118f605e2c85B71c029394C) |
-| MatoCreditLine (implementation) | [`0xB10f1D1d7Ada02267CB45203d8eB120983700528`](https://testnet.monadvision.com/address/0xB10f1D1d7Ada02267CB45203d8eB120983700528) |
-| MockEarnAUSD (yield vault) | [`0xA5238544faa35C9768bA9984aEd018A96b4A72Ba`](https://testnet.monadvision.com/address/0xA5238544faa35C9768bA9984aEd018A96b4A72Ba) |
-| TestAUSD | [`0x642dA38444cd6C51a126549ba72b7D3d51E37C9a`](https://testnet.monadvision.com/address/0x642dA38444cd6C51a126549ba72b7D3d51E37C9a) |
+| MatoCreditLine (proxy) | [`0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a`](https://testnet.monadvision.com/address/0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a) |
+| MatoCreditLine (implementation) | [`0x55768e1Cf5B2c6FcAAa0bA2f29e72601898F3548`](https://testnet.monadvision.com/address/0x55768e1Cf5B2c6FcAAa0bA2f29e72601898F3548) |
+| MockEarnAUSD (yield vault) | [`0xF93Dc9038F4209675C3ab7909d0FEE4738Dd7C08`](https://testnet.monadvision.com/address/0xF93Dc9038F4209675C3ab7909d0FEE4738Dd7C08) |
+| AUSD (Agora) | [`0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`](https://testnet.monadvision.com/address/0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC) |
 
-Always talk to the **proxy**. The pool is seeded with 100,000 TestAUSD. TestAUSD and MockEarnAUSD stand in for AUSD and earnAUSD; TestAUSD has AUSD's `permit` and ERC-3009 functions with the same selectors.
+Always talk to the **proxy**. The pool holds real AUSD from Agora's testnet faucet (90,000 seeded). MockEarnAUSD stands in for earnAUSD, which is mainnet only.
 
-This is the second deployment (29 Sep 2026), made to switch to that TestAUSD. The first, proxy [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59), is retired; its runs are recorded in [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
+This is the third deployment (30 Sep 2026), made to move onto real AUSD. The earlier two ran on TestAUSD: proxies [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x39BED14767138AbA87d1F07b64088e1042239C59) and [`0x142A…394C`](https://testnet.monadvision.com/address/0x142A155055b8aE415118f605e2c85B71c029394C), both retired; their runs are in [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 
 A full cycle against these addresses, with every transaction: [docs/e2e-testnet-run.md](../docs/e2e-testnet-run.md).
 
@@ -99,7 +99,7 @@ source .env
 forge script script/DeployMatoCreditLine.s.sol --rpc-url $MONAD_RPC_URL --broadcast --slow
 ```
 
-Without `AUSD_ADDRESS` the script deploys TestAUSD and seeds the pool.
+Without `AUSD_ADDRESS` the script deploys TestAUSD and mints the seed; with it, the deployer seeds the pool from its own AUSD (`POOL_SEED`, whole tokens).
 
 To move to real AUSD (`0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`): Agora's testnet faucet `0xd236c18d274e54faccc3dd9dda4b27965a73ee6c` gives 10,000 AUSD per call, once a minute, up to 100,000 per address, when it is funded (it was empty from 25 Sep 2026):
 
@@ -120,7 +120,7 @@ forge verify-contract <address> <path>:<Contract> --chain 10143 \
 Upgrade (admin only):
 
 ```sh
-PROXY=0x142A155055b8aE415118f605e2c85B71c029394C \
+PROXY=0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a \
   forge script script/UpgradeMatoCreditLine.s.sol --rpc-url $MONAD_RPC_URL --broadcast --slow
 ```
 
