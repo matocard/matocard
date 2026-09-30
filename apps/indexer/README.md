@@ -7,7 +7,7 @@
 | Chain | Monad testnet (`10143`) |
 | Contract | `MatoCreditLine` proxy [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a) |
 | Start block | `66922881` (proxy deployment) |
-| GraphQL | `https://indexer.dev.hyperindex.xyz/895b549/v1/graphql` (Envio Cloud, deployment `44782fa`) |
+| GraphQL | `https://indexer.dev.hyperindex.xyz/b5ebb5c/v1/graphql` (Envio Cloud, deployment `bcbf16a`) |
 
 ## Entities
 
