@@ -4,7 +4,7 @@ import "../src/handlers/MatoCreditLine";
 
 /**
  * Runs the handlers over the real Monad testnet blocks holding the current
- * deployment and the demo accounts' three cycles (docs/e2e-testnet-run.md).
+ * deployment (on Agora's AUSD) and the demo accounts' three cycles (docs/e2e-testnet-run.md).
  * Opt-in, because it needs the network and an ENVIO_API_TOKEN:
  *
  *   INDEXER_LIVE_TEST=1 bun test test/live.test.ts
@@ -18,7 +18,7 @@ test.skipIf(!live)(
   async () => {
     const indexer = createTestIndexer();
     await indexer.process({
-      chains: { 10143: { startBlock: 66_642_498, endBlock: 66643978 } },
+      chains: { 10143: { startBlock: 66_922_881, endBlock: 66923876 } },
     });
 
     const account = await indexer.Account.get(siti);
@@ -33,7 +33,7 @@ test.skipIf(!live)(
     expect((await indexer.Account.get(mom))?.identityHash).toBeDefined();
 
     const pool = await indexer.Pool.get("matocard");
-    expect(pool?.lenderDeposits).toBe(100_000_000_000n);
+    expect(pool?.lenderDeposits).toBe(90_000_000_000n);
     expect(pool?.lifetimeDrawn).toBe(263_490_089n);
     expect(pool?.outstanding).toBe(0n);
   },
