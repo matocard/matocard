@@ -15,8 +15,9 @@ import {Params} from "../src/types/CreditTypes.sol";
 /// Env:
 ///   WALLET_PK      deployer; becomes admin, and holds KYC + relayer roles until
 ///                  the services have keys of their own
-///   AUSD_ADDRESS   optional. Unset: deploys TestAUSD and seeds the pool with it
-///   POOL_SEED      optional, whole tokens, default 100000 (TestAUSD only)
+///   AUSD_ADDRESS   optional. Unset: deploys TestAUSD and mints the seed
+///   POOL_SEED      optional, whole tokens, default 100000. With real AUSD the
+///                  deployer must already hold it (Agora's testnet faucet)
 contract DeployMatoCreditLine is Script {
     function run() external {
         uint256 pk = vm.envUint("WALLET_PK");
@@ -38,8 +39,8 @@ contract DeployMatoCreditLine is Script {
         line.grantRole(line.KYC_ROLE(), deployer);
         line.grantRole(line.RELAYER_ROLE(), deployer);
 
-        if (testToken) {
-            TestAUSD(address(ausd)).mint(deployer, seed);
+        if (testToken) TestAUSD(address(ausd)).mint(deployer, seed);
+        if (seed != 0) {
             ausd.approve(address(line), seed);
             line.deposit(seed, deployer);
         }
