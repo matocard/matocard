@@ -55,13 +55,30 @@ export function createIndexer(url: string | undefined) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ query, variables }),
     });
-    const out = (await res.json()) as { data?: T; errors?: unknown };
-    if (!res.ok || out.errors)
-      throw new Error(`indexer: ${JSON.stringify(out.errors ?? res.status)}`);
+    const out = (await res.json().catch(() => null)) as { data?: T; errors?: unknown } | null;
+    if (!res.ok || !out || out.errors) {
+      throw new Error(`indexer ${res.status}: ${JSON.stringify(out?.errors ?? out)}`);
+    }
     return out.data ?? null;
   };
 }
 export type Indexer = ReturnType<typeof createIndexer>;
+
+/**
+ * History is extra: the score, limit and cycle counts come from the contract.
+ * An indexer that is down or stale (it has stalled before, #62) must not take
+ * a screen down with it, so screens get null and a flag instead.
+ */
+async function history<T>(
+  read: Promise<T | null>,
+): Promise<{ data: T | null; indexer: "ok" | "unavailable" }> {
+  try {
+    return { data: await read, indexer: "ok" };
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    return { data: null, indexer: "unavailable" };
+  }
+}
 
 /** PLAN §6.3: 150% at score 0 down to 80% at 100. */
 const ratioBps = (score: bigint) => 15_000n - (7_000n * score) / 100n;
@@ -144,9 +161,9 @@ export function createRoutes(deps: {
 
     "/me/activity": {
       GET: signedIn(async (user) => {
-        const onchain = await indexer<{ Activity: unknown[] }>(ACTIVITY, {
-          id: user.wallet.toLowerCase(),
-        });
+        const onchain = await history(
+          indexer<{ Activity: unknown[] }>(ACTIVITY, { id: user.wallet.toLowerCase() }),
+        );
         // money in flight that is not onchain yet
         const payments = await sql`
           SELECT id, kind, method, fiat_amount AS fiat, currency, ausd_amount AS ausd, status, created_at AS "createdAt"
@@ -154,7 +171,11 @@ export function createRoutes(deps: {
         const payouts = await sql`
           SELECT id, kind, fiat_amount AS fiat, currency, ausd_amount AS ausd, status, created_at AS "createdAt"
           FROM payouts WHERE user_id = ${user.id} AND status IN ('PENDING', 'SENT_ONCHAIN') ORDER BY created_at DESC`;
-        return { activity: onchain?.Activity ?? [], inFlight: [...payments, ...payouts] };
+        return {
+          activity: onchain.data?.Activity ?? [],
+          indexer: onchain.indexer,
+          inFlight: [...payments, ...payouts],
+        };
       }),
     },
 
@@ -177,9 +198,9 @@ export function createRoutes(deps: {
           chain.read.accountOf(wallet),
           chain.read.isVerified(wallet),
         ]);
-        const history = await indexer<{ Account_by_pk: unknown }>(VERIFY, {
-          id: wallet.toLowerCase(),
-        });
+        const past = await history(
+          indexer<{ Account_by_pk: unknown }>(VERIFY, { id: wallet.toLowerCase() }),
+        );
         return json({
           account: wallet,
           verified,
@@ -187,7 +208,8 @@ export function createRoutes(deps: {
           ratioBps: ratioBps(score),
           cycles: { counted: a.cycleCount, repaid: a.repayCount },
           defaulted: a.defaulted,
-          history: history?.Account_by_pk ?? null,
+          history: past.data?.Account_by_pk ?? null,
+          indexer: past.indexer,
         });
       },
     },

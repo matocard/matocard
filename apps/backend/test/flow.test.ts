@@ -439,6 +439,24 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(JSON.stringify(v.body)).not.toMatch(/A1234567|Passport|IDN/);
   });
 
+  test("an indexer that is down leaves /verify working from the contract", async () => {
+    const routes = createRoutes({
+      sql: db.sql,
+      chain,
+      fx: createFx(db.sql),
+      payments,
+      kyc: createKyc(db.sql, chain, config),
+      indexer: createIndexer("http://127.0.0.1:1/v1/graphql"),
+      wake: () => {},
+    });
+    const down = Bun.serve({ port: 0, routes, fetch: () => new Response("", { status: 404 }) });
+    const v = await fetch(`http://127.0.0.1:${down.port}/verify/${siti.address}`).then((r) =>
+      r.json(),
+    );
+    down.stop(true);
+    expect(v).toMatchObject({ verified: true, history: null, indexer: "unavailable" });
+  });
+
   test("every ledger entry balances, per currency", async () => {
     const rows = await db.sql`
       SELECT currency, sum(debit)::text AS debit, sum(credit)::text AS credit FROM ledger GROUP BY currency`;
