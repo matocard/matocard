@@ -75,8 +75,7 @@ If the vault's share price falls, limits fall with it. New draws are blocked whi
 
 | On testnet | Stands in for | Why |
 |---|---|---|
-| TestAUSD `0x642d…7C9a` | AUSD | Agora's testnet faucet is empty. Anyone can mint it; it is worth nothing and its name says so. It has AUSD's `permit` and ERC-3009 functions |
-| MockEarnAUSD `0xA523…72Ba` | earnAUSD | earnAUSD is mainnet only |
+| MockEarnAUSD `0xF93D…7C08` | earnAUSD | earnAUSD is mainnet only |
 
 ## What has been checked
 

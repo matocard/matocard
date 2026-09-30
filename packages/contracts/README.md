@@ -32,7 +32,7 @@ await walletClient.writeContract({ /* … */ functionName: "draw", args, gas: ga
 
 Each limit is the largest estimate Monad testnet gave for that call (first-time accounts, cycle-closing repayments) plus 25%. `markDefaulted` has never run on testnet, so estimate it. A Foundry test fails if a call's heaviest case outgrows its limit.
 
-**TestAUSD and ERC-3009.** `testAusdAbi` includes `permit` and the ERC-3009 functions (`transferWithAuthorization`, `receiveWithAuthorization`, `cancelAuthorization`) with the same selectors as AUSD on Monad testnet.
+**AUSD.** `monadTestnet.ausd` is Agora's AUSD. `testAusdAbi` has the same `permit` and ERC-3009 selectors (`transferWithAuthorization`, `receiveWithAuthorization`, `cancelAuthorization`), so it works as AUSD's ABI for those calls. Read the EIP-712 domain from `eip712Domain()`: AUSD's is named `Agora Dollar`, not `AUSD`.
 
 Add it to a workspace with `"@matocard/contracts": "workspace:*"`.
 
