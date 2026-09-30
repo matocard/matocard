@@ -22,7 +22,7 @@ What a borrower or lender has to trust, who they are trusting, and what bounds i
 | `RELAYER_ROLE` | `depositFor` (pulls AUSD from its own balance), `cancelPending` | Move settled collateral, pool AUSD or anyone's debt. `cancelPending` reaches only card top-ups still inside their hold, and returns them to the relayer |
 | Anyone | `repayFor`, `settlePending`, `markDefaulted` once overdue, `redeemPoolShares` | Anything that takes value from someone else |
 
-**On testnet one key holds all three roles** (`0x3B4f…85F5`, the deployer), so every trusted party above is currently the same key. Production splits them: admin behind a multisig and timelock, the KYC and relayer roles on the services' own keys with daily caps.
+**On testnet the admin is one key** (`0x3B4f…85F5`, the deployer), which also still holds the KYC and relayer roles for the demo scripts. The backend service has its own key, `0xcf33…7Df1`, with `KYC_ROLE` and `RELAYER_ROLE` only. Production keeps the admin behind a multisig and timelock and takes the deployer out of the service roles.
 
 ## What the admin can change, and when it bites
 
