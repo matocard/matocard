@@ -1,0 +1,25 @@
+name: Indexer health
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      max_lag:
+        description: Blocks behind the chain head that count as stale
+        default: "1500"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # opens an issue when the hosted indexer falls behind, closes it when it catches up
+      - run: apps/indexer/scripts/health.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAX_LAG: ${{ inputs.max_lag || '1500' }}
