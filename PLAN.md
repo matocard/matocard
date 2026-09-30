@@ -394,14 +394,14 @@ packages/
 
 | # | Question / risk | Impact | Action |
 |---|---|---|---|
-| Q1 | Does the Agora bounty accept testnet AUSD, or want their staging environment / mainnet? | Deploy target | Ask on Discord, day 1 |
-| Q2 | Is there a testnet AUSD faucet? | Without it the pool cannot be funded | **Yes, but empty.** Agora's faucet `0xd236c18d274e54faccc3dd9dda4b27965a73ee6c` drips 10,000 AUSD per `requestFunds(address)` (60 s apart, up to 100,000 held) and has reverted `InsufficientFunds()` since 25 Sep. Ask Agora to refill it or send AUSD to the deployer. Until then: TestAUSD, clearly labelled |
+| Q1 | Does the Agora bounty accept testnet AUSD, or want their staging environment / mainnet? | Deploy target | **Answered 29 Sep: yes**, Monad testnet AUSD is sufficient (Agora). |
+| Q2 | Is there a testnet AUSD faucet? | Without it the pool cannot be funded | **Resolved 30 Sep:** Agora refilled the faucet `0xd236…e6C` (10,000 AUSD per request, up to 100,000 held). The stack moves to real AUSD (#59). |
 | Q3 | Xendit test: MYR (Malaysia) + IDR disbursement from one account? | Decides the persona | If not: top up in IDR, keep cross-border via disbursement to another supported country, or flip the story (family in ID sends to Siti in MY) |
-| Q4 | Does a PWA count as the "mobile application" Agora asks for? | Native app vs PWA | Ask on day 1. Fallback: Mera has a React Native recipe, but only if they insist |
+| Q4 | Does a PWA count as the "mobile application" Agora asks for? | Native app vs PWA | **Answered 29 Sep: yes**, a PWA qualifies (Agora). |
 | Q5 | earnAUSD is not on testnet | Yield is mock-only | Real mechanism in the contract, mock vault stated plainly |
 | Q6 | Is the Record ramp (N=3) too slow for the demo? | Small limit jump on stage (100 → 108.61) | Also show the aged account (134.52); do not weaken the anti-farming standard |
 | Q7 | Agora partner yield-sharing programme | Extra business model (roadmap) | Mention in the write-up; negotiated per partner |
-| Q8 | Can we get sandbox access to Agora's Routes API? Docs list production only | D12 stays a write-up item unless we can call it | Ask Agora with Q1 and Q2 |
+| Q8 | Can we get sandbox access to Agora's Routes API? Docs list production only | D12 stays a write-up item unless we can call it | **No answer** from Agora; stays a write-up item. |
 | R1 | Card chargebacks | Pool losses | Contract hold + `cancelPending` + 3DS + debit only + amount caps. Chargebacks after the hold (up to ~120 days) remain an operator loss |
 | R2 | Relayer key leak | Fake deposits, drained drip funds | Minimum roles, daily caps, pause, reconciliation |
 | R3 | Vault value drops | Limit drops, user may go over-limit | Block new draws, no auto-default |
