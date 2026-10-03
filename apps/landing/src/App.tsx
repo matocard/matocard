@@ -100,7 +100,7 @@ const PILLARS: { title: string; blurb: string; src: string }[] = [
  * photographic hero alike without a plate behind it, which the sibling
  * `.webp` export, being opaque, cannot do.
  */
-const LOGO_SRC = "/logos/matocard-logo.png";
+const LOGO_SRC = "/matocard-logo.jpeg";
 
 const STAGGER_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 

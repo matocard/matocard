@@ -5,7 +5,7 @@ import "../index.css";
 export const metadata: Metadata = {
   title: "Matocard",
   description: "A card sized by what you have repaid, not what you hold. Built on Creditcoin.",
-  icons: { icon: "/logos/matocard-logo.png" },
+  icons: { icon: "/matocard-logo.jpeg" },
 };
 
 export const viewport: Viewport = {
