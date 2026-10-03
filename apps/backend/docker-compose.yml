@@ -2,8 +2,7 @@
 #   cp .env.example .env
 #   docker compose up -d --build        # everything in Docker
 #   docker compose up -d postgres       # only the database, for `bun run dev` and tests
-# On the VPS (#50), with API_DOMAIN set in .env:
-#   docker compose --profile vps up -d --build    # adds Caddy (HTTPS) and daily backups
+# On the VPS (#50), COMPOSE_FILE in .env adds docker-compose.vps.yml (HTTPS, daily backups)
 name: matocard-backend
 
 services:
@@ -42,45 +41,5 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  caddy:
-    build:
-      context: .
-      dockerfile: Caddy.Dockerfile
-    profiles: [vps]
-    restart: unless-stopped
-    depends_on: [backend]
-    # HTTPS only; 8443 on the Hostinger VPS, where another project holds 443
-    ports:
-      - "${HTTPS_PORT:-443}:443"
-    environment:
-      API_DOMAIN: ${API_DOMAIN:-localhost}
-      HOSTINGER_API_TOKEN: ${HOSTINGER_API_TOKEN:-}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy:/data
-
-  # a compressed dump every day, the last 14 kept: the ledger is money records
-  backup:
-    image: postgres:18.3
-    profiles: [vps]
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - ./backups:/backups
-    entrypoint:
-      - sh
-      - -c
-      - |
-        while true; do
-          pg_dump -h postgres -U postgres matocard | gzip > /backups/matocard-$$(date +%F).sql.gz \
-            && find /backups -name 'matocard-*.sql.gz' -mtime +14 -delete
-          sleep 86400
-        done
-
 volumes:
   pgdata:
-  caddy:

@@ -218,6 +218,15 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(forged.status).toBe(401);
   });
 
+  test("the app on another origin may call it", async () => {
+    const pre = await fetch(`${base}/me`, { method: "OPTIONS" });
+    expect(pre.status).toBe(204);
+    expect(pre.headers.get("access-control-allow-headers")).toContain("authorization");
+    const res = await fetch(`${base}/me`);
+    expect(res.status).toBe(401);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
   test("1–2. sign up and verify: identity onchain, MON dripped once", async () => {
     await verify(siti, "A1234567");
     const me = await call(siti, "GET", "/me");

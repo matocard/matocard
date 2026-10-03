@@ -6,6 +6,15 @@ import { body, json, UserError } from "./http";
 import type { Kyc } from "./kyc";
 import { type Payments, parseAuthorization } from "./payments";
 
+// ponytail: any origin. Sessions ride in the Authorization header, never cookies, so
+// another site can't act as the user; pin to the app's domain if cookies ever appear
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "authorization, content-type",
+  "access-control-max-age": "86400",
+};
+
 const MAX_SESSION_SECONDS = 7 * 24 * 3600;
 const SENDS_PER_DAY = 50;
 
@@ -139,12 +148,13 @@ export function createRoutes(deps: {
 }) {
   const { sql, chain, fx, payments, kyc, indexer, wake } = deps;
   type Handler = (req: Request & { params: Record<string, string> }) => Promise<Response>;
+  type Method = "GET" | "POST" | "OPTIONS";
   const signedIn =
     (handler: (user: User, req: Request) => Promise<unknown>): Handler =>
     async (req) =>
       json(await handler(await authenticate(sql, req), req));
 
-  const routes: Record<string, Partial<Record<"GET" | "POST", Handler>>> = {
+  const routes: Record<string, Partial<Record<Method, Handler>>> = {
     "/health": {
       GET: async () => {
         await sql`SELECT 1`;
@@ -269,21 +279,26 @@ export function createRoutes(deps: {
 
   // one error shape for every route; anything unexpected is logged, not shown
   for (const methods of Object.values(routes)) {
-    for (const [method, handler] of Object.entries(methods) as ["GET" | "POST", Handler][]) {
+    for (const [method, handler] of Object.entries(methods) as [Method, Handler][]) {
       methods[method] = async (req) => {
-        try {
-          return await handler(req);
-        } catch (error) {
-          if (error instanceof UserError) return json({ error: error.message }, error.status);
-          // the relayer's dry run refused it: the request was wrong, the reason is the contract's
-          if (error instanceof Error && error.message.includes(" would revert: ")) {
-            return json({ error: error.message }, 400);
+        const res = await (async () => {
+          try {
+            return await handler(req);
+          } catch (error) {
+            if (error instanceof UserError) return json({ error: error.message }, error.status);
+            // the relayer's dry run refused it: the request was wrong, the reason is the contract's
+            if (error instanceof Error && error.message.includes(" would revert: ")) {
+              return json({ error: error.message }, 400);
+            }
+            console.error(`${method} ${new URL(req.url).pathname}:`, error);
+            return json({ error: "something went wrong" }, 500);
           }
-          console.error(`${method} ${new URL(req.url).pathname}:`, error);
-          return json({ error: "something went wrong" }, 500);
-        }
+        })();
+        for (const [k, v] of Object.entries(CORS)) res.headers.set(k, v);
+        return res;
       };
     }
+    methods.OPTIONS = async () => new Response(null, { status: 204, headers: CORS });
   }
   return routes;
 }
