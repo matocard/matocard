@@ -62,11 +62,11 @@ export function DesktopNav({ account }: { account?: ReactNode }) {
       <div className={`${SHELL} flex h-16 items-center gap-4`}>
         <Link href="/home" className="inline-flex shrink-0 items-center gap-[9px]">
           <Image
-            src="/brand/matocard-logo.jpeg"
+            src="/brand/matocard-logo.png"
             alt=""
-            width={1024}
-            height={1024}
-            className="h-[28px] w-[28px] rounded-[9px]"
+            width={512}
+            height={512}
+            className="h-[24px] w-[24px]"
             priority
           />
           <span className="text-[17px] font-bold tracking-[-0.02em]">Matocard</span>

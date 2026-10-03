@@ -29,9 +29,12 @@ it is adapted, assume anything below talks to the old system:
 | `app/page.tsx` onboarding tour, `app/earn` | Axel's words, PLAN §3 flow |
 | `.env.example` variables | to be rewritten with the data layer |
 
-The logo is Matocard's own (`public/brand/matocard-logo.jpeg`, a copy of the landing's, and
-`app/icon.png` made from it). It is a dark mark on a white square, so on a dark surface such as the
-card face it reads as a white tile.
+The logo is Matocard's own, in `public/brand/` (copies of the landing's): `matocard-logo.png` (dark
+mark, transparent), `matocard-logo-white.png` (white mark, transparent, for dark surfaces such as
+the card face) and `matocard-logo.jpeg` (the source, a dark mark on a white square, kept for the
+onboarding's app-icon tile and the wallet modal). The favicon is the transparent pair, chosen by
+`prefers-color-scheme` in `app/layout.tsx`; there is deliberately no `app/icon.png`, which Next
+would add unconditionally.
 
 Product rules that the adaptation must meet are in the root `CLAUDE.md` (banned words, local
 currency headlines, always explain the limit) and PLAN §8 (the screen list).

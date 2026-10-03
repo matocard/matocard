@@ -70,11 +70,11 @@ export function CardArtwork({
 
       <span className="absolute right-[6%] top-[11%] flex items-center gap-1.5">
         <Image
-          src="/brand/matocard-logo.jpeg"
+          src="/brand/matocard-logo-white.png"
           alt=""
-          width={1024}
-          height={1024}
-          className="h-[22px] w-[22px] rounded-[7px]"
+          width={512}
+          height={512}
+          className="h-[18px] w-[18px]"
         />
         <span className="text-[11px] font-semibold tracking-[-0.02em] text-white/85">Matocard</span>
       </span>
