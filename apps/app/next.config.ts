@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Workspace packages ship TypeScript source (no build step), so Next compiles them with the app.
+  transpilePackages: ["@matocard/contracts", "@matocard/core"],
+
   allowedDevOrigins: [
     "tendentiously-impalpable-dede.ngrok-free.dev",
     "tapeless-overbill-upcountry.ngrok-free.dev",
