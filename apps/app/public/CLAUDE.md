@@ -3,7 +3,7 @@
 Served as is. Check a file's real type with `file` before adding it: Next sets `Content-Type` from
 the extension.
 
-- `brand/`: Matocard's logo (see `../CLAUDE.md`, Brand).
+- `brand/`: Matocard's transparent logo, dark and white (see `../CLAUDE.md`, Brand).
 - `tokens/`: `ausd.png` (Agora's AUSD mark, 256 px), `mon.svg` (Monad's MON, from
   monad.xyz/brand-page-assets) and `idr.svg` (a round Indonesian flag for the rupiah, drawn here)
   are Matocard's. The other token files serve the earlier screens and

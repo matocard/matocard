@@ -264,10 +264,10 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`${styles.brand} ${compact ? styles.brandCompact : ""}`}>
       <Image
-        src="/brand/matocard-logo.jpeg"
+        src="/brand/matocard-logo.png"
         alt="Matocard"
-        width={1024}
-        height={1024}
+        width={512}
+        height={512}
         className={styles.brandLogo}
         priority
       />

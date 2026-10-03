@@ -96,11 +96,11 @@ The verdict never comes through the iframe; the sheet polls the backend.
 
 ## Brand
 
-`public/brand/`: `matocard-logo.png` (dark mark, transparent), `matocard-logo-white.png` (white, for
-dark surfaces such as the card face), `matocard-logo.jpeg` (the source, a dark mark on a white
-square, kept for the onboarding's app-icon tile and the wallet modal). The favicon is the
-transparent pair, picked by `prefers-color-scheme` in `app/layout.tsx`; there is deliberately no
-`app/icon.png`. Monad, MON and AUSD marks are in `public/chains/monad.svg` and `public/tokens/`.
+`public/brand/`: `matocard-logo.png` (dark mark, transparent) and `matocard-logo-white.png` (white,
+for dark surfaces such as the card face). Every Matocard logo in the app is one of these two, never
+a mark on a white square, the same as the landing page (Axel, 4 Oct); the JPEG source lives only in
+`apps/landing/public`. The favicon is the transparent pair, picked by `prefers-color-scheme` in
+`app/layout.tsx`; there is deliberately no `app/icon.png`. Monad, MON and AUSD marks are in `public/chains/monad.svg` and `public/tokens/`.
 
 ## Lint
 

@@ -52,19 +52,19 @@
   font-size: 16px;
 }
 
+/* The transparent mark, cut tight to the letter, so it sits on the screen like the landing
+   page's header rather than on a white tile. */
 .brandLogo {
   display: block;
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
+  width: 40px;
+  height: 40px;
 }
 
 /* The header is a 42px back button, the mark, then a 42px skip button, so the mark sits
    dead centre on its own — do not give it a margin to "fix" the centring. */
 .brandCompact .brandLogo {
-  width: 60px;
-  height: 60px;
-  border-radius: 19px;
+  width: 32px;
+  height: 32px;
 }
 
 .brandIcon {
@@ -1130,9 +1130,8 @@
   }
 
   .brandCompact .brandLogo {
-    width: 52px;
-    height: 52px;
-    border-radius: 17px;
+    width: 28px;
+    height: 28px;
   }
 
   .welcomePreview {
@@ -1395,9 +1394,8 @@
   }
 
   .brandCompact .brandLogo {
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
+    width: 30px;
+    height: 30px;
   }
 
   .tourBody {
