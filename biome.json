@@ -16,6 +16,7 @@
       "!apps/indexer/generated",
       "!apps/indexer/.envio",
       "!apps/indexer/envio-env.d.ts",
+      "!apps/app/public",
       "!packages/contracts/src/abi"
     ]
   },
@@ -64,6 +65,14 @@
     {
       "includes": ["**/tsconfig*.json"],
       "json": { "parser": { "allowComments": true } }
+    },
+    {
+      "includes": ["**/*.css"],
+      "css": { "parser": { "tailwindDirectives": true } }
+    },
+    {
+      "includes": ["apps/landing/**/*.css", "apps/app/**/*.css"],
+      "linter": { "rules": { "suspicious": { "noUnknownAtRules": "off" } } }
     }
   ]
 }
