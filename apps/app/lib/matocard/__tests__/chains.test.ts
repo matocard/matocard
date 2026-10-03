@@ -59,17 +59,19 @@ test("the native coin is the chain's own, never ETH by default", () => {
   expect(NATIVE_SYMBOL[10004]).toBe("ETH");
 });
 
-test("BNB and AVAX have their own marks rather than falling back to MON", () => {
-  // `badgeForSymbol` returns MON for anything it does not know, so a missing entry does not break,
-  // it puts Monad's logo on someone else's money, which is worse than a broken image.
+test("AUSD, MON, BNB and AVAX have their own marks rather than the fallback", () => {
+  // `badgeForSymbol` returns AUSD for anything it does not know, so a missing entry does not
+  // break, it puts Agora's logo on someone else's money, which is worse than a broken image.
+  expect(badgeForSymbol("AUSD")).toBe("AUSD");
+  expect(badgeForSymbol("MON")).toBe("MON");
   expect(badgeForSymbol("BNB")).toBe("BNB");
   expect(badgeForSymbol("AVAX")).toBe("AVAX");
-  expect(badgeForSymbol("WOMBAT")).toBe("MON");
+  expect(badgeForSymbol("WOMBAT")).toBe("AUSD");
 });
 
 test("every native coin the hub lists can be named and badged", () => {
   for (const [id, name] of Object.entries(NATIVE_SYMBOL)) {
-    expect(badgeForSymbol(name), `${id} → ${name}`).not.toBe("MON");
+    expect(badgeForSymbol(name), `${id} → ${name}`).not.toBe("AUSD");
   }
 });
 

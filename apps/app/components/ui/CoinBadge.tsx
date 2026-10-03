@@ -4,15 +4,19 @@
    cannot also be there, hence file scope. */
 
 /**
- * Every symbol a screen can put a logo against. MON is Monad's own; ETH, BNB and AVAX are the
- * native coins of the chains collateral arrives from.
+ * Every symbol a screen can put a logo against. AUSD is Matocard's money (Agora's dollar on
+ * Monad) and MON is Monad's own coin. The rest are left from the earlier project's multi-chain
+ * screens and go when those screens are rewired.
  */
-export type TokenSym = "USDC" | "USDT" | "MON" | "ETH" | "BNB" | "AVAX";
+export type TokenSym = "AUSD" | "MON" | "USDC" | "USDT" | "MON" | "ETH" | "BNB" | "AVAX";
 
 // Official token logos under /public/tokens (USDC → Circle SVG, USDT → Tether, MON → Monad's
 // symbol, knocked out white on the brand black so it reads as a coin).
 // Real brand assets, so this is the one deliberate exception to the monochrome palette (PM-approved).
 const FILE: Record<TokenSym, string> = {
+  // Agora's AUSD mark, and Monad's MON token from monad.xyz/brand-page-assets.
+  AUSD: "/tokens/ausd.png",
+  MON: "/tokens/mon.svg",
   USDC: "/tokens/usdc.svg",
   USDT: "/tokens/usdt.svg",
   MON: "/tokens/mon.png",
@@ -28,7 +32,7 @@ const FILE: Record<TokenSym, string> = {
  *
  * The Sepolia collateral tokens are faucet stand-ins, so their symbols carry a `t` prefix (`tUSDC`,
  * `tWETH`) that no logo file is named after. Mapping happens here, once, rather than in each screen
- * that lists collateral. An unknown symbol falls back to MON rather than rendering a broken image.
+ * that lists collateral. An unknown symbol falls back to AUSD rather than rendering a broken image.
  */
 export function badgeForSymbol(symbol: string): TokenSym {
   const bare = symbol.replace(/^t/, "").toUpperCase();
@@ -37,7 +41,8 @@ export function badgeForSymbol(symbol: string): TokenSym {
   if (bare === "AVAX") return "AVAX";
   if (bare === "USDC") return "USDC";
   if (bare === "USDT") return "USDT";
-  return "MON";
+  if (bare === "MON") return "MON";
+  return "AUSD";
 }
 
 /**
@@ -56,7 +61,7 @@ export function CoinBadge({
   size?: number;
   className?: string;
 }) {
-  const key: TokenSym = token ?? "USDC";
+  const key: TokenSym = token ?? "AUSD";
   return (
     // biome-ignore lint/performance/noImgElement: static asset that must paint the moment the step appears; next/image defers it
     <img
