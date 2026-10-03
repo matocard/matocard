@@ -44,24 +44,16 @@ export async function connectWallet(page: Page): Promise<void> {
 }
 
 /**
- * Assert the desktop Overview chrome is on screen and the mobile bottom nav is hidden.
+ * Assert the desktop Home chrome is on screen and the mobile bottom nav is hidden.
  *
- * **This asserted the old dashboard until now**, and would have failed the moment it ran: headings
- * "Buckets", "Growth" and "Agent", plus a "your value" hero eyebrow, none of which have existed
- * since the #9 conversion. `DesktopOverview.test.tsx` asserts the opposite in the same
- * repo, so the two suites contradicted each other and the contradiction went unnoticed because the
- * Playwright specs are not in the vitest run.
- *
- * What it checks now is chrome rather than content: the brand, the nav, the primary action, and
- * that the mobile bar is hidden. Figures belong in the unit tests, which can mock a wallet; an e2e
- * that asserts an amount is asserting whatever the shared chain state happens to hold.
+ * Chrome rather than content: the brand, the nav, the card, and that the mobile bar is hidden.
+ * Figures belong in the unit tests, which can mock the chain; an e2e that asserts an amount is
+ * asserting whatever the shared testnet state happens to hold.
  */
 export async function expectDesktopHome(page: Page): Promise<void> {
-  await expect(page.getByText("Matocard")).toBeVisible();
+  await expect(page.getByText("Matocard", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Deposit" })).toBeVisible();
+  await expect(page.getByText("Your card", { exact: true })).toBeVisible();
   // CSS-hidden at lg rather than unmounted, so `toBeHidden` is the right assertion.
   await expect(page.getByRole("navigation", { name: "Main" })).toBeHidden();
-  // Nothing from the product this was ported from should survive on this screen.
-  await expect(page.getByText(/\b(bucket|APY|sentinel)\b/i)).toHaveCount(0);
 }

@@ -16,7 +16,7 @@ const BASE_URL = `http://localhost:${PORT}`;
  */
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: false, // MockVaultClient is a module singleton; specs share one dev server
+  fullyParallel: false, // specs share one dev server
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -42,7 +42,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm dev --port ${PORT}`,
+    command: `bun run dev -- --port ${PORT}`,
     url: BASE_URL,
     env: { NEXT_PUBLIC_E2E: "1" },
     reuseExistingServer: false,
