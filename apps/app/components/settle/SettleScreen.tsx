@@ -148,10 +148,12 @@ export function SettleScreen() {
           {backend.error ?? failed}
         </p>
       ) : null}
-      <p className="mt-auto pt-4 text-center text-[12px] text-muted">
-        What you owe is fixed in dollars. In rupiah it moves with the rate, so it can cost a little
-        more or less than when you spent it. Interest-free either way.
-      </p>
+      {owed === 0n ? null : (
+        <p className="mt-auto pt-4 text-center text-[12px] text-muted">
+          What you owe is fixed in dollars. In rupiah it moves with the rate, so it can cost a
+          little more or less than when you spent it. Interest-free either way.
+        </p>
+      )}
     </div>
   );
 }
