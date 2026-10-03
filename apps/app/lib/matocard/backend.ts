@@ -4,7 +4,9 @@
  * Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`, where the account
  * signed `sessionMessage(wallet, until)` once. No passwords and no cookies, which is why the
  * backend can allow any origin. Amounts come back as decimal strings in the smallest unit (AUSD:
- * 6 decimals, MYR: sen, IDR: rupiah); turn them into bigints with `big`, never `Number`.
+ * 6 decimals, IDR: whole rupiah); turn them into bigints with `big`, never `Number`. Every route,
+ * with real examples, is at https://api.matocard.xyz/docs (Swagger), and issue #71 maps them to
+ * screens.
  */
 
 /** Live at api.matocard.xyz; `NEXT_PUBLIC_MATOCARD_API_URL` points elsewhere (a local backend). */
@@ -14,11 +16,10 @@ export const API_URL = (
 
 /**
  * Where a cash-out's AUSD is sent: the backend relayer, which also holds the treasury. The backend
- * checks that a cash-out authorization pays exactly this address. Not served by the API yet, so it
- * is the relayer that credited the indexed top-ups (`TRUST.md`: `0xcf33…7Df1`).
+ * checks that a cash-out authorization pays exactly this address (issue #71, `TRUST.md`).
  */
 export const TREASURY = (process.env.NEXT_PUBLIC_TREASURY_ADDRESS ||
-  "0xcf330a7e5d4eae35250f00b4af96ebcf38347df1") as `0x${string}`;
+  "0xcf330A7E5D4eae35250f00B4af96eBcf38347Df1") as `0x${string}`;
 
 /** Must match `sessionMessage` in `apps/backend/src/api.ts` byte for byte. */
 export const sessionMessage = (wallet: string, until: number) =>
@@ -188,13 +189,16 @@ export const getQuote = (pair: Pair) => call<Quote>("/quote", { body: { pair } }
 export const startKyc = (session: Session) =>
   call<{ url: string }>("/kyc/session", { method: "POST", body: {}, session });
 
-/** A top-up in ringgit (`"600.00"`) at a locked quote; answers with Xendit's checkout. */
+/**
+ * A top-up in whole rupiah (`"50000"`, at least Rp 10,000) at a locked `USD/IDR` quote; answers
+ * with Xendit's checkout. Virtual account and QRIS count at once, a card waits out its hold.
+ */
 export const startTopUp = (
   session: Session,
   input: { amount: string; method: "card" | "bank" | "qr"; quoteId: string },
 ) => call<Checkout>("/topups", { body: input, session });
 
-/** Settles the whole debt in ringgit, rounded up, at a locked quote. */
+/** Settles the whole debt in rupiah, rounded up, at a locked `USD/IDR` quote. */
 export const startSettlement = (session: Session, quoteId: string) =>
   call<Checkout>("/settlements", { body: { quoteId }, session });
 
