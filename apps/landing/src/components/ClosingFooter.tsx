@@ -12,7 +12,7 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: "Do I spend my own money?",
     answer:
-      "No. What you put in stays as collateral and keeps earning. The card spends against it, and you pay back what you used.",
+      "No. What you put in stays as collateral, held as AUSD, a digital dollar by Agora, and keeps earning. The card spends against it, and you pay back what you used.",
   },
   {
     question: "How is my limit decided?",
@@ -101,7 +101,7 @@ export function ClosingFooter({ logoSrc, faqId }: { logoSrc: string; faqId?: str
               Keep it.
             </h2>
             <p className="mb-[30px] text-[0.95rem] font-normal opacity-85">
-              Lock your MON once and stop choosing between holding and paying
+              Top up once and stop choosing between saving and paying
             </p>
             <a
               href={APP_URL}
