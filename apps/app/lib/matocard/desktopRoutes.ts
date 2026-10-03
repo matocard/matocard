@@ -27,7 +27,10 @@ export function rendersOnDesktop(path: string): boolean {
     path.startsWith("/send/") ||
     // Repay. Same reason: there is no drawer for it, and it is the action the credit line exists
     // for, so bouncing it to Home made the product unusable on desktop rather than merely awkward.
-    path === "/pay"
+    path === "/pay" ||
+    // Matocard's top up and settle have no drawer either.
+    path === "/topup" ||
+    path === "/settle"
   );
 }
 
