@@ -50,6 +50,8 @@ Postgres and the backend listen on localhost only; Caddy is the one public door.
 
 ## API
 
+**Swagger: [`https://api.matocard.xyz/docs`](https://api.matocard.xyz/docs)**, from [`openapi.json`](openapi.json): every route with its request, response and errors, how to sign in, and the ERC-3009 domain. A test fails if a route is missing from it.
+
 Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`, where the account signs `sessionMessage(wallet, until)` from `src/api.ts` (at most 7 days ahead). Amounts are strings in the smallest unit (AUSD: 6 decimals, MYR: sen, IDR: rupiah).
 
 Every route answers CORS preflight and allows any origin: sessions ride in a header, never a cookie.

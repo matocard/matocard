@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { createRoutes } from "../src/api";
 import { identityHash } from "../src/kyc";
 import { methodOf } from "../src/payments";
 import { reconcile } from "../src/reconcile";
@@ -80,4 +81,13 @@ describe.skipIf(!hasDatabase)("reconciliation", () => {
       /INDEXER_URL/,
     );
   });
+});
+
+test("openapi.json documents every route", async () => {
+  const spec = await Bun.file(`${import.meta.dir}/../openapi.json`).json();
+  const documented = Object.keys(spec.paths).map((p) => p.replace(/\{\w+\}/g, ":id"));
+  const served = Object.keys(createRoutes({} as never)).filter(
+    (p) => p !== "/docs" && p !== "/openapi.json",
+  );
+  expect(documented.sort()).toEqual(served.sort());
 });

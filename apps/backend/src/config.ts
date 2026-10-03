@@ -35,7 +35,7 @@ export function loadConfig() {
       perUser: parseAmount(env("DAILY_CAP_USER_AUSD", "1000"), "AUSD"),
       global: parseAmount(env("DAILY_CAP_GLOBAL_AUSD", "20000"), "AUSD"),
     },
-    dripWei: parseEther(env("DRIP_MON", "0.1")),
+    dripWei: parseEther(env("DRIP_MON", "0.5")),
     indexerUrl: optional("INDEXER_URL"),
     xendit: {
       secretKey: optional("XENDIT_SECRET_KEY"),
