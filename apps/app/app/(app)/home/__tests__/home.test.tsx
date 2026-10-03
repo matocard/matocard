@@ -4,12 +4,9 @@ import userEvent from "@testing-library/user-event";
 import HomePage from "../page";
 
 /**
- * The phone Home, which is the layout the desktop one was rebuilt from.
- *
- * What these pin is the order and the shape of the actions, because both were changed deliberately:
- * they sit **above** the card artwork rather than below it, and they are pills sized to their labels
- * rather than two full-width buttons. The number is what the eye lands on; these are what it can do
- * about the number, and the card is the object being described rather than a thing to scroll past.
+ * Home on Matocard's own data: the chain (`useCredit`), the backend (`useMe`) and one display rate
+ * (`useFx`). What these pin is PLAN §3 step 4: the headline in rupiah with the AUSD row under it,
+ * the limit always explained, and debt in its dollar value with a way to settle.
  */
 
 const render = (ui: React.ReactNode) =>
@@ -28,190 +25,114 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(""),
 }));
 vi.mock("../../../../hooks/useIsDesktop", () => ({ useIsDesktop: () => false }));
-vi.mock("../../../../hooks/useWallet", () => ({
-  useWallet: () => ({ address: "0x56A2950ddE6B1040d1DCC4b4C4Fc314Bd56eFB0E", isConnected: true }),
+
+const credit = vi.fn();
+vi.mock("../../../../hooks/useCredit", () => ({ useCredit: () => credit() }));
+const me = vi.fn();
+vi.mock("../../../../hooks/useMe", () => ({ useMe: () => me() }));
+// PLAN §3's rate, so 100 AUSD reads Rp 1,600,000.
+vi.mock("../../../../hooks/useFx", () => ({ useFx: () => ({ rate: "16000" }) }));
+vi.mock("../../../../hooks/useMyActivity", () => ({
+  useMyActivity: () => ({ items: [], loading: false, indexerDown: false }),
 }));
 
-const cardAccount = vi.fn();
-vi.mock("../../../../hooks/useCardAccount", () => ({ useCardAccount: () => cardAccount() }));
-const creditLine = vi.fn();
-vi.mock("../../../../hooks/useCreditLine", () => ({ useCreditLine: () => creditLine() }));
-vi.mock("../../../../hooks/useCollateral", () => ({
-  useCollateral: () => ({ assets: [], totalValue: 0n, loading: false, error: false }),
-}));
-vi.mock("../../../../hooks/useRemoteCollateral", () => ({
-  useRemoteCollateral: () => ({ assets: [], loading: false, error: false, refresh: vi.fn() }),
-}));
-// Both Overviews are in the DOM now that the branch is CSS, so `SpendChart` renders here and
-// reaches for `binEvents` from this same module. Replacing the module wholesale removed it.
-vi.mock("../../../../hooks/useCreditHistory", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../../../hooks/useCreditHistory")>()),
-  useCreditHistory: () => ({ events: [], borrowed: 0n, loading: false, error: false }),
-}));
-vi.mock("../../../../hooks/useWalletAssets", () => ({
-  useWalletAssets: () => ({ loading: false, assets: [] }),
-}));
-vi.mock("../../../../hooks/useTransactions", () => ({
-  useTransactions: () => ({ loading: false, error: false, items: [] }),
-}));
-vi.mock("../../../../hooks/useKycStart", () => ({
-  useKycStart: () => ({
-    verify: vi.fn(),
-    url: null,
-    close: vi.fn(),
-    starting: false,
-    error: null,
-    clearError: vi.fn(),
-  }),
-}));
-vi.mock("wagmi", () => ({
-  useSwitchChain: () => ({ switchChainAsync: vi.fn(), isPending: false }),
-  useConfig: () => ({}),
-}));
-
-const VERIFIED = {
-  account: {
-    kyc: { verified: true, status: "Approved", sessionId: "s" },
-    card: { issued: true, spendableCtc: "36.3333" },
-    credit: { score: 0, limitCtc: "37.3333", availableCtc: "36.3333", drawnCtc: "1.0000" },
-    pendingDeposits: [],
-  },
-  error: null,
+/** The demo account at score 0: 150 AUSD of collateral, limit and available 100. */
+const verifiedCredit = (over: Record<string, unknown> = {}) => ({
   loading: false,
   refresh: vi.fn(),
-};
+  verified: true,
+  score: 0n,
+  ratioBps: 15_000n,
+  limit: 100_000_000n,
+  available: 100_000_000n,
+  drawn: 0n,
+  dueAt: 0n,
+  collateral: { value: 150_000_000n, shares: 150_000_000n, pendingShares: 0n, pendingUntil: 0n },
+  ausdBalance: 0n,
+  ...over,
+});
+
+const meState = (over: Record<string, unknown> = {}) => ({
+  session: { wallet: "0xA11CE", until: 9_999_999_999, signature: "0x" },
+  signIn: vi.fn(),
+  signingIn: false,
+  refresh: vi.fn(),
+  kyc: "approved",
+  collateral: { yield: 0n },
+  ...over,
+});
 
 beforeEach(() => {
-  vi.clearAllMocks();
-  cardAccount.mockReturnValue(VERIFIED);
-  creditLine.mockReturnValue({
-    drawn: 0n,
-    available: 33n,
-    loading: false,
-    availableLoading: false,
-  });
+  push.mockReset();
+  credit.mockReturnValue(verifiedCredit());
+  me.mockReturnValue(meState());
 });
 
-test("the actions sit above the card artwork", () => {
-  const { container } = render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  const spend = phone.getByRole("button", { name: "Send" });
-  const card = container.querySelector("[data-testid='card-artwork'], svg, img");
-  expect(spend).toBeInTheDocument();
-  // `compareDocumentPosition` rather than a class or index: it survives any amount of wrapper
-  // churn, and the only thing being asserted is that one comes before the other.
-  expect(
-    card && spend.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy();
-});
-
-test("nothing is owed: Send and Deposit, and no Repay", () => {
+test("the headline is what the card can spend, in rupiah, with the AUSD row under it", () => {
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  expect(phone.getByRole("button", { name: "Send" })).toBeInTheDocument();
-  expect(phone.getByRole("button", { name: "Deposit" })).toBeInTheDocument();
-  expect(phone.queryByRole("button", { name: "Repay" })).toBeNull();
+  expect(screen.getByText("Available")).toBeInTheDocument();
+  expect(screen.getByText("≈ Rp 1,600,000")).toBeInTheDocument();
+  expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
 });
 
-test("an open balance adds Repay last, and the order never moves", async () => {
-  const user = userEvent.setup();
-  creditLine.mockReturnValue({
-    drawn: 1_000_000_000_000_000_000n,
-    available: 5n,
-    loading: false,
-    availableLoading: false,
-  });
+test("the limit is explained: collateral, score, ratio, limit", () => {
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  // Send · Deposit · Repay, in that order and with Send still leading. Moving the primary around as
-  // state changes makes the row feel unstable: someone reaching for the same control twice should
-  // find it in the same place.
-  // Scoped to the phone tree: the branch is CSS now, so both Overviews are in the document and an
-  // unscoped query counts each control twice.
-  const labels = [...screen.getByTestId("home-mobile").querySelectorAll("button")]
-    .map((b) => b.textContent?.trim())
-    .filter((t) => t === "Send" || t === "Deposit" || t === "Repay");
-  expect(labels).toEqual(["Send", "Deposit", "Repay"]);
-
-  // No figure on the control. The balance is a fact about the account, not part of its name.
-  expect(phone.queryByRole("button", { name: /Repay .*tCTC/ })).toBeNull();
-
-  await user.click(phone.getByRole("button", { name: "Repay" }));
-  expect(push).toHaveBeenCalledWith("/pay");
+  const card = screen.getByText("Why your limit is this").closest("div") as HTMLElement;
+  expect(within(card).getByText("150.00 USD")).toBeInTheDocument();
+  expect(within(card).getByText("0 of 100")).toBeInTheDocument();
+  expect(within(card).getByText("150%")).toBeInTheDocument();
+  expect(within(card).getByText("100.00 USD")).toBeInTheDocument();
 });
 
-test("a limit still being read disables Spend as a wait, not a refusal", () => {
-  creditLine.mockReturnValue({
-    drawn: 0n,
-    available: undefined,
-    loading: true,
-    availableLoading: true,
-  });
+test("nothing owed: Send and Top up, no Settle", async () => {
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  expect(phone.queryByRole("button", { name: "Send" })).toBeNull();
-  expect(phone.getByRole("button", { name: "Deposit" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Send" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Top up" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Settle" })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Top up" }));
+  expect(push).toHaveBeenCalledWith("/topup");
 });
 
-test("an unverified holder is offered verification instead of the actions", () => {
-  cardAccount.mockReturnValue({
-    ...VERIFIED,
-    account: {
-      ...VERIFIED.account,
-      kyc: { verified: false, status: "Not Started", sessionId: null },
-    },
-  });
+test("a balance owed shows in dollars, and Settle leads to settling", async () => {
+  credit.mockReturnValue(verifiedCredit({ drawn: 50_000_000n, available: 50_000_000n }));
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  expect(phone.getByRole("button", { name: /verify identity/i })).toBeInTheDocument();
-  expect(phone.queryByRole("button", { name: "Send" })).toBeNull();
-  expect(phone.queryByRole("button", { name: "Deposit" })).toBeNull();
+  expect(screen.getByText("50.00 USD")).toBeInTheDocument();
+  const settles = screen.getAllByRole("button", { name: "Settle" });
+  expect(settles.length).toBe(2); // the action pill and the owed card
+  await userEvent.click(settles[0] as HTMLElement);
+  expect(push).toHaveBeenCalledWith("/settle");
 });
 
-test("the overflow opens what has nowhere else to sit on Home", async () => {
-  const user = userEvent.setup();
+test("an unread figure is a dash, never a zero", () => {
+  credit.mockReturnValue(verifiedCredit({ available: undefined }));
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  await user.click(phone.getByRole("button", { name: "More" }));
-
-  // The sheet is portalled, so it lands outside the tree that opened it: these stay global.
-  expect(screen.getByText("All transactions")).toBeInTheDocument();
-  expect(screen.getByText("Get test tokens")).toBeInTheDocument();
+  expect(screen.getByText("—")).toBeInTheDocument();
+  expect(screen.queryByText(/0\.00 USD · AUSD/)).not.toBeInTheDocument();
 });
 
-test("the overflow offers withdraw only for collateral that can actually come back", async () => {
-  const user = userEvent.setup();
+test("before verification, the card is not issued and the next step is offered", async () => {
+  const signIn = vi.fn();
+  credit.mockReturnValue(verifiedCredit({ verified: false }));
+  me.mockReturnValue(meState({ session: null, kyc: undefined, signIn }));
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
-
-  await user.click(phone.getByRole("button", { name: "More" }));
-
-  // This wallet holds nothing on a Wormhole chain in these mocks, so there is nothing to take back.
-  // Attestcoin collateral is never offered here: `approveRelease` is operator-gated, and a control
-  // that ends in "ask us" is worse than no control.
-  expect(phone.queryByText(/Take back/)).toBeNull();
+  expect(screen.getByText("Not issued yet")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+  expect(signIn).toHaveBeenCalled();
 });
 
-test("Send is live as soon as the figure beside it is, not when the slowest read lands", () => {
-  // The bug: `loading` is an OR across limitOf, availableOf and accountOf, and `accountOf` returns
-  // a struct and lands last. Send was gated on all three, so the screen showed "Spendable
-  // 35.0097 tCTC" beside a spinner that refused to let anyone spend it, for seconds.
-  creditLine.mockReturnValue({
-    drawn: 0n,
-    available: 33n,
-    loading: true,
-    availableLoading: false,
-  });
+test("a verification in progress says so instead of asking again", () => {
+  credit.mockReturnValue(verifiedCredit({ verified: false }));
+  me.mockReturnValue(meState({ kyc: "pending" }));
   render(<HomePage />);
-  const phone = within(screen.getByTestId("home-mobile"));
+  expect(screen.getByText("Checking your identity")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Verify identity" })).not.toBeInTheDocument();
+});
 
-  const send = phone.getByRole("button", { name: "Send" });
-  expect(send).toBeInTheDocument();
-  expect(send).toBeEnabled();
+test("money received shows as a balance, in AUSD on the detail row", () => {
+  credit.mockReturnValue(verifiedCredit({ ausdBalance: 50_000_000n }));
+  render(<HomePage />);
+  expect(screen.getByText("Balance")).toBeInTheDocument();
+  expect(screen.getByText("50.00 USD · AUSD")).toBeInTheDocument();
+  expect(screen.getByText("≈ Rp 800,000")).toBeInTheDocument();
 });
