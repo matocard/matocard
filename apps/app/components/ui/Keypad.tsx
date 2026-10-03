@@ -39,7 +39,8 @@ export function Keypad({
   value: string;
   onChange: (next: string) => void;
   symbol: string;
-  onQuick: (pct: number) => void;
+  /** The 10% / 50% / Max row. Omit it where a share of something means nothing, such as a top-up. */
+  onQuick?: (pct: number) => void;
   invalid?: boolean;
   hint?: string;
 }) {
@@ -131,24 +132,26 @@ export function Keypad({
           </div>
         )}
       </div>
-      <div className="mb-2 flex gap-2.5">
-        {(
-          [
-            ["10%", 0.1],
-            ["50%", 0.5],
-            ["Max", 1],
-          ] as const
-        ).map(([label, pct]) => (
-          <button
-            type="button"
-            key={label}
-            onClick={() => onQuick(pct)}
-            className="h-[52px] flex-1 rounded-[18px] bg-pill text-[15px] font-semibold text-ink"
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {onQuick ? (
+        <div className="mb-2 flex gap-2.5">
+          {(
+            [
+              ["10%", 0.1],
+              ["50%", 0.5],
+              ["Max", 1],
+            ] as const
+          ).map(([label, pct]) => (
+            <button
+              type="button"
+              key={label}
+              onClick={() => onQuick(pct)}
+              className="h-[52px] flex-1 rounded-[18px] bg-pill text-[15px] font-semibold text-ink"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className="mb-3.5 grid grid-cols-3 gap-0.5">
         {KEYS.map((k) => (
           <button
