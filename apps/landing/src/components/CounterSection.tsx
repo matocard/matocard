@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useInViewAnimation } from "../hooks/useInViewAnimation";
 import { CurvedDivider } from "./CurvedDivider";
 
-const GLOBE_VIDEO =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260625_213350_6343fcfb-2892-4dcc-8573-1161447cacf5.mp4";
+// Served from public/, sized to the 1080px box it plays in.
+const GLOBE_VIDEO = "/counter.mp4";
 
 const STATS: { value: number; suffix: string; description: string }[] = [
   { value: 6, suffix: "", description: "Chains you can lock on, and the asset stays on its own" },
