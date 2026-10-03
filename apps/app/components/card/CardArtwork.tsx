@@ -70,7 +70,7 @@ export function CardArtwork({
 
       <span className="absolute right-[6%] top-[11%] flex items-center gap-1.5">
         <Image
-          src="/brand/matocard-logo.png"
+          src="/brand/matocard-logo.jpeg"
           alt=""
           width={1024}
           height={1024}

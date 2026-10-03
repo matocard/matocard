@@ -29,7 +29,9 @@ it is adapted, assume anything below talks to the old system:
 | `app/page.tsx` onboarding tour, `app/earn` | Axel's words, PLAN §3 flow |
 | `.env.example` variables | to be rewritten with the data layer |
 
-Logos and card artwork under `public/brand` are placeholders until Matocard's logo exists.
+The logo is Matocard's own (`public/brand/matocard-logo.jpeg`, a copy of the landing's, and
+`app/icon.png` made from it). It is a dark mark on a white square, so on a dark surface such as the
+card face it reads as a white tile.
 
 Product rules that the adaptation must meet are in the root `CLAUDE.md` (banned words, local
 currency headlines, always explain the limit) and PLAN §8 (the screen list).

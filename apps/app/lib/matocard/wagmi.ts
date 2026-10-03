@@ -172,7 +172,7 @@ export const metadata = {
   description: "A card sized by what you have repaid, not what you hold.",
   // Wallets verify this against the origin they were opened from.
   url: typeof window === "undefined" ? "https://app.matocard.xyz" : window.location.origin,
-  icons: ["https://app.matocard.xyz/brand/matocard-logo.png"],
+  icons: ["https://app.matocard.xyz/brand/matocard-logo.jpeg"],
 };
 
 /** `ssr: true` is required under the App Router: without it wagmi hydrates from an empty state and
