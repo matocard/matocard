@@ -51,8 +51,8 @@ apps/app (Next PWA) ──HTTPS──▶ apps/backend (Bun + Postgres, VPS)
   reconciliation. It indexes credit-line events only, so a plain AUSD transfer to someone (Mom
   receiving) does not appear there.
 - **Backend** composes one answer per screen (`/me`, `/me/activity`, `/verify/:wallet`) and runs
-  every fiat leg. Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`; see
-  `apps/backend/CLAUDE.md`.
+  every fiat leg. Live at `https://api.matocard.xyz` (VPS, CORS open to any origin). Signed-in
+  routes take `Authorization: Matocard <wallet>.<until>.<signature>`; see `apps/backend/CLAUDE.md`.
 
 Live addresses: `packages/contracts/src/addresses.ts` (the proxy is
 `0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a`, AUSD `0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`).
@@ -75,9 +75,6 @@ Indexer GraphQL: `apps/indexer/README.md` holds the current URL; it changes on e
   Agora bounty want Mera passkey onboarding. Mera yields a plain viem `LocalAccount`
   (`@category-labs/mera/viem`), so it can sit behind wagmi later as a connector. Decide before the
   user tests on 9 Oct, and fix the app's final domain first: a passkey is bound to its domain.
-- **CORS.** The backend sends no CORS headers and answers no `OPTIONS`, so a browser on another
-  origin cannot call it with an `Authorization` header. Either a Next rewrite proxies it, or Kiel
-  adds CORS.
 
 ## Workspace
 
@@ -98,7 +95,7 @@ Commits are small and conventional, scoped by area: `feat(app): ...`, `fix(index
 
 | | |
 | --- | --- |
-| `apps/app/CLAUDE.md` | the cardholder app, and how much of it is still from an earlier project |
+| `apps/app/CLAUDE.md` | the cardholder app on Monad, the rebuild order, and a note per folder |
 | `apps/landing/CLAUDE.md` | the marketing page and its scroll-locked hero |
 | `apps/backend/CLAUDE.md` | routes, auth, and how money moves |
 | `apps/indexer/CLAUDE.md` | Envio deployments and what is (not) indexed |

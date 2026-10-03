@@ -35,7 +35,8 @@ bun test                                        # DATABASE_URL; relayer + e2e te
 - **`/settlements` charges the whole debt** in MYR, rounded up. A partial repayment is a user
   transaction (`repayWithPermit`, `repayFromCollateral`), not a backend route.
 - **A cash-out authorization must pay the relayer's address**, which no route returns yet.
-- **No CORS.** Routes answer only GET and POST and send no CORS headers.
+- **Live at `https://api.matocard.xyz`.** CORS allows any origin with `Authorization` and
+  `Content-Type` (sessions ride in that header, never cookies), so the app calls it directly.
 - Without Xendit or Didit keys those routes answer 503; the rest still works.
 
 ## How money moves
