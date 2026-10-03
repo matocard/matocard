@@ -8,9 +8,12 @@ Product-agnostic and kept: `useWallet` (the only answer to who is connected), `u
 
 Being replaced for Matocard (see `../CLAUDE.md`):
 
-- `useCreditLine` becomes a hook on `MatoCreditLine` (Monad testnet): `limitOf`, `availableOf`,
-  `scoreOf`, `accountOf`, `collateralOf`, `collateralValueOf`, the AUSD balance, and the user's own
-  writes `draw(amount, to)`, `repayWithPermit`, `repayFromCollateral`, `withdrawCollateral`.
+- `useCreditLine` is replaced by **`useCredit`** (done): one multicall on `MatoCreditLine` (Monad
+  testnet) for verified, score, ratio, limit, available, debt, due date, cycles, collateral (with
+  card holds) and the AUSD and MON balances, plus the user's own writes `draw(amount, to)`,
+  `repay` (AUSD permit, one transaction), `repayFromCollateral` and `withdrawCollateral`. Each write
+  switches to Monad, sends the published gas limit and resolves only after reading the change back.
+  Checked live against the demo account: score 55, limit 134.529147 on 150 AUSD.
 - `useCardAccount`, `useCardSecrets`, `useKycStart` move to the backend's signed routes (`/me`,
   `/kyc/session`).
 - `useTransactions`, `useCreditHistory`, `useLimitHistory` move to the indexer's `Activity`,
