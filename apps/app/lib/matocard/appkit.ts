@@ -33,8 +33,7 @@ export function getAppKit(): Promise<AppKit> {
       instance = createAppKit({
         adapters: [wagmiAdapter],
         networks,
-        // Sepolia, the first entry, is what AppKit connects on. See the ordering note in wagmi.ts:
-        // leading with Monad fails the connect for any wallet that has not added CC3.
+        // Monad testnet, the first entry. See the ordering note in wagmi.ts.
         defaultNetwork: networks[0],
         projectId,
         metadata,

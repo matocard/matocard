@@ -14,9 +14,33 @@ import type { Config } from "wagmi";
  * when this landed; do not add it back alongside this file.
  *
  * Networks are declared here rather than imported from `viem/chains` because AppKit needs the CAIP
- * shape (`caipNetworkId`, `chainNamespace`) that plain viem chains do not carry, and because
- * Monad is not in viem's chain list at all.
+ * shape (`caipNetworkId`, `chainNamespace`) that plain viem chains do not carry.
+ *
+ * Monad testnet is Matocard's only chain. The networks after it are left from the earlier
+ * project's screens and go once nothing reads them.
  */
+
+/** Monad's public testnet RPC. Override with `NEXT_PUBLIC_MONAD_RPC_URL` if it rate-limits a demo. */
+export const MONAD_RPC = process.env.NEXT_PUBLIC_MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
+
+/** Monad testnet, where the credit line, AUSD and the yield vault live (`@matocard/contracts`). */
+export const monadTestnet: AppKitNetwork = {
+  id: 10143,
+  caipNetworkId: "eip155:10143",
+  chainNamespace: "eip155",
+  name: "Monad Testnet",
+  nativeCurrency: { name: "Testnet MON", symbol: "MON", decimals: 18 },
+  // `default` feeds the modal and viem's transport; `chainDefault` is what AppKit's
+  // `wallet_addEthereumChain` reads. Omit the second and the add-chain prompt sends an empty
+  // rpcUrls array, which every wallet rejects.
+  rpcUrls: { default: { http: [MONAD_RPC] }, chainDefault: { http: [MONAD_RPC] } },
+  // The explorer every README and run record in this repo links to.
+  blockExplorers: { default: { name: "MonadVision", url: "https://testnet.monadvision.com" } },
+  contracts: {
+    multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11", blockCreated: 251449 },
+  },
+  testnet: true,
+};
 
 /** Monad CC3 testnet. Chain id and RPC match `contracts/foundry.toml`. */
 export const monadTestnet: AppKitNetwork = {
@@ -146,16 +170,12 @@ export const avalancheFuji: AppKitNetwork = {
 };
 
 /**
- * Sepolia leads, and that ordering is load-bearing rather than alphabetical.
- *
- * AppKit connects on whichever network is active and its adapter fires `wallet_switchEthereumChain`
- * during connect without ever offering to ADD an unknown chain. Lead with Monad and every
- * wallet that has not already added CC3 fails the connect outright with "Connection declined".
- * Sepolia ships in every wallet, so that switch always succeeds; `selectMonad()` in
- * `lib/wallet-reown.ts` moves the session over afterwards, through the one code path that does
- * fall back to `wallet_addEthereumChain`.
+ * Monad leads: it is AppKit's default network. `selectMonad()` in `lib/wallet-reown.ts` also
+ * switches to it after connect, through `switchChain`, which falls back to
+ * `wallet_addEthereumChain` for a wallet that does not know Monad testnet yet.
  */
 export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
+  monadTestnet,
   sepolia,
   monadTestnet,
   baseSepolia,

@@ -45,12 +45,12 @@ export function getWalletId(): string {
 }
 
 /**
- * Moves the connected wallet onto Monad, adding the chain when the wallet does not know it.
+ * Moves the connected wallet onto Monad testnet, adding the chain when the wallet does not know it.
  *
- * This has to happen after connecting rather than through `defaultNetwork`, because the two code
- * paths differ: AppKit's connect-time switch throws on an unrecognised chain, while `switchChain`
- * falls back to `wallet_addEthereumChain`. A refusal here is not a failed connection: the user
- * stays on Sepolia, where the collateral lives anyway, and can switch later.
+ * This happens after connecting as well as through `defaultNetwork`, because the two code paths
+ * differ: AppKit's connect-time switch can throw on an unrecognised chain, while `switchChain`
+ * falls back to `wallet_addEthereumChain`. A refusal here is not a failed connection: reads still
+ * go to Monad over its own RPC, and a transaction asks to switch again before it is sent.
  */
 async function selectMonad(): Promise<void> {
   try {
