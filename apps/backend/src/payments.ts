@@ -40,21 +40,22 @@ type PayoutRow = {
   };
 };
 
+/** A POST with `body`, a GET without. */
 async function xendit(
   key: string | undefined,
   path: string,
-  body: unknown,
+  body?: unknown,
   headers: Record<string, string> = {},
 ) {
   if (!key) throw new UserError("Xendit is not configured on this server", 503);
   const res = await fetch(`${XENDIT}${path}`, {
-    method: "POST",
+    method: body === undefined ? "GET" : "POST",
     headers: {
       authorization: `Basic ${btoa(`${key}:`)}`,
       "content-type": "application/json",
       ...headers,
     },
-    body: JSON.stringify(body),
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
   if (!res.ok) throw new Error(`Xendit ${path} answered ${res.status}: ${text}`);
@@ -142,8 +143,31 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
     };
   }
 
+  /**
+   * `payment_session.completed` does not say how the payer paid, and it can
+   * arrive before the payment's own webhook. The session's payment request does.
+   */
+  async function channelOf(reference: string): Promise<string | null> {
+    const [p] = await sql`SELECT provider_session_id FROM payments WHERE id = ${reference}`;
+    if (!p?.provider_session_id) return null;
+    const session = await xendit(x.secretKey, `/sessions/${p.provider_session_id}`);
+    if (!session.latest_payment_request_id) return null;
+    const request = await xendit(
+      x.secretKey,
+      `/v3/payment_requests/${session.latest_payment_request_id}`,
+      undefined,
+      { "api-version": "2024-11-11" },
+    );
+    return request.channel_code ? String(request.channel_code) : null;
+  }
+
   async function paid(reference: unknown, paymentId: unknown, channel: unknown) {
     if (typeof reference !== "string" || !/^[0-9a-f-]{36}$/.test(reference)) return;
+    // a failed lookup leaves it unknown, which holds it as a card: the safe side
+    channel ||= await channelOf(reference).catch((e) => {
+      console.error(`channel of ${reference}:`, e instanceof Error ? e.message : e);
+      return null;
+    });
     const [row] = await sql`
       UPDATE payments SET status = 'PAID', provider_event_id = ${String(paymentId ?? reference)},
         channel_code = ${channel ? String(channel) : null}, method = ${methodOf(channel)}

@@ -35,6 +35,11 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Promise<R
   const url = new URL(input instanceof Request ? input.url : input);
   const reply = (body: unknown) => Promise.resolve(Response.json(body));
   if (url.host === "api.xendit.co") {
+    // what Xendit has on a session and its payment request, for the channel lookup
+    if (url.pathname.startsWith("/sessions/"))
+      return reply({ latest_payment_request_id: `pr-${url.pathname.split("/")[2]}` });
+    if (url.pathname.startsWith("/v3/payment_requests/"))
+      return reply({ channel_code: "BCA_VIRTUAL_ACCOUNT" });
     const body = JSON.parse(String(init?.body));
     xenditCalls.push({ path: url.pathname, body, headers: new Headers(init?.headers) });
     if (url.pathname === "/sessions") {
@@ -335,14 +340,11 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
       method: "card",
       quoteId: quote.body.id,
     });
-    // picked card in the app, paid by virtual account: the channel decides, so no hold
+    // picked card in the app, paid by virtual account: the channel decides, so no hold.
+    // The session webhook has no channel_code; it is looked up on the payment request
     await xenditHook({
       event: "payment_session.completed",
-      data: {
-        reference_id: topup.body.paymentId,
-        payment_id: "py-2",
-        channel_code: "BCA_VIRTUAL_ACCOUNT",
-      },
+      data: { reference_id: topup.body.paymentId, payment_id: "py-2" },
     });
     await work();
     const me = await call(siti, "GET", "/me");
