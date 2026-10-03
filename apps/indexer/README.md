@@ -51,7 +51,7 @@ Every deployment gets a new URL. Update the GraphQL row above and tell the app a
 
 ## Health check
 
-`.github/workflows/indexer-health.yml` runs `scripts/health.sh` every 30 minutes. If the hosted indexer is more than 1,500 blocks behind the chain head (about ten minutes) or does not answer, it opens one issue titled *Indexer is behind the chain*; when the indexer catches up, it closes that issue. The endpoint it checks is `INDEXER_URL` in `.env.example`, so update that line whenever the deployment changes. `DRY_RUN=1 scripts/health.sh` checks by hand.
+`.github/workflows/indexer-health.yml` runs `scripts/health.sh` on a 30-minute schedule. GitHub delays scheduled runs when it is busy, and in practice they have come every three to six hours, so a stall can go unnoticed that long: check `_meta` by hand before recording a demo or a judging window. If the hosted indexer is more than 1,500 blocks behind the chain head (about ten minutes) or does not answer, it opens one issue titled *Indexer is behind the chain*; when the indexer catches up, it closes that issue. The endpoint it checks is `INDEXER_URL` in `.env.example`, so update that line whenever the deployment changes. `DRY_RUN=1 scripts/health.sh` checks by hand.
 
 ## Self-hosting
 
