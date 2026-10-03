@@ -40,7 +40,7 @@ export function loadConfig() {
     xendit: {
       secretKey: optional("XENDIT_SECRET_KEY"),
       callbackToken: optional("XENDIT_CALLBACK_TOKEN"),
-      // Xendit needs an account per country of origin: MY collects MYR, ID pays out IDR
+      // one account collects and pays out; a second only if collecting moves to another country
       payoutSecretKey: optional("XENDIT_PAYOUT_SECRET_KEY") ?? optional("XENDIT_SECRET_KEY"),
       payoutCallbackToken:
         optional("XENDIT_PAYOUT_CALLBACK_TOKEN") ?? optional("XENDIT_CALLBACK_TOKEN"),

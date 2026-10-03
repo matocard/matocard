@@ -272,17 +272,17 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
   });
 
   test("3. a card top-up is credited once, as pending collateral, however often Xendit calls", async () => {
-    const quote = await call(null, "POST", "/quote", { pair: "USD/MYR" });
+    const quote = await call(null, "POST", "/quote", { pair: "USD/IDR" });
     const topup = await call(siti, "POST", "/topups", {
-      amount: "600",
+      amount: "2400000",
       method: "card",
       quoteId: quote.body.id,
     });
     expect(topup.status).toBe(200);
     expect(topup.body.ausd).toBe("150000000");
     expect(xenditCalls.at(-1)?.body).toMatchObject({
-      amount: 600,
-      currency: "MYR",
+      amount: 2400000,
+      currency: "IDR",
       allowed_payment_channels: ["CARDS"],
     });
 
@@ -313,8 +313,8 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(postings.map((r: { currency: string }) => r.currency).sort()).toEqual([
       "AUSD",
       "AUSD",
-      "MYR",
-      "MYR",
+      "IDR",
+      "IDR",
     ]);
   });
 
@@ -329,16 +329,20 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
   });
 
   test("4. a bank top-up counts at once: 150 AUSD at score 0 gives a limit of 100", async () => {
-    const quote = await call(null, "POST", "/quote", { pair: "USD/MYR" });
+    const quote = await call(null, "POST", "/quote", { pair: "USD/IDR" });
     const topup = await call(siti, "POST", "/topups", {
-      amount: "600",
+      amount: "2400000",
       method: "card",
       quoteId: quote.body.id,
     });
-    // picked card in the app, paid by FPX: the channel decides, so no hold
+    // picked card in the app, paid by virtual account: the channel decides, so no hold
     await xenditHook({
       event: "payment_session.completed",
-      data: { reference_id: topup.body.paymentId, payment_id: "py-2", channel_code: "MAYB2U_FPX" },
+      data: {
+        reference_id: topup.body.paymentId,
+        payment_id: "py-2",
+        channel_code: "BCA_VIRTUAL_ACCOUNT",
+      },
     });
     await work();
     const me = await call(siti, "GET", "/me");
@@ -352,7 +356,7 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
   });
 
   test("an expired quote is refused", async () => {
-    const quote = await call(null, "POST", "/quote", { pair: "USD/MYR" });
+    const quote = await call(null, "POST", "/quote", { pair: "USD/IDR" });
     await db.sql`UPDATE fx_quotes SET expires_at = now() - interval '1 second' WHERE id = ${quote.body.id}`;
     const topup = await call(siti, "POST", "/topups", {
       amount: "10",
@@ -362,22 +366,22 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(topup).toEqual({ status: 400, body: { error: "quote expired, ask for a new one" } });
   });
 
-  test("5–6. draw 50 to Mom, then settle in MYR: debt cleared by the relayer", async () => {
+  test("5–6. draw 50 to Mom, then settle in IDR: debt cleared by the relayer", async () => {
     await sendAs(siti, {
       address: anvil.creditLine,
       abi: matoCreditLineAbi,
       functionName: "draw",
       args: [50_000_000n, mom.address],
     } as never);
-    const quote = await call(null, "POST", "/quote", { pair: "USD/MYR" });
+    const quote = await call(null, "POST", "/quote", { pair: "USD/IDR" });
     const settle = await call(siti, "POST", "/settlements", { quoteId: quote.body.id });
-    expect(settle.body).toMatchObject({ fiat: "20000", ausd: "50000000" }); // RM 200.00
+    expect(settle.body).toMatchObject({ fiat: "800000", ausd: "50000000" }); // Rp 800,000
     await xenditHook({
       event: "payment_session.completed",
       data: {
         reference_id: settle.body.paymentId,
         payment_id: "py-3",
-        channel_code: "DUITNOW_PAY",
+        channel_code: "BRI_VIRTUAL_ACCOUNT",
       },
     });
     await work();

@@ -6,6 +6,8 @@ import { hasDatabase, testDatabase } from "./harness";
 
 test("the paid channel decides the hold; unknown means card", () => {
   expect(methodOf("CARDS")).toBe("card");
+  expect(methodOf("BCA_VIRTUAL_ACCOUNT")).toBe("bank");
+  expect(methodOf("QRIS")).toBe("qr");
   expect(methodOf("MAYB2U_FPX")).toBe("bank");
   expect(methodOf("CIMB_FPX_BUSINESS")).toBe("bank");
   expect(methodOf("DUITNOW_PAY")).toBe("bank");
