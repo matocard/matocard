@@ -5,10 +5,11 @@
 
 /**
  * Every symbol a screen can put a logo against. AUSD is Matocard's money (Agora's dollar on
- * Monad) and MON is Monad's own coin. The rest are left from the earlier project's multi-chain
- * screens and go when those screens are rewired.
+ * Monad), MON is Monad's own coin (fees, dripped after KYC) and IDR is the rupiah a top-up is paid
+ * in. The rest are left from the earlier project's multi-chain screens and go when those screens
+ * are rewired.
  */
-export type TokenSym = "AUSD" | "MON" | "USDC" | "USDT" | "MON" | "ETH" | "BNB" | "AVAX";
+export type TokenSym = "AUSD" | "MON" | "IDR" | "USDC" | "USDT" | "MON" | "ETH" | "BNB" | "AVAX";
 
 // Official token logos under /public/tokens (USDC → Circle SVG, USDT → Tether, MON → Monad's
 // symbol, knocked out white on the brand black so it reads as a coin).
@@ -17,6 +18,8 @@ const FILE: Record<TokenSym, string> = {
   // Agora's AUSD mark, and Monad's MON token from monad.xyz/brand-page-assets.
   AUSD: "/tokens/ausd.png",
   MON: "/tokens/mon.svg",
+  // A currency, not a token: the round Indonesian flag.
+  IDR: "/tokens/idr.svg",
   USDC: "/tokens/usdc.svg",
   USDT: "/tokens/usdt.svg",
   MON: "/tokens/mon.png",
@@ -42,6 +45,7 @@ export function badgeForSymbol(symbol: string): TokenSym {
   if (bare === "USDC") return "USDC";
   if (bare === "USDT") return "USDT";
   if (bare === "MON") return "MON";
+  if (bare === "IDR") return "IDR";
   return "AUSD";
 }
 

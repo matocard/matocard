@@ -59,11 +59,12 @@ test("the native coin is the chain's own, never ETH by default", () => {
   expect(NATIVE_SYMBOL[10004]).toBe("ETH");
 });
 
-test("AUSD, MON, BNB and AVAX have their own marks rather than the fallback", () => {
+test("AUSD, MON, IDR, BNB and AVAX have their own marks rather than the fallback", () => {
   // `badgeForSymbol` returns AUSD for anything it does not know, so a missing entry does not
   // break, it puts Agora's logo on someone else's money, which is worse than a broken image.
   expect(badgeForSymbol("AUSD")).toBe("AUSD");
   expect(badgeForSymbol("MON")).toBe("MON");
+  expect(badgeForSymbol("IDR")).toBe("IDR");
   expect(badgeForSymbol("BNB")).toBe("BNB");
   expect(badgeForSymbol("AVAX")).toBe("AVAX");
   expect(badgeForSymbol("WOMBAT")).toBe("AUSD");
