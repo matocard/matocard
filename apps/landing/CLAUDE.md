@@ -16,8 +16,8 @@ renamed; the layout, motion and section structure are what carries over. **The
 story is not Matocard's yet.** The copy, the chat demo, the features, the stats and
 every image and video still describe the earlier product. They have to be rewritten
 around PLAN §2 and §3 (Siti, top up, send to Mom, limit grows, `/verify`), in
-Axel's words, before the page is shown to anyone. Logos under `public/logos` are
-placeholders until Matocard's logo exists.
+Axel's words, before the page is shown to anyone. The logo is Matocard's own:
+`public/matocard-logo.jpeg`, a dark mark on white, also the favicon.
 
 Next 16 still accepts React 18 as a peer, which is why this app is on 18 while
 the rest of the ecosystem has moved. Do not bump React without checking
