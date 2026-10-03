@@ -62,8 +62,8 @@ Every route answers CORS preflight and allows any origin: sessions ride in a hea
 | `GET /me` | signed | home screen: limit, available, score, ratio, collateral, yield, debt, AUSD balance |
 | `GET /me/activity` | signed | indexer activity plus payments and payouts not yet onchain |
 | `POST /kyc/session` | signed | Didit URL to open |
-| `POST /topups` | signed, verified | `{ amount: "600.00", method, quoteId }` → Xendit checkout URL |
-| `POST /settlements` | signed | `{ quoteId }` → checkout for the whole debt in MYR, rounded up |
+| `POST /topups` | signed, verified | `{ amount: "2400000", method, quoteId }` (IDR, quote `USD/IDR`) → Xendit checkout URL |
+| `POST /settlements` | signed | `{ quoteId }` (`USD/IDR`) → checkout for the whole debt in IDR, rounded up |
 | `POST /sends` | signed, verified | `{ authorization }`: an ERC-3009 transfer the sender signed; relayer pays gas |
 | `POST /cashouts` | signed | `{ quoteId, authorization (to the treasury), bank: { channelCode, accountNumber, accountHolderName } }` |
 | `POST /webhooks/xendit` | `x-callback-token` | payments, refunds, disputes, payouts |
@@ -92,6 +92,6 @@ The hold follows how the payer actually paid (the channel in Xendit's webhook), 
 
 Written from Xendit's and Didit's docs, tested against fakes:
 
-- Xendit Payment Sessions and v2 payouts. DuitNow QR's channel code and `ID_BRI` are not in Xendit's docs; the QR method is inferred from any channel containing `QR`.
-- Collecting MYR and paying out IDR likely need two Xendit accounts (country of origin), hence `XENDIT_PAYOUT_SECRET_KEY`.
+- Xendit Payment Sessions and v2 payouts. The QR method is inferred from any channel containing `QR` (QRIS), bank from `*_VIRTUAL_ACCOUNT`; anything else (cards, e-wallets) gets the card hold.
+- Top-ups and settlements are in IDR through one Indonesian Xendit account (`COLLECT` in `src/payments.ts`). Collecting MYR needs a Malaysian account; `XENDIT_PAYOUT_SECRET_KEY` is for a second account if that happens.
 - Didit v3 sessions and webhooks. Its sandbox gives every tester the same document, so in sandbox the identity hash also includes the wallet.
