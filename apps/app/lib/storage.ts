@@ -14,4 +14,6 @@ export const STORAGE = {
   remoteOrigin: "matocard.remote.origin.v1",
   pendingRelease: "matocard.release.pending.v1",
   e2eConnected: "matocard.e2e.connected",
+  /** The signed backend session: `{ wallet, until, signature }`, valid six days. */
+  session: "matocard.session.v1",
 } as const;
