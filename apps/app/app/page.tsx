@@ -24,8 +24,8 @@ const ONBOARDING_DONE_KEY = STORAGE.onboardingDone;
 
 /**
  * Three beats, in the order the product works: top up, watch the limit it buys grow as you repay,
- * spend it. Figures are PLAN §3 and §6.3's demo: RM 600 tops up 150 AUSD, which starts at a limit
- * of 100 and reaches 134.52 at score 55.
+ * spend it. Figures are PLAN §3 and §6.3's demo at 1 USD = Rp 16,000: Rp 2.4m tops up 150 AUSD,
+ * which starts at a limit of 100 and reaches 134.52 at score 55.
  */
 const TOUR: TourScreen[] = [
   {
@@ -296,21 +296,22 @@ function Stepper({ current, total }: { current: number; total: number }) {
 }
 
 /**
- * A first top-up, from the money paid in to what it lets you spend: RM 600 by card is 150 AUSD of
- * collateral, which earns in the vault and starts at a limit of 100 (150% at score 0).
+ * A first top-up, one row per thing it touches, each with its own mark: the rupiah paid in, the
+ * AUSD it becomes and the limit that buys (100 at 150% backing, score 0), and the MON the backend
+ * drips after verification so fees are never the user's problem (0.5, #69).
  */
 function CollateralVisual() {
   return (
     <div className={styles.assetStack} aria-hidden="true">
-      <AssetRow asset="Topped up" chain="RM 600 by card" value="150.00" token="AUSD" />
+      <AssetRow asset="Topped up" chain="By bank transfer" value="Rp 2.4m" token="IDR" />
       <AssetRow
         asset="Ready to spend"
-        chain="150% backing to start"
+        chain="150 AUSD backs it at 150%"
         value="100.00"
         token="AUSD"
         highlight
       />
-      <AssetRow asset="Collateral yield" chain="Earning on Monad" value="+0.42" token="AUSD" />
+      <AssetRow asset="Fees covered" chain="Given after you verify" value="0.50" token="MON" />
     </div>
   );
 }
