@@ -23,13 +23,14 @@ type TourScreen = {
 const ONBOARDING_DONE_KEY = STORAGE.onboardingDone;
 
 /**
- * Three beats, in the order the product works: put something down, watch the limit it buys grow as
- * you repay, spend it. Copy picked by Axel.
+ * Three beats, in the order the product works: top up, watch the limit it buys grow as you repay,
+ * spend it. Figures are PLAN §3 and §6.3's demo: RM 600 tops up 150 AUSD, which starts at a limit
+ * of 100 and reaches 134.52 at score 55.
  */
 const TOUR: TourScreen[] = [
   {
-    title: "Put down what you\nalready hold",
-    body: "Lock an asset on its own chain. It stays there, and your card is sized against it",
+    title: "Top up what\nyou can spare",
+    body: "It becomes collateral, held as AUSD on Monad and earning while your card is sized against it",
     visual: <CollateralVisual />,
   },
   {
@@ -295,18 +296,21 @@ function Stepper({ current, total }: { current: number; total: number }) {
 }
 
 /**
- * Three assets a holder could put down, each named with the chain it stays on.
- *
- * The chain is the second line rather than a yield figure, because the chain is the claim this
- * screen is making: the asset does not move. It also matches the "Assets held" card the holder
- * meets on Home, so the first thing they see in the tour is the thing they will actually use.
+ * A first top-up, from the money paid in to what it lets you spend: RM 600 by card is 150 AUSD of
+ * collateral, which earns in the vault and starts at a limit of 100 (150% at score 0).
  */
 function CollateralVisual() {
   return (
     <div className={styles.assetStack} aria-hidden="true">
-      <AssetRow asset="USDT" chain="BSC Testnet" value="1,200.00" token="USDT" />
-      <AssetRow asset="ETH" chain="Base Sepolia" value="0.4200" token="ETH" highlight />
-      <AssetRow asset="USDC" chain="Ethereum Sepolia" value="2,416.00" token="USDC" />
+      <AssetRow asset="Topped up" chain="RM 600 by card" value="150.00" token="AUSD" />
+      <AssetRow
+        asset="Ready to spend"
+        chain="150% backing to start"
+        value="100.00"
+        token="AUSD"
+        highlight
+      />
+      <AssetRow asset="Collateral yield" chain="Earning on Monad" value="+0.42" token="AUSD" />
     </div>
   );
 }
@@ -327,8 +331,8 @@ function CardVisual() {
         <div className={styles.phoneContent}>
           <div className={styles.homeHeroMini}>
             <span>Spendable</span>
-            <b>35.0097 tCTC</b>
-            <em>of 41.4594 allowed</em>
+            <b>84.52 AUSD</b>
+            <em>of 134.52 allowed</em>
           </div>
           <div className={styles.homeButtonMini}>Send</div>
           <span className={styles.homeSectionMini}>Your card</span>
@@ -356,7 +360,7 @@ function CardVisual() {
           </svg>
         </span>
         <div className={styles.safeExitText}>
-          <strong>Spent 13 tCTC</strong>
+          <strong>Sent 50 AUSD to Mom</strong>
           <span>Pay it back to close the cycle</span>
         </div>
         <b>Repay</b>
@@ -372,9 +376,9 @@ function LimitChartVisual() {
       <div className={styles.chartHeader}>
         <div>
           <span>Your limit</span>
-          <strong>41.4594 tCTC</strong>
+          <strong>134.52 AUSD</strong>
         </div>
-        <b>score 42</b>
+        <b>score 55</b>
       </div>
       <div className={styles.earningBars}>
         {bars.map((height, i) => (
@@ -395,7 +399,7 @@ function AssetRow({
   loading = false,
 }: {
   asset: string;
-  /** Where it stays. This is the point of the screen, so it gets the second line. */
+  /** The second line: where the money came from or what it does. */
   chain: string;
   value: string;
   token: TokenSym;
