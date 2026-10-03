@@ -12,11 +12,13 @@ bun run typecheck
 ## Where this page stands
 
 Copied whole from the frontend owner's earlier card project on 3 Oct 2026 and
-renamed; the layout, motion and section structure are what carries over. **The
-story is not Matocard's yet.** The copy, the chat demo, the features, the stats and
-every image and video still describe the earlier product. They have to be rewritten
-around PLAN §2 and §3 (Siti, top up, send to Mom, limit grows, `/verify`), in
-Axel's words, before the page is shown to anyone. The logo is Matocard's own:
+renamed; the layout, motion and section structure are what carries over. The copy
+is now true to Matocard: Monad is the platform, money is dollars held as AUSD (the
+Agora bounty wants AUSD on screen; MON only pays fees and no user holds it), and no
+claim about locking crypto on another chain is left. **The story is still generic**,
+a coffee rather than Siti: rewriting it around PLAN §2 and §3 (top up, send to Mom,
+limit grows, `/verify`) is open, in Axel's words. Images and videos are the earlier
+product's and carry no brand. The testimonials are placeholders. The logo is Matocard's own:
 `public/matocard-logo.jpeg` is the source (a dark mark on white); the page uses the
 transparent cut-outs `matocard-logo.png` (dark) and `matocard-logo-white.png`. The
 header swaps them with its text colour, and the favicon picks one by
