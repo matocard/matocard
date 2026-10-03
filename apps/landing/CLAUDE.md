@@ -17,7 +17,10 @@ story is not Matocard's yet.** The copy, the chat demo, the features, the stats 
 every image and video still describe the earlier product. They have to be rewritten
 around PLAN §2 and §3 (Siti, top up, send to Mom, limit grows, `/verify`), in
 Axel's words, before the page is shown to anyone. The logo is Matocard's own:
-`public/matocard-logo.jpeg`, a dark mark on white, also the favicon.
+`public/matocard-logo.jpeg` is the source (a dark mark on white); the page uses the
+transparent cut-outs `matocard-logo.png` (dark) and `matocard-logo-white.png`. The
+header swaps them with its text colour, and the favicon picks one by
+`prefers-color-scheme` in `src/app/layout.tsx`.
 
 Next 16 still accepts React 18 as a peer, which is why this app is on 18 while
 the rest of the ecosystem has moved. Do not bump React without checking

@@ -95,12 +95,14 @@ const PILLARS: { title: string; blurb: string; src: string }[] = [
 ];
 
 /**
- * The Matocard mark, replacing the inline paths this page shipped with. The
- * PNG carries real alpha, so the tile sits on the light footer and the
- * photographic hero alike without a plate behind it, which the sibling
- * `.webp` export, being opaque, cannot do.
+ * The Matocard mark with a transparent background, cut from
+ * `matocard-logo.jpeg`. The header follows its own text colour: the white mark
+ * over the photographic hero, the dark one once the header turns dark. The
+ * JPEG, a mark on a white square, stays the favicon, where a transparent dark
+ * mark would vanish on a dark tab bar.
  */
-const LOGO_SRC = "/matocard-logo.jpeg";
+const LOGO_SRC = "/matocard-logo.png";
+const LOGO_WHITE_SRC = "/matocard-logo-white.png";
 
 const STAGGER_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 
@@ -834,7 +836,7 @@ function Nav({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {/* biome-ignore lint/performance/noImgElement: static asset that must paint the moment the step appears; next/image defers it */}
           <img
-            src={LOGO_SRC}
+            src={d ? LOGO_SRC : LOGO_WHITE_SRC}
             alt=""
             width={24}
             height={24}

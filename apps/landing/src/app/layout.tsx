@@ -5,7 +5,13 @@ import "../index.css";
 export const metadata: Metadata = {
   title: "Matocard",
   description: "A card sized by what you have repaid, not what you hold. Built on Creditcoin.",
-  icons: { icon: "/matocard-logo.jpeg" },
+  // Transparent mark: dark on a light tab bar, white on a dark one, where the dark mark vanishes.
+  icons: {
+    icon: [
+      { url: "/matocard-logo.png", media: "(prefers-color-scheme: light)" },
+      { url: "/matocard-logo-white.png", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
