@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { createRoutes } from "../src/api";
 import { identityHash } from "../src/kyc";
 import { methodOf } from "../src/payments";
 import { reconcile } from "../src/reconcile";
@@ -6,6 +7,8 @@ import { hasDatabase, testDatabase } from "./harness";
 
 test("the paid channel decides the hold; unknown means card", () => {
   expect(methodOf("CARDS")).toBe("card");
+  expect(methodOf("BCA_VIRTUAL_ACCOUNT")).toBe("bank");
+  expect(methodOf("QRIS")).toBe("qr");
   expect(methodOf("MAYB2U_FPX")).toBe("bank");
   expect(methodOf("CIMB_FPX_BUSINESS")).toBe("bank");
   expect(methodOf("DUITNOW_PAY")).toBe("bank");
@@ -78,4 +81,13 @@ describe.skipIf(!hasDatabase)("reconciliation", () => {
       /INDEXER_URL/,
     );
   });
+});
+
+test("openapi.json documents every route", async () => {
+  const spec = await Bun.file(`${import.meta.dir}/../openapi.json`).json();
+  const documented = Object.keys(spec.paths).map((p) => p.replace(/\{\w+\}/g, ":id"));
+  const served = Object.keys(createRoutes({} as never)).filter(
+    (p) => p !== "/docs" && p !== "/openapi.json",
+  );
+  expect(documented.sort()).toEqual(served.sort());
 });

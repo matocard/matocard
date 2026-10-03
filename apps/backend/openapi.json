@@ -1,0 +1,649 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Matocard API",
+    "version": "1.0.0",
+    "description": "The backend the app calls. Served at `/docs` (this page) and `/openapi.json`.\n\n**Amounts** are decimal strings in the currency's smallest unit, never floats: AUSD has 6 decimals (`\"1000000\"` = 1 AUSD), IDR has none (`\"50000\"` = Rp 50,000), MYR is in sen. Format them with `formatAmount` from `@matocard/core`.\n\n**Signing in.** No passwords: the account's key (the Mera passkey account) signs once, and the app sends the result on every signed route as\n\n`Authorization: Matocard <wallet>.<until>.<signature>`\n\nwhere `until` is a unix time at most 7 days ahead and `signature` is `personal_sign` (viem `signMessage`) of exactly:\n\n```\nSign in to Matocard\n<wallet in lowercase>\nuntil <until>\n```\n\nThe first signed call creates the user. To try a signed route here, press **Authorize** and paste the whole header value, `Matocard 0x….…`.\n\n**Errors** are `{ \"error\": \"…\" }` with a 4xx status and a message the app may show. 500 is `something went wrong` and is logged on the server.\n\n**Signed transfers (ERC-3009).** `/sends` and `/cashouts` take an AUSD `TransferWithAuthorization` the user signed, so the relayer pays the gas. EIP-712 domain on Monad testnet: `name: \"Agora Dollar\"`, `version: \"1\"`, `chainId: 10143`, `verifyingContract: 0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`. Types: `TransferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce)`. Use a random 32-byte `nonce` per transfer.\n\n**Money in.** Top-ups and settlements return a Xendit `checkoutUrl`; open it, and the backend credits the contract when Xendit reports the payment. Poll `GET /me` (or `/me/activity`, whose `inFlight` lists payments not onchain yet) to see it land. In test mode nothing is charged: pick a virtual account and simulate the payment from the Xendit dashboard.\n\n**Done in the app, not here:** `draw(amount, to)` (borrow, straight to anyone's wallet), `repay` / `repayWithPermit` (pay back in AUSD) and `withdrawCollateral` are the user's own transactions on the `MatoCreditLine` contract (`0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a`), paid with the MON the backend drips after KYC."
+  },
+  "servers": [
+    {
+      "url": "https://api.matocard.xyz",
+      "description": "VPS, Monad testnet, Xendit and Didit in test mode"
+    },
+    { "url": "http://127.0.0.1:3000", "description": "local docker compose" }
+  ],
+  "tags": [
+    { "name": "Public" },
+    { "name": "Account", "description": "Signed in" },
+    { "name": "Money", "description": "Signed in; top-ups and sends also need KYC approved" },
+    { "name": "Webhooks", "description": "Called by Xendit and Didit, not by the app" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "`Matocard <wallet>.<until>.<signature>`, see the description at the top"
+      }
+    },
+    "schemas": {
+      "Amount": {
+        "type": "string",
+        "pattern": "^[0-9]+$",
+        "description": "Smallest unit of its currency",
+        "examples": ["1000000"]
+      },
+      "Address": {
+        "type": "string",
+        "pattern": "^0x[0-9a-fA-F]{40}$",
+        "examples": ["0xC0519BE562f0De7E32e9A48e50AdecBAde605aAD"]
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string", "examples": ["verify your identity first"] } }
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "pair": { "type": "string", "enum": ["USD/IDR", "USD/MYR"] },
+          "rate": {
+            "type": "string",
+            "description": "Units of the second currency per 1 USD (AUSD counts as USD)",
+            "examples": ["17950"]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "60 seconds after it was made"
+          }
+        }
+      },
+      "Me": {
+        "type": "object",
+        "description": "The home screen, read from the contract",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "wallet": { "$ref": "#/components/schemas/Address" },
+              "kyc": {
+                "type": "string",
+                "enum": ["none", "pending", "approved", "rejected", "duplicate"],
+                "description": "Our record of Didit's decision. `duplicate`: this document already verified another account"
+              },
+              "country": { "type": ["string", "null"] }
+            }
+          },
+          "verified": { "type": "boolean", "description": "Verified onchain; can top up and draw" },
+          "score": { "$ref": "#/components/schemas/Amount", "description": "0–100" },
+          "ratioBps": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "Collateral needed per unit of limit, in basis points: 15000 (150%) at score 0 down to 8000 at 100"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "AUSD the collateral allows"
+          },
+          "available": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "AUSD that can still be drawn"
+          },
+          "drawn": { "$ref": "#/components/schemas/Amount", "description": "AUSD owed" },
+          "dueAt": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "Unix time the debt is due, 0 when nothing is owed"
+          },
+          "defaulted": { "type": "boolean" },
+          "cycles": {
+            "type": "object",
+            "properties": {
+              "counted": {
+                "$ref": "#/components/schemas/Amount",
+                "description": "Borrow-and-repay cycles that counted toward the score"
+              },
+              "repaid": { "$ref": "#/components/schemas/Amount" }
+            }
+          },
+          "collateral": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "$ref": "#/components/schemas/Amount",
+                "description": "AUSD value of the collateral, yield included"
+              },
+              "yield": {
+                "$ref": "#/components/schemas/Amount",
+                "description": "Earned so far, net of the yield fee"
+              },
+              "pendingShares": {
+                "$ref": "#/components/schemas/Amount",
+                "description": "A card top-up still in its hold: not in the limit yet"
+              },
+              "pendingUntil": {
+                "type": ["string", "null"],
+                "description": "Unix time the hold ends"
+              }
+            }
+          },
+          "balance": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "AUSD in the wallet (drawn or received), outside the credit line"
+          }
+        }
+      },
+      "Activity": {
+        "type": "object",
+        "description": "One onchain event, from the indexer",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "Verified",
+              "TopUp",
+              "TopUpCleared",
+              "TopUpReversed",
+              "Draw",
+              "Repay",
+              "CollateralWithdrawn",
+              "YieldFee",
+              "Default"
+            ]
+          },
+          "amount": { "type": ["string", "null"], "description": "AUSD, 6 decimals" },
+          "shares": { "type": ["string", "null"] },
+          "counterparty": {
+            "type": ["string", "null"],
+            "description": "Payer of a top-up or repayment, or recipient of a draw"
+          },
+          "method": { "type": ["string", "null"], "description": "Bank or Card, for top-ups" },
+          "timestamp": { "type": "string" },
+          "txHash": { "type": "string" }
+        }
+      },
+      "InFlight": {
+        "type": "object",
+        "description": "A payment (top-up, repay) or payout (cash-out) not onchain yet",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "kind": { "type": "string", "enum": ["topup", "repay", "cashout"] },
+          "method": { "type": "string", "description": "Payments only" },
+          "fiat": { "$ref": "#/components/schemas/Amount" },
+          "currency": { "type": "string", "enum": ["IDR", "MYR"] },
+          "ausd": { "$ref": "#/components/schemas/Amount" },
+          "status": { "type": "string", "enum": ["PENDING", "PAID", "SENT_ONCHAIN"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Checkout": {
+        "type": "object",
+        "properties": {
+          "paymentId": { "type": "string", "format": "uuid" },
+          "checkoutUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Xendit's hosted page; open it"
+          },
+          "fiat": { "$ref": "#/components/schemas/Amount", "description": "IDR charged" },
+          "ausd": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "AUSD credited (top-up) or repaid (settlement)"
+          }
+        }
+      },
+      "Authorization": {
+        "type": "object",
+        "description": "An ERC-3009 TransferWithAuthorization the sender signed (EIP-712, domain at the top). Numbers as decimal strings.",
+        "required": ["from", "to", "value", "validAfter", "validBefore", "nonce", "signature"],
+        "properties": {
+          "from": { "$ref": "#/components/schemas/Address" },
+          "to": { "$ref": "#/components/schemas/Address" },
+          "value": { "$ref": "#/components/schemas/Amount" },
+          "validAfter": { "type": "string", "examples": ["0"] },
+          "validBefore": {
+            "type": "string",
+            "description": "Unix time",
+            "examples": ["1791051600"]
+          },
+          "nonce": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+          "signature": { "type": "string", "pattern": "^0x[0-9a-fA-F]+$" }
+        }
+      },
+      "Verify": {
+        "type": "object",
+        "description": "The public record: no name, no document",
+        "properties": {
+          "account": { "$ref": "#/components/schemas/Address" },
+          "verified": { "type": "boolean" },
+          "score": { "$ref": "#/components/schemas/Amount" },
+          "ratioBps": { "$ref": "#/components/schemas/Amount" },
+          "cycles": { "$ref": "#/components/schemas/Me/properties/cycles" },
+          "defaulted": { "type": "boolean" },
+          "history": {
+            "type": ["object", "null"],
+            "description": "From the indexer; null when it is down",
+            "properties": {
+              "score": { "type": "string" },
+              "cycleCount": { "type": "integer" },
+              "repayCount": { "type": "integer" },
+              "cyclesOpened": { "type": "integer" },
+              "defaulted": { "type": "boolean" },
+              "verifiedAt": { "type": ["string", "null"] },
+              "firstSeenAt": { "type": "string" },
+              "cycles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "number": { "type": "integer" },
+                    "outcome": { "type": "string", "examples": ["Qualified"] },
+                    "openedAt": { "type": "string" },
+                    "closedAt": { "type": ["string", "null"] },
+                    "peakDrawn": { "type": "string" },
+                    "totalRepaid": { "type": "string" },
+                    "scoreAfter": { "type": ["string", "null"] },
+                    "openTxHash": { "type": "string" },
+                    "closeTxHash": { "type": ["string", "null"] }
+                  }
+                }
+              }
+            }
+          },
+          "indexer": { "type": "string", "enum": ["ok", "unavailable"] }
+        }
+      }
+    },
+    "responses": {
+      "Bad": {
+        "description": "The request was wrong; the message says why",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "SignIn": {
+        "description": "No session, a bad signature, or an expired one: sign again",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "NotVerified": {
+        "description": "KYC not approved yet",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "NotConfigured": {
+        "description": "Xendit or Didit keys are missing on this server",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Public"],
+        "security": [],
+        "summary": "Server and database are up",
+        "responses": {
+          "200": {
+            "description": "Up",
+            "content": { "application/json": { "example": { "ok": true } } }
+          }
+        }
+      }
+    },
+    "/quote": {
+      "post": {
+        "tags": ["Public"],
+        "security": [],
+        "summary": "Lock an exchange rate for 60 seconds",
+        "description": "Every top-up, settlement and cash-out needs a fresh quote id. Top-ups and settlements use `USD/IDR`; `USD/MYR` is for display.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["pair"],
+                "properties": { "pair": { "type": "string", "enum": ["USD/IDR", "USD/MYR"] } }
+              },
+              "example": { "pair": "USD/IDR" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Locked",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Quote" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Bad" }
+        }
+      }
+    },
+    "/verify/{wallet}": {
+      "get": {
+        "tags": ["Public"],
+        "security": [],
+        "summary": "Anyone's public credit record",
+        "description": "The page someone back home opens to check a record (`/verify` in the app).",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/Address" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The record",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Verify" } }
+            }
+          },
+          "404": {
+            "description": "Not an address",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "Home screen",
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "The account",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Me" } } }
+          },
+          "401": { "$ref": "#/components/responses/SignIn" }
+        }
+      }
+    },
+    "/me/activity": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "History, plus money not onchain yet",
+        "description": "`activity` is the last 100 onchain events, newest first. If the indexer is down, `activity` is empty and `indexer` is `unavailable`; the rest of the app keeps working.",
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "activity": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Activity" }
+                    },
+                    "indexer": { "type": "string", "enum": ["ok", "unavailable"] },
+                    "inFlight": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/InFlight" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/SignIn" }
+        }
+      }
+    },
+    "/kyc/session": {
+      "post": {
+        "tags": ["Account"],
+        "summary": "Start identity verification",
+        "description": "Open `url` (Didit). When Didit approves, the backend marks the account verified onchain and drips MON for fees; `GET /me` then shows `kyc: approved` and `verified: true`. Didit sends the user back to the app's URL with `?status=Approved`.",
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "url": { "type": "string", "format": "uri" } }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/SignIn" },
+          "409": {
+            "description": "Already verified",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": { "$ref": "#/components/responses/NotConfigured" }
+        }
+      }
+    },
+    "/topups": {
+      "post": {
+        "tags": ["Money"],
+        "summary": "Add collateral by paying in IDR",
+        "description": "`amount` is whole rupiah, at least 10000. `method` is what the user picked, but the hold follows how they actually paid: virtual account and QRIS count at once, cards and e-wallets are held first (`collateral.pendingShares`).",
+        "security": [{ "session": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "method", "quoteId"],
+                "properties": {
+                  "amount": { "type": "string", "description": "IDR, whole rupiah" },
+                  "method": {
+                    "type": "string",
+                    "enum": ["bank", "card", "qr"],
+                    "description": "`card` limits the checkout to cards"
+                  },
+                  "quoteId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "A `USD/IDR` quote"
+                  }
+                }
+              },
+              "example": {
+                "amount": "50000",
+                "method": "bank",
+                "quoteId": "92d758a3-4c5b-48c4-952b-7ee932786435"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Checkout" },
+                "example": {
+                  "paymentId": "765b1b01-3f7f-425d-a2b1-87635dd2ba82",
+                  "checkoutUrl": "https://dev.xen.to/iCRL0isp",
+                  "fiat": "50000",
+                  "ausd": "2785515"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Bad" },
+          "401": { "$ref": "#/components/responses/SignIn" },
+          "403": { "$ref": "#/components/responses/NotVerified" },
+          "503": { "$ref": "#/components/responses/NotConfigured" }
+        }
+      }
+    },
+    "/settlements": {
+      "post": {
+        "tags": ["Money"],
+        "summary": "Pay the whole debt in IDR",
+        "description": "Charges `drawn` converted at the quote, rounded up. Once paid, the backend repays the contract for the user, which closes the cycle and moves the score.",
+        "security": [{ "session": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["quoteId"],
+                "properties": {
+                  "quoteId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "A `USD/IDR` quote"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Checkout" },
+                "example": {
+                  "paymentId": "5d9df8c6-c863-4802-9e6b-ad88c3131451",
+                  "checkoutUrl": "https://dev.xen.to/OovmxqHa",
+                  "fiat": "17950",
+                  "ausd": "1000000"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Bad" },
+          "401": { "$ref": "#/components/responses/SignIn" },
+          "503": { "$ref": "#/components/responses/NotConfigured" }
+        }
+      }
+    },
+    "/sends": {
+      "post": {
+        "tags": ["Money"],
+        "summary": "Send AUSD to anyone, gas paid by the relayer",
+        "description": "The sender signs an ERC-3009 transfer from their wallet to the recipient; the backend submits it and answers once it is mined. At most 50 per account per day. A reused nonce answers 400 with the contract's error.",
+        "security": [{ "session": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["authorization"],
+                "properties": { "authorization": { "$ref": "#/components/schemas/Authorization" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mined",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "hash": { "type": "string" } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Bad" },
+          "401": { "$ref": "#/components/responses/SignIn" },
+          "403": { "$ref": "#/components/responses/NotVerified" },
+          "429": {
+            "description": "Daily send limit reached",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/cashouts": {
+      "post": {
+        "tags": ["Money"],
+        "summary": "AUSD to IDR in a bank account",
+        "description": "The user signs an ERC-3009 transfer of `value` AUSD **to the treasury** `0xcf330A7E5D4eae35250f00B4af96eBcf38347Df1`, valid for at least 5 more minutes. The backend takes the AUSD, then Xendit pays the IDR (at least Rp 10,000) to the bank. The answer comes at once; the payout shows in `/me/activity` `inFlight` until done. `channelCode` is Xendit's, such as `ID_BCA`, `ID_BRI`, `ID_MANDIRI`, `ID_BNI`.",
+        "security": [{ "session": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["quoteId", "authorization", "bank"],
+                "properties": {
+                  "quoteId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "A `USD/IDR` quote"
+                  },
+                  "authorization": { "$ref": "#/components/schemas/Authorization" },
+                  "bank": {
+                    "type": "object",
+                    "required": ["channelCode", "accountNumber", "accountHolderName"],
+                    "properties": {
+                      "channelCode": { "type": "string", "examples": ["ID_BCA"] },
+                      "accountNumber": { "type": "string", "pattern": "^[0-9]{6,20}$" },
+                      "accountHolderName": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payoutId": { "type": "string", "format": "uuid" },
+                    "ausd": { "$ref": "#/components/schemas/Amount" },
+                    "fiat": { "$ref": "#/components/schemas/Amount", "description": "IDR paid out" }
+                  }
+                },
+                "example": {
+                  "payoutId": "9fd1d0dd-f236-4c9d-90c2-db454b626502",
+                  "ausd": "600000",
+                  "fiat": "10770"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Bad" },
+          "401": { "$ref": "#/components/responses/SignIn" }
+        }
+      }
+    },
+    "/webhooks/xendit": {
+      "post": {
+        "tags": ["Webhooks"],
+        "security": [],
+        "summary": "Xendit: payments, refunds, disputes, payouts",
+        "description": "Checked with the `x-callback-token` header.",
+        "responses": { "200": { "description": "Recorded" }, "401": { "description": "Bad token" } }
+      }
+    },
+    "/webhooks/didit": {
+      "post": {
+        "tags": ["Webhooks"],
+        "security": [],
+        "summary": "Didit: verification results",
+        "description": "Checked with an HMAC of the raw body in `x-signature`.",
+        "responses": {
+          "200": { "description": "Recorded" },
+          "401": { "description": "Bad signature or stale" }
+        }
+      }
+    }
+  }
+}

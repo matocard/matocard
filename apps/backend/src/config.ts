@@ -35,12 +35,12 @@ export function loadConfig() {
       perUser: parseAmount(env("DAILY_CAP_USER_AUSD", "1000"), "AUSD"),
       global: parseAmount(env("DAILY_CAP_GLOBAL_AUSD", "20000"), "AUSD"),
     },
-    dripWei: parseEther(env("DRIP_MON", "0.1")),
+    dripWei: parseEther(env("DRIP_MON", "0.5")),
     indexerUrl: optional("INDEXER_URL"),
     xendit: {
       secretKey: optional("XENDIT_SECRET_KEY"),
       callbackToken: optional("XENDIT_CALLBACK_TOKEN"),
-      // Xendit needs an account per country of origin: MY collects MYR, ID pays out IDR
+      // one account collects and pays out; a second only if collecting moves to another country
       payoutSecretKey: optional("XENDIT_PAYOUT_SECRET_KEY") ?? optional("XENDIT_SECRET_KEY"),
       payoutCallbackToken:
         optional("XENDIT_PAYOUT_CALLBACK_TOKEN") ?? optional("XENDIT_CALLBACK_TOKEN"),

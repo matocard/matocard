@@ -15,6 +15,14 @@ const CORS = {
   "access-control-max-age": "86400",
 };
 
+const OPENAPI = `${import.meta.dir}/../openapi.json`;
+const SWAGGER_UI = `<!doctype html><html><head><meta charset="utf-8"><title>Matocard API</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"></head>
+<body><div id="ui"></div><script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>SwaggerUIBundle({ url: "/openapi.json", dom_id: "#ui", persistAuthorization: true });</script>
+</body></html>`;
+
 const MAX_SESSION_SECONDS = 7 * 24 * 3600;
 const SENDS_PER_DAY = 50;
 
@@ -155,6 +163,12 @@ export function createRoutes(deps: {
       json(await handler(await authenticate(sql, req), req));
 
   const routes: Record<string, Partial<Record<Method, Handler>>> = {
+    // for the app's developers: the contract of every route, and Swagger UI over it
+    "/openapi.json": { GET: async () => new Response(Bun.file(OPENAPI)) },
+    "/docs": {
+      GET: async () => new Response(SWAGGER_UI, { headers: { "content-type": "text/html" } }),
+    },
+
     "/health": {
       GET: async () => {
         await sql`SELECT 1`;

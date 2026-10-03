@@ -8,6 +8,9 @@ import type { Fx } from "./fx";
 import { sameSecret, UserError } from "./http";
 
 const XENDIT = "https://api.xendit.co";
+// ponytail: one Indonesian Xendit account collects and pays out. Collecting MYR needs a
+// Malaysian account (country of origin); switch these three back when there is one
+const COLLECT = { currency: "IDR", country: "ID", pair: "USD/IDR" } as const;
 
 type User = { id: string; wallet: Address };
 
@@ -37,21 +40,22 @@ type PayoutRow = {
   };
 };
 
+/** A POST with `body`, a GET without. */
 async function xendit(
   key: string | undefined,
   path: string,
-  body: unknown,
+  body?: unknown,
   headers: Record<string, string> = {},
 ) {
   if (!key) throw new UserError("Xendit is not configured on this server", 503);
   const res = await fetch(`${XENDIT}${path}`, {
-    method: "POST",
+    method: body === undefined ? "GET" : "POST",
     headers: {
       authorization: `Basic ${btoa(`${key}:`)}`,
       "content-type": "application/json",
       ...headers,
     },
-    body: JSON.stringify(body),
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
   if (!res.ok) throw new Error(`Xendit ${path} answered ${res.status}: ${text}`);
@@ -65,7 +69,12 @@ async function xendit(
  */
 export function methodOf(channelCode: unknown): "card" | "bank" | "qr" {
   const code = String(channelCode ?? "").toUpperCase();
-  if (code.endsWith("_FPX") || code.endsWith("_FPX_BUSINESS") || code === "DUITNOW_PAY")
+  if (
+    code.endsWith("_VIRTUAL_ACCOUNT") ||
+    code.endsWith("_FPX") ||
+    code.endsWith("_FPX_BUSINESS") ||
+    code === "DUITNOW_PAY"
+  )
     return "bank";
   if (code.includes("QR")) return "qr";
   return "card";
@@ -112,15 +121,15 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
   ) {
     const [payment] = await sql`
       INSERT INTO payments (user_id, kind, method, fiat_amount, currency, quote_id, ausd_amount)
-      VALUES (${user.id}, ${kind}, ${method}, ${fiat}, 'MYR', ${quoteId}, ${ausd})
+      VALUES (${user.id}, ${kind}, ${method}, ${fiat}, ${COLLECT.currency}, ${quoteId}, ${ausd})
       RETURNING id`;
     const session = await xendit(x.secretKey, "/sessions", {
       reference_id: payment.id,
       session_type: "PAY",
       mode: "PAYMENT_LINK",
-      amount: Number(formatAmount(fiat, "MYR")),
-      currency: "MYR",
-      country: "MY",
+      amount: Number(formatAmount(fiat, COLLECT.currency)),
+      currency: COLLECT.currency,
+      country: COLLECT.country,
       ...(method === "card" ? { allowed_payment_channels: ["CARDS"] } : {}),
       ...(x.returnUrl ? { success_return_url: x.returnUrl, cancel_return_url: x.returnUrl } : {}),
     });
@@ -134,8 +143,31 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
     };
   }
 
+  /**
+   * `payment_session.completed` does not say how the payer paid, and it can
+   * arrive before the payment's own webhook. The session's payment request does.
+   */
+  async function channelOf(reference: string): Promise<string | null> {
+    const [p] = await sql`SELECT provider_session_id FROM payments WHERE id = ${reference}`;
+    if (!p?.provider_session_id) return null;
+    const session = await xendit(x.secretKey, `/sessions/${p.provider_session_id}`);
+    if (!session.latest_payment_request_id) return null;
+    const request = await xendit(
+      x.secretKey,
+      `/v3/payment_requests/${session.latest_payment_request_id}`,
+      undefined,
+      { "api-version": "2024-11-11" },
+    );
+    return request.channel_code ? String(request.channel_code) : null;
+  }
+
   async function paid(reference: unknown, paymentId: unknown, channel: unknown) {
     if (typeof reference !== "string" || !/^[0-9a-f-]{36}$/.test(reference)) return;
+    // a failed lookup leaves it unknown, which holds it as a card: the safe side
+    channel ||= await channelOf(reference).catch((e) => {
+      console.error(`channel of ${reference}:`, e instanceof Error ? e.message : e);
+      return null;
+    });
     const [row] = await sql`
       UPDATE payments SET status = 'PAID', provider_event_id = ${String(paymentId ?? reference)},
         channel_code = ${channel ? String(channel) : null}, method = ${methodOf(channel)}
@@ -302,24 +334,24 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
       const method = input.method;
       if (method !== "card" && method !== "bank" && method !== "qr")
         throw new UserError("method is card, bank or qr");
-      const quote = await fx.use(input.quoteId, "USD/MYR");
+      const quote = await fx.use(input.quoteId, COLLECT.pair);
       let fiat: bigint;
       try {
-        fiat = parseAmount(String(input.amount ?? ""), "MYR");
+        fiat = parseAmount(String(input.amount ?? ""), COLLECT.currency);
       } catch {
-        throw new UserError("amount is not a MYR amount");
+        throw new UserError(`amount is not a ${COLLECT.currency} amount`);
       }
-      if (fiat < 100n) throw new UserError("the smallest top-up is RM 1.00");
-      const ausd = quoteToBase(fiat, "MYR", "AUSD", quote.rate, "down");
+      if (fiat < 10_000n) throw new UserError("the smallest top-up is Rp 10,000");
+      const ausd = quoteToBase(fiat, COLLECT.currency, "AUSD", quote.rate, "down");
       return checkout(user, "topup", method, fiat, ausd, quote.id);
     },
 
-    /** Settlement (#45): the whole debt, charged in MYR rounded up. */
+    /** Settlement (#45): the whole debt, charged in local money rounded up. */
     async settle(user: User, input: Record<string, unknown>) {
-      const quote = await fx.use(input.quoteId, "USD/MYR");
+      const quote = await fx.use(input.quoteId, COLLECT.pair);
       const { drawn } = await chain.read.accountOf(user.wallet);
       if (drawn === 0n) throw new UserError("nothing is owed");
-      const fiat = baseToQuote(drawn, "AUSD", "MYR", quote.rate, "up");
+      const fiat = baseToQuote(drawn, "AUSD", COLLECT.currency, quote.rate, "up");
       return checkout(user, "repay", "bank", fiat, drawn, quote.id);
     },
 
