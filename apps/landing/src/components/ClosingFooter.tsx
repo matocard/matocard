@@ -7,12 +7,12 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: "What do I need to get started?",
     answer:
-      "A wallet with some CTC and one identity check. The check happens once, before your first spend, and you are never asked for it again.",
+      "A phone, a debit card to top up, and one identity check. The check happens once, before your first spend, and you are never asked for it again.",
   },
   {
-    question: "Do I have to sell my crypto to spend?",
+    question: "Do I spend my own money?",
     answer:
-      "No. You lock it, and the card spends against it. The coins stay yours the whole time, on the chain you put them on.",
+      "No. What you put in stays as collateral and keeps earning. The card spends against it, and you pay back what you used.",
   },
   {
     question: "How is my limit decided?",
@@ -22,12 +22,12 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: "What happens if I pay late?",
     answer:
-      "The position closes and your limit drops. There is no late fee and no interest piling up, but the record follows you.",
+      "After a 3-day grace period, what you owe is taken from your collateral and the account stops spending. No late fee, no interest, but the record stays.",
   },
   {
     question: "Is my collateral safe while I owe money?",
     answer:
-      "It stays locked where you put it and nothing moves it while you are paying back. Settle up and you can take it out again.",
+      "It stays in your account, earning, while you pay back. Only a missed due date lets any of it be taken, and then only what you owe.",
   },
 ];
 
@@ -45,7 +45,7 @@ const FOOTER_LINKS: { heading: string; items: { label: string; href: string }[] 
     items: [
       { label: "GitHub", href: "https://github.com/matocard/matocard" },
       { label: "Docs", href: "https://github.com/matocard/matocard#readme" },
-      { label: "Creditcoin", href: "https://docs.creditcoin.org" },
+      { label: "Monad", href: "https://monad.xyz" },
     ],
   },
 ];
@@ -101,7 +101,7 @@ export function ClosingFooter({ logoSrc, faqId }: { logoSrc: string; faqId?: str
               Keep it.
             </h2>
             <p className="mb-[30px] text-[0.95rem] font-normal opacity-85">
-              Lock your CTC once and stop choosing between holding and paying
+              Lock your MON once and stop choosing between holding and paying
             </p>
             <a
               href={APP_URL}
@@ -160,7 +160,7 @@ export function ClosingFooter({ logoSrc, faqId }: { logoSrc: string; faqId?: str
               {/* biome-ignore lint/performance/noImgElement: static asset that must paint the moment the step appears; next/image defers it */}
               <img src={logoSrc} alt="Matocard" className="mb-[15px] h-6 w-6" />
               <p className="max-w-[220px] text-[0.85rem] leading-[1.6] text-[#888]">
-                Lock what you hold. Spend what it earns you. Keep the coins either way.
+                Top up once. Spend what it earns you. Keep your record wherever you go.
               </p>
             </div>
 

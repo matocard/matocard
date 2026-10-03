@@ -4,7 +4,7 @@ import "../index.css";
 
 export const metadata: Metadata = {
   title: "Matocard",
-  description: "A card sized by what you have repaid, not what you hold. Built on Creditcoin.",
+  description: "A card sized by what you have repaid, not what you hold. Built on Monad.",
   // Transparent mark: dark on a light tab bar, white on a dark one, where the dark mark vanishes.
   icons: {
     icon: [

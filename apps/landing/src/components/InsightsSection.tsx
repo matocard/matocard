@@ -36,7 +36,7 @@ const CARDS: {
     video: "/insight-3.mp4",
     overlay: "bg-[rgba(218,218,218,0.2)]",
     stat: "0",
-    description: "Times you have to sell your crypto to pay for something",
+    description: "Credit history you need to start. One identity check is enough",
     descriptionWidth: "max-w-[351px]",
   },
 ];

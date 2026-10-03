@@ -6,9 +6,13 @@ import { CurvedDivider } from "./CurvedDivider";
 const GLOBE_VIDEO = "/counter.mp4";
 
 const STATS: { value: number; suffix: string; description: string }[] = [
-  { value: 6, suffix: "", description: "Chains you can lock on, and the asset stays on its own" },
+  { value: 1, suffix: "", description: "Second or less for money you send home to arrive" },
   { value: 30, suffix: "", description: "Days to settle, the same every time, no interest" },
-  { value: 0, suffix: "", description: "Times you sell your crypto to pay for something" },
+  {
+    value: 0,
+    suffix: "",
+    description: "Credit history you need to start. One identity check is enough",
+  },
 ];
 
 /** Ease-out cubic. Fast at the start, so the number feels like it lands. */
@@ -57,7 +61,7 @@ export function CounterSection() {
       <div className="mx-auto flex max-w-[1260px] flex-col items-center gap-[60px] px-6 text-center">
         <div className="flex max-w-[500px] flex-col items-center gap-5">
           <span className="rounded-full border border-[#18161B]/10 bg-white px-4 py-2 text-[13px] text-[#18161B]/60">
-            Spending without selling
+            Credit that grows with you
           </span>
 
           <h2
@@ -68,7 +72,7 @@ export function CounterSection() {
               letterSpacing: "-0.03em",
             }}
           >
-            People keep their coins and still pay for things
+            No history needed. Pay on time and your limit rises
           </h2>
 
           <span className="mt-2 text-[60px] font-light leading-none tracking-[-0.03em] text-[#18161B] md:text-[100px] lg:text-[120px]">

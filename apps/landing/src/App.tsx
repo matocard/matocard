@@ -60,8 +60,8 @@ const NAV_ITEMS: NavItem[] = [
  */
 const TRANSCRIPT: { speaker: "you" | "card"; text: string; emphasis?: boolean }[] = [
   { speaker: "you", text: "buy me a coffee" },
-  { speaker: "card", text: "done. 2 CTC, paid from your limit." },
-  { speaker: "you", text: "my CTC is still locked?" },
+  { speaker: "card", text: "done. 2 MON, paid from your limit." },
+  { speaker: "you", text: "my MON is still locked?" },
   { speaker: "card", text: "all of it. you pay it back in 30 days." },
   { speaker: "you", text: "and next month?" },
   { speaker: "card", text: "settle on time and the same lock allows more.", emphasis: true },
@@ -79,13 +79,13 @@ const PILLARS: { title: string; blurb: string; src: string }[] = [
     src: "/profile-matocard.avif",
   },
   {
-    title: "Collateral stays put",
-    blurb: "It never leaves the chain you locked it on",
+    title: "Collateral keeps earning",
+    blurb: "It grows in a yield vault while it backs your limit",
     src: "/lock-matocard.avif",
   },
   {
-    title: "Proved, not trusted",
-    blurb: "Creditcoin is shown a proof, never a promise",
+    title: "Checkable by anyone",
+    blurb: "Your score and limit are worked out on Monad, never set by hand",
     src: "/network-matocard.webp",
   },
   {
@@ -415,8 +415,9 @@ function CardSection({ visible, imagesVisible }: { visible: boolean; imagesVisib
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-8 px-5 pb-10 sm:px-10 sm:pb-14 md:flex-row md:items-end md:justify-between md:px-14 md:pb-16">
         <div className={staggerClass("max-w-md")} style={{ animationDelay: "0.7s" }}>
           <p className="text-[15px] leading-relaxed text-[#18161B]/75 sm:text-base">
-            Your crypto never moves. It stays locked on the chain you put it on, and Creditcoin only
-            ever sees a proof that it is there. Pay, settle up, take it back whenever you want.
+            What you put in never moves. It sits in your account on Monad, earning while it waits,
+            and only what you owe can ever be taken from it. Pay, settle up, take it back whenever
+            you want.
           </p>
         </div>
         <h2
@@ -600,7 +601,7 @@ function SpendSection() {
           {/* Wide enough that the sentence lands on two lines, never three. */}
           <Reveal delay={0.08}>
             <p className="mt-[30px] text-[15px] leading-relaxed text-[#18161B]/60 sm:text-base">
-              Your CTC stays locked where you put it. What moves at the till is the credit it earned
+              Your MON stays locked where you put it. What moves at the till is the credit it earned
               you, and you settle that before the due date. Nothing is sold to cover a coffee.
             </p>
           </Reveal>
@@ -660,7 +661,7 @@ function ReachSection() {
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
         <Reveal>
           <p className="text-[12px] font-medium uppercase tracking-[0.5px] text-[#18161B]/45">
-            Your record lives on chain
+            Your record lives on Monad
           </p>
         </Reveal>
         <Reveal delay={0.08}>

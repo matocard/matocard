@@ -19,8 +19,7 @@ const QUOTES: {
   avatar: string;
 }[] = [
   {
-    quote:
-      "I had been holding this coin for three years. Last week I paid for groceries with it and I still own every single one.",
+    quote: "I sent money home and it arrived before I hung up. My limit went up the month after.",
     author: "Alice Sugar",
     role: "Product Designer",
     company: "Acme",
