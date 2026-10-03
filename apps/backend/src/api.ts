@@ -6,6 +6,15 @@ import { body, json, UserError } from "./http";
 import type { Kyc } from "./kyc";
 import { type Payments, parseAuthorization } from "./payments";
 
+// ponytail: any origin. Sessions ride in the Authorization header, never cookies, so
+// another site can't act as the user; pin to the app's domain if cookies ever appear
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "authorization, content-type",
+  "access-control-max-age": "86400",
+};
+
 const MAX_SESSION_SECONDS = 7 * 24 * 3600;
 const SENDS_PER_DAY = 50;
 
@@ -55,13 +64,30 @@ export function createIndexer(url: string | undefined) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ query, variables }),
     });
-    const out = (await res.json()) as { data?: T; errors?: unknown };
-    if (!res.ok || out.errors)
-      throw new Error(`indexer: ${JSON.stringify(out.errors ?? res.status)}`);
+    const out = (await res.json().catch(() => null)) as { data?: T; errors?: unknown } | null;
+    if (!res.ok || !out || out.errors) {
+      throw new Error(`indexer ${res.status}: ${JSON.stringify(out?.errors ?? out)}`);
+    }
     return out.data ?? null;
   };
 }
 export type Indexer = ReturnType<typeof createIndexer>;
+
+/**
+ * History is extra: the score, limit and cycle counts come from the contract.
+ * An indexer that is down or stale (it has stalled before, #62) must not take
+ * a screen down with it, so screens get null and a flag instead.
+ */
+async function history<T>(
+  read: Promise<T | null>,
+): Promise<{ data: T | null; indexer: "ok" | "unavailable" }> {
+  try {
+    return { data: await read, indexer: "ok" };
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    return { data: null, indexer: "unavailable" };
+  }
+}
 
 /** PLAN §6.3: 150% at score 0 down to 80% at 100. */
 const ratioBps = (score: bigint) => 15_000n - (7_000n * score) / 100n;
@@ -122,12 +148,13 @@ export function createRoutes(deps: {
 }) {
   const { sql, chain, fx, payments, kyc, indexer, wake } = deps;
   type Handler = (req: Request & { params: Record<string, string> }) => Promise<Response>;
+  type Method = "GET" | "POST" | "OPTIONS";
   const signedIn =
     (handler: (user: User, req: Request) => Promise<unknown>): Handler =>
     async (req) =>
       json(await handler(await authenticate(sql, req), req));
 
-  const routes: Record<string, Partial<Record<"GET" | "POST", Handler>>> = {
+  const routes: Record<string, Partial<Record<Method, Handler>>> = {
     "/health": {
       GET: async () => {
         await sql`SELECT 1`;
@@ -144,9 +171,9 @@ export function createRoutes(deps: {
 
     "/me/activity": {
       GET: signedIn(async (user) => {
-        const onchain = await indexer<{ Activity: unknown[] }>(ACTIVITY, {
-          id: user.wallet.toLowerCase(),
-        });
+        const onchain = await history(
+          indexer<{ Activity: unknown[] }>(ACTIVITY, { id: user.wallet.toLowerCase() }),
+        );
         // money in flight that is not onchain yet
         const payments = await sql`
           SELECT id, kind, method, fiat_amount AS fiat, currency, ausd_amount AS ausd, status, created_at AS "createdAt"
@@ -154,7 +181,11 @@ export function createRoutes(deps: {
         const payouts = await sql`
           SELECT id, kind, fiat_amount AS fiat, currency, ausd_amount AS ausd, status, created_at AS "createdAt"
           FROM payouts WHERE user_id = ${user.id} AND status IN ('PENDING', 'SENT_ONCHAIN') ORDER BY created_at DESC`;
-        return { activity: onchain?.Activity ?? [], inFlight: [...payments, ...payouts] };
+        return {
+          activity: onchain.data?.Activity ?? [],
+          indexer: onchain.indexer,
+          inFlight: [...payments, ...payouts],
+        };
       }),
     },
 
@@ -177,9 +208,9 @@ export function createRoutes(deps: {
           chain.read.accountOf(wallet),
           chain.read.isVerified(wallet),
         ]);
-        const history = await indexer<{ Account_by_pk: unknown }>(VERIFY, {
-          id: wallet.toLowerCase(),
-        });
+        const past = await history(
+          indexer<{ Account_by_pk: unknown }>(VERIFY, { id: wallet.toLowerCase() }),
+        );
         return json({
           account: wallet,
           verified,
@@ -187,7 +218,8 @@ export function createRoutes(deps: {
           ratioBps: ratioBps(score),
           cycles: { counted: a.cycleCount, repaid: a.repayCount },
           defaulted: a.defaulted,
-          history: history?.Account_by_pk ?? null,
+          history: past.data?.Account_by_pk ?? null,
+          indexer: past.indexer,
         });
       },
     },
@@ -247,21 +279,26 @@ export function createRoutes(deps: {
 
   // one error shape for every route; anything unexpected is logged, not shown
   for (const methods of Object.values(routes)) {
-    for (const [method, handler] of Object.entries(methods) as ["GET" | "POST", Handler][]) {
+    for (const [method, handler] of Object.entries(methods) as [Method, Handler][]) {
       methods[method] = async (req) => {
-        try {
-          return await handler(req);
-        } catch (error) {
-          if (error instanceof UserError) return json({ error: error.message }, error.status);
-          // the relayer's dry run refused it: the request was wrong, the reason is the contract's
-          if (error instanceof Error && error.message.includes(" would revert: ")) {
-            return json({ error: error.message }, 400);
+        const res = await (async () => {
+          try {
+            return await handler(req);
+          } catch (error) {
+            if (error instanceof UserError) return json({ error: error.message }, error.status);
+            // the relayer's dry run refused it: the request was wrong, the reason is the contract's
+            if (error instanceof Error && error.message.includes(" would revert: ")) {
+              return json({ error: error.message }, 400);
+            }
+            console.error(`${method} ${new URL(req.url).pathname}:`, error);
+            return json({ error: "something went wrong" }, 500);
           }
-          console.error(`${method} ${new URL(req.url).pathname}:`, error);
-          return json({ error: "something went wrong" }, 500);
-        }
+        })();
+        for (const [k, v] of Object.entries(CORS)) res.headers.set(k, v);
+        return res;
       };
     }
+    methods.OPTIONS = async () => new Response(null, { status: 204, headers: CORS });
   }
   return routes;
 }

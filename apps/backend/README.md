@@ -1,6 +1,6 @@
 # Backend
 
-`api`, `kyc`, `payments` and `relayer` (PLAN §7) in one Bun process, with Postgres. Runs in Docker; the Hostinger VPS will run the same compose file (#50).
+`api`, `kyc`, `payments` and `relayer` (PLAN §7) in one Bun process, with Postgres. Runs in Docker; the Hostinger VPS runs the same compose file (#50), live at `https://api.matocard.xyz`.
 
 ## Run on localhost
 
@@ -23,9 +23,36 @@ bun run dev
 bun test          # needs DATABASE_URL; the relayer and end-to-end tests also need anvil and forge
 ```
 
+## Deploy to the VPS
+
+The Hostinger VPS already runs a Caddy for its other sites (`/opt/portir/apps/portiragent/deploy`), which holds 80 and 443 and gets certificates from Let's Encrypt on its own. It serves `https://api.matocard.xyz` as well: `docker-compose.vps.yml` puts the backend on that Caddy's network as `matocard-api`, and adds a daily `pg_dump` into `backups/` (14 days kept).
+
+1. **DNS:** an `A` record `api` → `201.18.211.8` in the `matocard.xyz` zone.
+2. **That Caddy's Caddyfile** has:
+   ```
+   api.matocard.xyz {
+   	encode gzip
+   	reverse_proxy matocard-api:3000
+   }
+   ```
+   then `docker exec deploy-caddy-1 caddy validate --config /etc/caddy/Caddyfile && docker exec deploy-caddy-1 caddy reload --config /etc/caddy/Caddyfile`.
+3. **On the VPS:**
+   ```sh
+   cd /opt/matocard/apps/backend
+   cp .env.example .env && chmod 600 .env      # fill in, and uncomment COMPOSE_FILE
+   docker compose up -d --build
+   curl https://api.matocard.xyz/health
+   ```
+4. **Webhooks:** Didit → a webhook destination `https://api.matocard.xyz/webhooks/didit` subscribed to `status.updated`; its secret is `DIDIT_WEBHOOK_SECRET`. Xendit → `https://api.matocard.xyz/webhooks/xendit`; its callback token is `XENDIT_CALLBACK_TOKEN`.
+5. **Chain:** on Monad testnet, `RELAYER_PK` needs `KYC_ROLE` and `RELAYER_ROLE` on the credit line and holds the treasury's AUSD, plus MON for gas and drips.
+
+Postgres and the backend listen on localhost only; Caddy is the one public door. The code reaches the VPS with `git archive <branch> | ssh root@201.18.211.8 'tar -x -C /opt/matocard'` (`.env` is not in git, so it stays), then `docker compose up -d --build`.
+
 ## API
 
 Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`, where the account signs `sessionMessage(wallet, until)` from `src/api.ts` (at most 7 days ahead). Amounts are strings in the smallest unit (AUSD: 6 decimals, MYR: sen, IDR: rupiah).
+
+Every route answers CORS preflight and allows any origin: sessions ride in a header, never a cookie.
 
 | Route | | |
 |---|---|---|

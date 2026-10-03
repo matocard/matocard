@@ -1,0 +1,35 @@
+# VPS only (COMPOSE_FILE in .env). Our VPS already runs a Caddy for its other
+# sites (/opt/portir/apps/portiragent/deploy) that owns 80 and 443; it serves
+# api.matocard.xyz too and reaches the backend over its network as matocard-api.
+services:
+  backend:
+    networks:
+      default:
+      shared:
+        aliases: [matocard-api]
+
+  # a compressed dump every day, the last 14 kept: the ledger is money records
+  backup:
+    image: postgres:18.3
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          pg_dump -h postgres -U postgres matocard | gzip > /backups/matocard-$$(date +%F).sql.gz \
+            && find /backups -name 'matocard-*.sql.gz' -mtime +14 -delete
+          sleep 86400
+        done
+
+networks:
+  shared:
+    name: deploy_default
+    external: true

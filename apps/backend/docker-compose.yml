@@ -2,7 +2,7 @@
 #   cp .env.example .env
 #   docker compose up -d --build        # everything in Docker
 #   docker compose up -d postgres       # only the database, for `bun run dev` and tests
-# The VPS runs this same file (#50).
+# On the VPS (#50), COMPOSE_FILE in .env adds docker-compose.vps.yml (HTTPS, daily backups)
 name: matocard-backend
 
 services:

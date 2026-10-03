@@ -218,6 +218,15 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(forged.status).toBe(401);
   });
 
+  test("the app on another origin may call it", async () => {
+    const pre = await fetch(`${base}/me`, { method: "OPTIONS" });
+    expect(pre.status).toBe(204);
+    expect(pre.headers.get("access-control-allow-headers")).toContain("authorization");
+    const res = await fetch(`${base}/me`);
+    expect(res.status).toBe(401);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
   test("1–2. sign up and verify: identity onchain, MON dripped once", async () => {
     await verify(siti, "A1234567");
     const me = await call(siti, "GET", "/me");
@@ -437,6 +446,24 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(v.status).toBe(200);
     expect(v.body).toMatchObject({ verified: true, score: "0", ratioBps: "15000" });
     expect(JSON.stringify(v.body)).not.toMatch(/A1234567|Passport|IDN/);
+  });
+
+  test("an indexer that is down leaves /verify working from the contract", async () => {
+    const routes = createRoutes({
+      sql: db.sql,
+      chain,
+      fx: createFx(db.sql),
+      payments,
+      kyc: createKyc(db.sql, chain, config),
+      indexer: createIndexer("http://127.0.0.1:1/v1/graphql"),
+      wake: () => {},
+    });
+    const down = Bun.serve({ port: 0, routes, fetch: () => new Response("", { status: 404 }) });
+    const v = await fetch(`http://127.0.0.1:${down.port}/verify/${siti.address}`).then((r) =>
+      r.json(),
+    );
+    down.stop(true);
+    expect(v).toMatchObject({ verified: true, history: null, indexer: "unavailable" });
   });
 
   test("every ledger entry balances, per currency", async () => {
