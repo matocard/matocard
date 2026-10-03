@@ -60,8 +60,8 @@ const NAV_ITEMS: NavItem[] = [
  */
 const TRANSCRIPT: { speaker: "you" | "card"; text: string; emphasis?: boolean }[] = [
   { speaker: "you", text: "buy me a coffee" },
-  { speaker: "card", text: "done. 2 MON, paid from your limit." },
-  { speaker: "you", text: "my MON is still locked?" },
+  { speaker: "card", text: "done. $2, paid from your limit." },
+  { speaker: "you", text: "my top-up is still locked?" },
   { speaker: "card", text: "all of it. you pay it back in 30 days." },
   { speaker: "you", text: "and next month?" },
   { speaker: "card", text: "settle on time and the same lock allows more.", emphasis: true },
@@ -601,8 +601,9 @@ function SpendSection() {
           {/* Wide enough that the sentence lands on two lines, never three. */}
           <Reveal delay={0.08}>
             <p className="mt-[30px] text-[15px] leading-relaxed text-[#18161B]/60 sm:text-base">
-              Your MON stays locked where you put it. What moves at the till is the credit it earned
-              you, and you settle that before the due date. Nothing is sold to cover a coffee.
+              Your top-up stays put, held as AUSD on Monad. What moves at the till is the credit it
+              earned you, and you settle that before the due date. Nothing is sold to cover a
+              coffee.
             </p>
           </Reveal>
         </div>
