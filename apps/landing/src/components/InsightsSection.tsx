@@ -2,8 +2,6 @@ import { motion } from "framer-motion";
 import { BlurIn } from "./BlurIn";
 import { CurvedDivider } from "./CurvedDivider";
 
-const CDN = "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P";
-
 /**
  * The middle card is deliberately shorter. With `lg:items-end` on the row, that
  * is what staggers the tops on desktop while every card still ends on the same
@@ -19,7 +17,7 @@ const CARDS: {
 }[] = [
   {
     minHeight: "min-h-[450px]",
-    video: `${CDN}/hf_20260405_143605_bc7bd6c0-9c68-49ff-a9d3-073a10759fa4.mp4`,
+    video: "/insight-1.mp4",
     overlay: "bg-[rgba(206,223,235,0.25)]",
     stat: "1.25x",
     description: "What you can spend against what you put in, once the card knows you",
@@ -27,7 +25,7 @@ const CARDS: {
   },
   {
     minHeight: "min-h-[350px]",
-    video: `${CDN}/hf_20260405_145119_f4ec4d9f-3ecd-4116-baa3-26e8cf2df976.mp4`,
+    video: "/insight-2.mp4",
     overlay: "bg-[rgba(247,236,233,0.6)]",
     stat: "30 days",
     description: "To pay it back. No interest, no fee you find out about later",
@@ -35,7 +33,7 @@ const CARDS: {
   },
   {
     minHeight: "min-h-[450px]",
-    video: `${CDN}/hf_20260405_140728_ae719193-f10b-4105-82fc-c989610b3aa6.mp4`,
+    video: "/insight-3.mp4",
     overlay: "bg-[rgba(218,218,218,0.2)]",
     stat: "0",
     description: "Times you have to sell your crypto to pay for something",

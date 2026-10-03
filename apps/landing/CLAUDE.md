@@ -83,10 +83,13 @@ deployed yet. Change it there once the app's domain is fixed.
 
 ## Things that will bite you
 
-**Assets are remote and hardcoded.** Hero imagery comes from a Higgs CDN and the
-stat cards pull three CloudFront MP4s. There is no local fallback: offline, or
-the day those URLs move, those sections render empty. Everything under `public/`
-is ours and safe.
+**Videos are local and web-sized; images are still remote.** Every video lives in
+`public/` (`intro.mp4`, `counter.mp4`, `insight-*.mp4`), re-encoded with
+`ffmpeg -c:v libx264 -preset slow -crf 23..25 -movflags +faststart`, scaled to the
+box each plays in. The intro was 29 MB at 46 Mbps for five seconds and stalled the
+hero; keep any new video near 0.5 MB per second of 1080p. Hero and card imagery
+still come from a Higgs CDN with no local fallback: offline, or the day those URLs
+move, those images render empty.
 
 **Video needs `muted` set through a ref**, not only as a JSX prop. React does not
 reliably reflect it as a DOM attribute, and an unmuted video is blocked from
