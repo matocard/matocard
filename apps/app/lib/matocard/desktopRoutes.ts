@@ -30,7 +30,8 @@ export function rendersOnDesktop(path: string): boolean {
     path === "/pay" ||
     // Matocard's top up and settle have no drawer either.
     path === "/topup" ||
-    path === "/settle"
+    path === "/settle" ||
+    path === "/cashout"
   );
 }
 

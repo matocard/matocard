@@ -27,6 +27,7 @@ const FLOW_ROUTES = {
   "/send": null,
   "/send/me": null,
   "/send/to": null,
+  "/cashout": null,
   "/settle": null,
   "/topup": null,
   "/transactions": "/home?panel=activity",

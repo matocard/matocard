@@ -195,6 +195,13 @@ export default function HomePage() {
             </div>
             <div className="text-right text-[14.5px] font-semibold [font-variant-numeric:tabular-nums]">
               {formatAusd(credit.ausdBalance)} USD · AUSD
+              <button
+                type="button"
+                onClick={() => nav.forward("/cashout")}
+                className="mt-1 block w-full text-right text-[12.5px] font-medium underline"
+              >
+                Cash out
+              </button>
             </div>
           </Card>
         ) : null}
