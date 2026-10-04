@@ -22,3 +22,30 @@ test("the ratio reads as a percentage", () => {
   expect(formatBps(11_150n)).toBe("111.5%");
   expect(formatBps(13_810n)).toBe("138.1%");
 });
+
+test("ringgit is in sen and reads with two decimals", async () => {
+  const { approxLocal, formatLocal, ausdToLocal } = await import("../money");
+  expect(formatLocal(60_000n, "MYR")).toBe("RM 600.00");
+  // PLAN §3: 1 USD = 4.00 MYR, so 150 AUSD is RM 600 and 100 AUSD is RM 400.
+  expect(ausdToLocal(150_000_000n, "MYR", "4")).toBe(60_000n);
+  expect(approxLocal(100_000_000n, "4", "MYR")).toBe("≈ RM 400.00");
+  expect(approxLocal(100_000_000n, "16000", "IDR")).toBe("≈ Rp 1,600,000");
+});
+
+test("where you live picks the currency, the Xendit account and the minimum", async () => {
+  const { localFor } = await import("../local");
+  expect(localFor("MY")).toMatchObject({
+    currency: "MYR",
+    pair: "USD/MYR",
+    minTopUp: 500n,
+    decimals: 2,
+  });
+  expect(localFor("ID")).toMatchObject({
+    currency: "IDR",
+    pair: "USD/IDR",
+    minTopUp: 10_000n,
+    decimals: 0,
+  });
+  // Not chosen yet: rupiah, the currency every account can use.
+  expect(localFor(null).currency).toBe("IDR");
+});

@@ -17,11 +17,33 @@ export const formatIdr = (rupiah: bigint) => `Rp ${groupThousands(rupiah.toStrin
 export const ausdToIdr = (amount: bigint, rate: string) =>
   baseToQuote(amount, "AUSD", "IDR", rate, "down");
 
-/** "≈ Rp 1,625,050", or null while there is no rate yet (show nothing rather than a guess). */
-export function approxIdr(amount: bigint | undefined, rate: string | undefined): string | null {
+/** 60_000n sen → "RM 600.00". */
+export const formatMyr = (sen: bigint) => `RM ${groupThousands(formatAmount(sen, "MYR"))}`;
+
+/** The money a user pays in and thinks in. */
+export type LocalCurrency = "IDR" | "MYR";
+
+/** An amount in `currency`'s smallest unit (rupiah, sen), with its symbol. */
+export const formatLocal = (amount: bigint, currency: LocalCurrency) =>
+  currency === "MYR" ? formatMyr(amount) : formatIdr(amount);
+
+/** AUSD at a `USD/<currency>` rate, in that currency's smallest unit, rounded down. */
+export const ausdToLocal = (amount: bigint, currency: LocalCurrency, rate: string) =>
+  baseToQuote(amount, "AUSD", currency, rate, "down");
+
+/** "≈ RM 400.00" / "≈ Rp 1,625,050", or null while there is no rate yet (never a guess). */
+export function approxLocal(
+  amount: bigint | undefined,
+  rate: string | undefined,
+  currency: LocalCurrency = "IDR",
+): string | null {
   if (amount === undefined || !rate) return null;
-  return `≈ ${formatIdr(ausdToIdr(amount, rate))}`;
+  return `≈ ${formatLocal(ausdToLocal(amount, currency, rate), currency)}`;
 }
+
+/** Rupiah only; `approxLocal` with "IDR". */
+export const approxIdr = (amount: bigint | undefined, rate: string | undefined) =>
+  approxLocal(amount, rate, "IDR");
 
 /** Bps as a percentage with up to two decimals: 11150n → "111.5%". */
 export const formatBps = (bps: bigint) =>
