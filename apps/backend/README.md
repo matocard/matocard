@@ -48,6 +48,7 @@ The VPS's address and SSH access are not in this repository; ask the backend own
 4. **Webhooks:**
    - Didit: a webhook destination `https://api.matocard.xyz/webhooks/didit` subscribed to `status.updated`; its secret is `DIDIT_WEBHOOK_SECRET`.
    - Xendit (Settings → Webhooks): `https://api.matocard.xyz/webhooks/xendit` on **Payment Session** (completed, expired), **Payment Requests V3** (payment status), **Payouts v2** and **Unified Refunds** (refund succeeded). The verification token on that page is `XENDIT_CALLBACK_TOKEN`. Leave the v1 *Disbursement* hooks off: the backend uses v2 payouts.
+   - Xendit's Malaysian account: the same URL on **Payment Session**, **Payment Requests V3** and **Unified Refunds**; its token is `XENDIT_MY_CALLBACK_TOKEN`.
 5. **Chain:** on Monad testnet, `RELAYER_PK` needs `KYC_ROLE` and `RELAYER_ROLE` on the credit line and holds the treasury's AUSD, plus MON for gas and drips.
 
 Postgres and the backend listen on localhost only; Caddy is the one public door.
@@ -65,7 +66,7 @@ ssh <vps> 'cd /opt/matocard/apps/backend && docker compose up -d --build'
 
 **Swagger: [`https://api.matocard.xyz/docs`](https://api.matocard.xyz/docs)**, from [`openapi.json`](openapi.json): every route with its request, response and errors, how to sign in, and the ERC-3009 domain. A test fails if a route is missing from it.
 
-Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`, where the account signs `sessionMessage(wallet, until)` from `src/api.ts` (at most 7 days ahead). Amounts are strings in the smallest unit (AUSD: 6 decimals, IDR: rupiah, MYR: sen). Money moves in IDR; MYR is quoted for display only.
+Signed-in routes take `Authorization: Matocard <wallet>.<until>.<signature>`, where the account signs `sessionMessage(wallet, until)` from `src/api.ts` (at most 7 days ahead). Amounts are strings in the smallest unit (AUSD: 6 decimals, IDR: rupiah, MYR: sen). Top-ups and settlements move in IDR or MYR, picked by the quote's pair; cash-outs in IDR.
 
 **Verified** below means verified onchain (`isVerified` on the credit line), the same `verified` that `GET /me` returns. `user.kyc` is only our record of Didit's decision: the demo accounts were verified onchain without Didit and keep `kyc: "none"`.
 
@@ -81,8 +82,8 @@ Every route answers CORS preflight and allows any origin: sessions ride in a hea
 | `POST /me/country` | signed | `{ country: "MY" }`, ISO two letters |
 | `GET /me/activity` | signed | indexer activity plus payments and payouts not yet onchain |
 | `POST /kyc/session` | signed | Didit URL to open; Didit sends the user back to `APP_URL` |
-| `POST /topups` | signed, verified | `{ amount: "2400000", method, quoteId }` (IDR, quote `USD/IDR`) → Xendit checkout URL |
-| `POST /settlements` | signed | `{ quoteId }` (`USD/IDR`) → checkout for the whole debt in IDR, rounded up |
+| `POST /topups` | signed, verified | `{ amount: "2400000", method, quoteId }`: rupiah with a `USD/IDR` quote (at least Rp 10,000), sen with `USD/MYR` (at least RM 5) → Xendit checkout URL |
+| `POST /settlements` | signed | `{ quoteId }` (`USD/IDR` or `USD/MYR`) → checkout for the whole debt in that currency, rounded up |
 | `POST /sends` | signed, verified | `{ authorization }`: an ERC-3009 transfer the sender signed; relayer pays gas |
 | `POST /cashouts` | signed | `{ quoteId, authorization (to the treasury), bank: { channelCode, accountNumber, accountHolderName } }` → IDR payout, at least Rp 10,000 |
 | `POST /webhooks/xendit` | `x-callback-token` | payments, refunds, disputes, payouts |
@@ -94,7 +95,7 @@ Webhooks only record what happened and answer at once. A worker loop in the same
 
 The relayer logs every transaction in `relayer_txs` before sending it, dry-runs it first (a revert costs nothing and comes back with the contract's error), keeps its own nonce, sends the published gas limits, and reads back the state each call was meant to change. It never resends for a payment that already has a sent or confirmed transaction: that is left for a person.
 
-The hold follows how the payer actually paid, not what the app asked for: virtual accounts count as bank (no hold), QRIS as QR, and cards, e-wallets and anything unknown as card, the longest hold. `payment_session.completed` does not carry the channel, so it is read from the session's payment request at Xendit.
+The hold follows how the payer actually paid, not what the app asked for: virtual accounts, FPX and DuitNow count as bank (no hold), QRIS as QR, and cards, e-wallets and anything unknown as card, the longest hold. `payment_session.completed` does not carry the channel, so it is read from the session's payment request at Xendit.
 
 A refund or chargeback marks its top-up; inside the hold the worker takes the deposit back with `cancelPending`, after it the amount is booked as an operator loss (`loss:chargeback`). Xendit's `refund.succeeded` names the payment request (`pr-…`) in `payment_id`, so it is resolved to the payment first. One that matches no top-up is logged.
 
@@ -128,4 +129,4 @@ Run on `https://api.matocard.xyz` on 3–4 Oct 2026, Xendit in test mode, Didit 
 - Dispute webhooks (`dispute.*`): none raised in our tests; they are handled like a refund
 - QRIS and e-wallet payments, and payouts to banks other than BCA
 
-**One Xendit account.** Top-ups, settlements and payouts all use one Indonesian account, so money moves in IDR (`COLLECT` in `src/payments.ts`). Collecting MYR needs a Malaysian account (Xendit ties an account to its country); then set `COLLECT` back to MYR, and `XENDIT_PAYOUT_SECRET_KEY` / `XENDIT_PAYOUT_CALLBACK_TOKEN` keep payouts on the Indonesian one.
+**Two Xendit accounts.** Xendit ties an account to its country, so there is one per currency (`COLLECT` in `src/payments.ts`). The Indonesian one (`XENDIT_SECRET_KEY`) collects IDR and pays every cash-out, since the families are in Indonesia. The Malaysian one (`XENDIT_MY_SECRET_KEY`) collects MYR. The quote's pair picks the account; a webhook's token says which account sent it, so refunds are looked up there.

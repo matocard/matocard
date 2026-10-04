@@ -388,6 +388,41 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(p).toEqual({ method: "bank", status: "SETTLED" });
   });
 
+  test("a ringgit top-up goes through the Malaysian account", async () => {
+    const quote = await call(null, "POST", "/quote", { pair: "USD/MYR" });
+    const small = await call(siti, "POST", "/topups", {
+      amount: "499",
+      method: "bank",
+      quoteId: quote.body.id,
+    });
+    expect(small.body.error).toBe("the smallest top-up is 5.00 MYR");
+    const topup = await call(siti, "POST", "/topups", {
+      amount: "60000", // RM 600
+      method: "bank",
+      quoteId: quote.body.id,
+    });
+    expect(topup.body.ausd).toBe("150000000");
+    const session = xenditCalls.at(-1)!;
+    expect(session.body).toMatchObject({ amount: 600, currency: "MYR", country: "MY" });
+    expect(session.headers.get("authorization")).toBe(`Basic ${btoa("xnd_development_my:")}`);
+
+    // the Malaysian account's webhooks carry its own token
+    const hook = {
+      event: "payment_session.expired",
+      data: { reference_id: topup.body.paymentId },
+    };
+    expect((await xenditHook(hook, { "x-callback-token": "xendit-my-token" })).status).toBe(200);
+    const [p] =
+      await db.sql`SELECT status, currency FROM payments WHERE id = ${topup.body.paymentId}`;
+    expect(p).toEqual({ status: "FAILED", currency: "MYR" });
+  });
+
+  test("a cash out only takes a rupiah quote", async () => {
+    const quote = await call(null, "POST", "/quote", { pair: "USD/MYR" });
+    const out = await call(mom, "POST", "/cashouts", { quoteId: quote.body.id });
+    expect(out.body.error).toBe("unknown quote");
+  });
+
   test("an expired quote is refused", async () => {
     const quote = await call(null, "POST", "/quote", { pair: "USD/IDR" });
     await db.sql`UPDATE fx_quotes SET expires_at = now() - interval '1 second' WHERE id = ${quote.body.id}`;
