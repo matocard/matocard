@@ -16,8 +16,7 @@ import type { Config } from "wagmi";
  * Networks are declared here rather than imported from `viem/chains` because AppKit needs the CAIP
  * shape (`caipNetworkId`, `chainNamespace`) that plain viem chains do not carry.
  *
- * Monad testnet is Matocard's only chain. The networks after it are left from the earlier
- * project's screens and go once nothing reads them.
+ * Monad testnet is Matocard's only chain.
  */
 
 /** Monad's public testnet RPC. Override with `NEXT_PUBLIC_MONAD_RPC_URL` if it rate-limits a demo. */
@@ -42,148 +41,12 @@ export const monadTestnet: AppKitNetwork = {
   testnet: true,
 };
 
-/** Monad CC3 testnet. Chain id and RPC match `contracts/foundry.toml`. */
-export const monadTestnet: AppKitNetwork = {
-  id: 102031,
-  caipNetworkId: "eip155:102031",
-  chainNamespace: "eip155",
-  name: "Monad Testnet",
-  // The explorer and the wallets both show this, and tCTC is what the faucet calls it.
-  nativeCurrency: { name: "Testnet MON", symbol: "tCTC", decimals: 18 },
-  // `default` feeds the modal and viem's transport; `chainDefault` is what AppKit's
-  // `wallet_addEthereumChain` reads. Omit the second and the add-chain prompt sends an empty
-  // rpcUrls array, which every wallet rejects.
-  rpcUrls: {
-    default: { http: ["https://rpc.cc3-testnet.monad.network"] },
-    chainDefault: { http: ["https://rpc.cc3-testnet.monad.network"] },
-  },
-  blockExplorers: {
-    default: { name: "Blockscout", url: "https://monad-testnet.blockscout.com" },
-  },
-  testnet: true,
-};
-
-/** Where the collateral is locked. Attestcoin proves this chain's events on Monad. */
-export const sepolia: AppKitNetwork = {
-  id: 11155111,
-  caipNetworkId: "eip155:11155111",
-  chainNamespace: "eip155",
-  name: "Sepolia",
-  nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://ethereum-sepolia-rpc.publicnode.com"] },
-    chainDefault: { http: ["https://ethereum-sepolia-rpc.publicnode.com"] },
-  },
-  blockExplorers: { default: { name: "Etherscan", url: "https://sepolia.etherscan.io" } },
-  testnet: true,
-};
-
 /**
- * Base Sepolia. Collateral locked here reaches Monad through Wormhole, not Attestcoin.
- *
- * Attestcoin proves Ethereum and Sepolia and nothing else, so every other chain needs a different
- * carrier. The asset still never moves: a `WormholeVault` holds it here and publishes a signed
- * message saying so.
- */
-export const baseSepolia: AppKitNetwork = {
-  id: 84532,
-  caipNetworkId: "eip155:84532",
-  chainNamespace: "eip155",
-  name: "Base Sepolia",
-  nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://base-sepolia-rpc.publicnode.com"] },
-    chainDefault: { http: ["https://base-sepolia-rpc.publicnode.com"] },
-  },
-  blockExplorers: { default: { name: "Basescan", url: "https://sepolia.basescan.org" } },
-  testnet: true,
-};
-
-/** Arbitrum Sepolia. Same Wormhole path as Base. */
-export const arbitrumSepolia: AppKitNetwork = {
-  id: 421614,
-  caipNetworkId: "eip155:421614",
-  chainNamespace: "eip155",
-  name: "Arbitrum Sepolia",
-  nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://arbitrum-sepolia-rpc.publicnode.com"] },
-    chainDefault: { http: ["https://arbitrum-sepolia-rpc.publicnode.com"] },
-  },
-  blockExplorers: { default: { name: "Arbiscan", url: "https://sepolia.arbiscan.io" } },
-  testnet: true,
-};
-
-/** Optimism Sepolia. Wormhole 10005. */
-export const optimismSepolia: AppKitNetwork = {
-  id: 11155420,
-  caipNetworkId: "eip155:11155420",
-  chainNamespace: "eip155",
-  name: "Optimism Sepolia",
-  nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://optimism-sepolia-rpc.publicnode.com"] },
-    chainDefault: { http: ["https://optimism-sepolia-rpc.publicnode.com"] },
-  },
-  blockExplorers: {
-    default: { name: "Etherscan", url: "https://sepolia-optimism.etherscan.io" },
-  },
-  testnet: true,
-};
-
-/**
- * BSC Testnet. Wormhole **4**, not 10004-anything.
- *
- * Wormhole gave its later testnets ids in the 10000s (Sepolia 10002, Arbitrum 10003, Base 10004,
- * Optimism 10005) but BSC Testnet and Avalanche Fuji predate that and reuse their mainnet ids, 4
- * and 6. Guessing the pattern puts Fuji at 10006, which is Holesky: a different chain whose vault
- * would be read at the wrong address. Both numbers here are the ones `apps/worker/src/config.ts`
- * and the indexer's chain map use.
- */
-export const bscTestnet: AppKitNetwork = {
-  id: 97,
-  caipNetworkId: "eip155:97",
-  chainNamespace: "eip155",
-  name: "BSC Testnet",
-  nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://bsc-testnet-rpc.publicnode.com"] },
-    chainDefault: { http: ["https://bsc-testnet-rpc.publicnode.com"] },
-  },
-  blockExplorers: { default: { name: "BscScan", url: "https://testnet.bscscan.com" } },
-  testnet: true,
-};
-
-/** Avalanche Fuji. Wormhole **6**: see the note on `bscTestnet`. */
-export const avalancheFuji: AppKitNetwork = {
-  id: 43113,
-  caipNetworkId: "eip155:43113",
-  chainNamespace: "eip155",
-  name: "Avalanche Fuji",
-  nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://api.avax-test.network/ext/bc/C/rpc"] },
-    chainDefault: { http: ["https://api.avax-test.network/ext/bc/C/rpc"] },
-  },
-  blockExplorers: { default: { name: "Snowtrace", url: "https://testnet.snowtrace.io" } },
-  testnet: true,
-};
-
-/**
- * Monad leads: it is AppKit's default network. `selectMonad()` in `lib/wallet-reown.ts` also
+ * The one network, so it is AppKit's default. `selectMonad()` in `lib/wallet-reown.ts` also
  * switches to it after connect, through `switchChain`, which falls back to
  * `wallet_addEthereumChain` for a wallet that does not know Monad testnet yet.
  */
-export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
-  monadTestnet,
-  sepolia,
-  monadTestnet,
-  baseSepolia,
-  arbitrumSepolia,
-  optimismSepolia,
-  bscTestnet,
-  avalancheFuji,
-];
+export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [monadTestnet];
 
 export const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ?? "";
 
