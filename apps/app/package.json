@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "test:live": "LIVE=1 vitest run lib/matocard/__tests__/live.test.ts"
+    "test:live": "LIVE=1 vitest run lib/matocard/__tests__/live.test.ts",
+    "fork": "anvil --fork-url https://testnet-rpc.monad.xyz --chain-id 10143 --port 8645",
+    "test:fork": "FORK_RPC=${FORK_RPC:-http://127.0.0.1:8645} vitest run hooks/__tests__/useCredit.fork.test.tsx"
   },
   "dependencies": {
     "@matocard/contracts": "workspace:*",
