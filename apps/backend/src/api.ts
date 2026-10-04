@@ -157,6 +157,12 @@ export function createRoutes(deps: {
   const { sql, chain, fx, payments, kyc, indexer, wake } = deps;
   type Handler = (req: Request & { params: Record<string, string> }) => Promise<Response>;
   type Method = "GET" | "POST" | "OPTIONS";
+  // the contract is the authority (depositFor reverts NotVerified without it), and it also
+  // knows accounts bound onchain without Didit, such as the demo accounts (#68)
+  const mustBeVerified = async (user: User) => {
+    if (!(await chain.read.isVerified(user.wallet)))
+      throw new UserError("verify your identity first", 403);
+  };
   const signedIn =
     (handler: (user: User, req: Request) => Promise<unknown>): Handler =>
     async (req) =>
@@ -242,7 +248,7 @@ export function createRoutes(deps: {
 
     "/topups": {
       POST: signedIn(async (user, req) => {
-        if (user.kyc_status !== "approved") throw new UserError("verify your identity first", 403);
+        await mustBeVerified(user);
         return payments.topup(user, await body(req));
       }),
     },
@@ -260,7 +266,7 @@ export function createRoutes(deps: {
     "/sends": {
       // D11: the sender signs an ERC-3009 transfer, the relayer pays the gas
       POST: signedIn(async (user, req) => {
-        if (user.kyc_status !== "approved") throw new UserError("verify your identity first", 403);
+        await mustBeVerified(user);
         const auth = parseAuthorization((await body(req)).authorization);
         if (auth.from !== user.wallet)
           throw new UserError("authorization is not from this account");
