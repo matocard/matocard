@@ -1,22 +1,36 @@
 "use client";
-import { CreditScreen } from "../../../components/credit/CreditScreen";
+import { useEffect, useState } from "react";
+import { Card, CopyButton } from "../../../components/ui";
+import { RecordView } from "../../../components/verify/RecordView";
+import { useVerifyRecord } from "../../../hooks/useVerifyRecord";
+import { useWallet } from "../../../hooks/useWallet";
 
 /**
- * The middle tab.
- *
- * It used to report APY on deposits, which this protocol does not pay and never had: there is no
- * yield here at all. It now reports the thing the card actually earns, which is a record.
- *
- * The path was `/earn` long after the tab was renamed Credit, on the grounds that the bottom nav
- * and every test addressed that path. That is a reason to do the rename carefully, not a reason to
- * leave a URL naming a product this app does not sell. `/earn` still resolves, as a redirect, so a
- * link posted before the rename does not land on a 404 during a demo.
- *
- * It used to bounce desktop visitors to `/home`, on the grounds that desktop had no design for it.
- * That was true while desktop had no navigation either; now that the bar offers Credit as a
- * destination, a link that redirected the moment it was followed would be the bug. `CreditScreen`
- * carries the desktop layout itself, so both widths render the same component.
+ * The Credit tab: your own record, exactly as anyone else sees it at `/verify/<account>`, and the
+ * link to share it. The record is the product (PLAN §2): it is yours, anyone can check it, and it
+ * still counts when you move home.
  */
 export default function CreditPage() {
-  return <CreditScreen />;
+  const { address } = useWallet();
+  const { record, loading, error } = useVerifyRecord(address);
+  // The origin is read after mount, so the server never renders a link to the wrong host.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+  const link = address && origin ? `${origin}/verify/${address}` : "";
+
+  return (
+    <div className="stagger pb-8">
+      <h1 className="mb-4 mt-2 text-[24px] font-semibold tracking-[-0.02em]">Your credit record</h1>
+      <RecordView record={record} loading={loading} error={error} />
+      {link ? (
+        <Card className="mt-3 flex items-center justify-between gap-3 px-5 py-4">
+          <div className="min-w-0">
+            <div className="text-[14.5px] font-semibold">Share your record</div>
+            <div className="truncate font-mono text-[12px] text-muted">{link}</div>
+          </div>
+          <CopyButton value={link} label="Copy link to your record" />
+        </Card>
+      ) : null}
+    </div>
+  );
 }
