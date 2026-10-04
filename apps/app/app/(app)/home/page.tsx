@@ -14,10 +14,9 @@ import { useFx } from "../../../hooks/useFx";
 import { useMe } from "../../../hooks/useMe";
 import { useMyActivity } from "../../../hooks/useMyActivity";
 import { useNav } from "../../../hooks/useNav";
-import { startKyc } from "../../../lib/matocard/backend";
-import { approxIdr, formatAusd } from "../../../lib/matocard/money";
-
-const MASKED = "•••• •••• •••• ••••";
+import { setCountry, startKyc } from "../../../lib/matocard/backend";
+import { localFor } from "../../../lib/matocard/local";
+import { approxLocal, formatAusd } from "../../../lib/matocard/money";
 
 /** A unix-seconds timestamp as "3 Nov". Formatted after mount only, where the screen renders. */
 const day = (seconds: bigint) =>
@@ -25,14 +24,17 @@ const day = (seconds: bigint) =>
 
 /**
  * Home (PLAN §8): what you can spend, why, what you owe, and what happened. Figures that the
- * user acts on come from the chain (`useCredit`); KYC comes from the backend (`useMe`); the
- * rupiah figures use one shared display rate (`useFx`).
+ * user acts on come from the chain (`useCredit`); KYC, country and the card number come from the
+ * backend (`useMe`); local-currency figures use one shared display rate (`useFx`) for the
+ * currency of where the user lives.
  */
 export default function HomePage() {
   const nav = useNav();
   const credit = useCredit();
   const me = useMe();
-  const { rate } = useFx();
+  const local = localFor(me.country);
+  const { rate } = useFx(local.pair);
+  const [cardShown, setCardShown] = useState(false);
   const activity = useMyActivity();
   const [kycUrl, setKycUrl] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
@@ -65,6 +67,19 @@ export default function HomePage() {
     }
   };
 
+  const chooseCountry = async (code: string) => {
+    setStarting(true);
+    try {
+      const session = me.session ?? (await me.signIn());
+      await setCountry(session, code);
+      await me.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save that.");
+    } finally {
+      setStarting(false);
+    }
+  };
+
   const verify = async () => {
     setStarting(true);
     try {
@@ -91,7 +106,12 @@ export default function HomePage() {
   return (
     <div>
       <div className="stagger">
-        <AvailableHero available={credit.available} rate={rate} issued={verified} />
+        <AvailableHero
+          available={credit.available}
+          rate={rate}
+          currency={local.currency}
+          issued={verified}
+        />
 
         {verified ? (
           <ActionRow className="mb-[22px]">
@@ -108,9 +128,11 @@ export default function HomePage() {
         ) : credit.loading ? null : (
           <VerifyCard
             signedIn={Boolean(me.session)}
+            country={me.country}
             kyc={me.kyc}
             busy={starting || me.signingIn}
             onSignIn={signIn}
+            onCountry={chooseCountry}
             onVerify={verify}
           />
         )}
@@ -119,11 +141,20 @@ export default function HomePage() {
           <CardFolder
             title=""
             ariaLabel={verified ? "Your card" : "Your card, not issued yet"}
-            cardNumber={MASKED}
+            cardNumber={verified ? (me.cardNumber ?? "") : ""}
             expiry="••/••"
             cvv="•••"
+            detailsVisible={cardShown}
+            onDetailsVisibleChange={setCardShown}
             className="w-full max-w-[340px]"
-            card={<CardArtwork holder="" number={MASKED} expiry="••/••" detailsVisible={false} />}
+            card={
+              <CardArtwork
+                holder=""
+                number={verified ? me.cardNumber : undefined}
+                expiry="••/••"
+                detailsVisible={cardShown}
+              />
+            }
           />
         </div>
 
@@ -133,6 +164,7 @@ export default function HomePage() {
             drawn={credit.drawn}
             dueDate={credit.dueAt && credit.dueAt > 0n && now ? day(credit.dueAt) : null}
             rate={rate}
+            currency={local.currency}
             onSettle={() => nav.forward("/settle")}
           />
         ) : null}
@@ -147,6 +179,7 @@ export default function HomePage() {
             yieldEarned={me.collateral?.yield}
             heldUntil={held && credit.collateral ? day(credit.collateral.pendingUntil) : null}
             rate={rate}
+            currency={local.currency}
           />
         ) : null}
 
@@ -156,7 +189,9 @@ export default function HomePage() {
             <CoinBadge token="AUSD" size={36} />
             <div className="flex-1">
               <div className="text-[14.5px] font-semibold">Balance</div>
-              <div className="text-[12.5px] text-muted">{approxIdr(credit.ausdBalance, rate)}</div>
+              <div className="text-[12.5px] text-muted">
+                {approxLocal(credit.ausdBalance, rate, local.currency)}
+              </div>
             </div>
             <div className="text-right text-[14.5px] font-semibold [font-variant-numeric:tabular-nums]">
               {formatAusd(credit.ausdBalance)} USD · AUSD

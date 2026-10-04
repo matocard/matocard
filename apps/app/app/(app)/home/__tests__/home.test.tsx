@@ -30,8 +30,15 @@ const credit = vi.fn();
 vi.mock("../../../../hooks/useCredit", () => ({ useCredit: () => credit() }));
 const me = vi.fn();
 vi.mock("../../../../hooks/useMe", () => ({ useMe: () => me() }));
-// PLAN §3's rate, so 100 AUSD reads Rp 1,600,000.
-vi.mock("../../../../hooks/useFx", () => ({ useFx: () => ({ rate: "16000" }) }));
+// PLAN §3's rates: 100 AUSD reads Rp 1,600,000 or RM 400.00.
+vi.mock("../../../../hooks/useFx", () => ({
+  useFx: (pair: string) => ({ rate: pair === "USD/MYR" ? "4" : "16000" }),
+}));
+const setCountry = vi.fn();
+vi.mock("../../../../lib/matocard/backend", async (original) => ({
+  ...(await original<typeof import("../../../../lib/matocard/backend")>()),
+  setCountry: (...a: unknown[]) => setCountry(...a),
+}));
 vi.mock("../../../../hooks/useMyActivity", () => ({
   useMyActivity: () => ({ items: [], loading: false, indexerDown: false }),
 }));
@@ -58,6 +65,8 @@ const meState = (over: Record<string, unknown> = {}) => ({
   signingIn: false,
   refresh: vi.fn(),
   kyc: "approved",
+  country: "ID",
+  cardNumber: "9924123412341234",
   collateral: { yield: 0n },
   ...over,
 });
@@ -135,4 +144,22 @@ test("money received shows as a balance, in AUSD on the detail row", () => {
   expect(screen.getByText("Balance")).toBeInTheDocument();
   expect(screen.getByText("50.00 USD · AUSD")).toBeInTheDocument();
   expect(screen.getByText("≈ Rp 800,000")).toBeInTheDocument();
+});
+
+test("someone in Malaysia reads the headline in ringgit", () => {
+  me.mockReturnValue(meState({ country: "MY" }));
+  render(<HomePage />);
+  expect(screen.getByText("≈ RM 400.00")).toBeInTheDocument();
+  expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
+});
+
+test("a signed-in account that has not said where it lives is asked, and the answer is saved", async () => {
+  const refresh = vi.fn();
+  credit.mockReturnValue(verifiedCredit({ verified: false }));
+  me.mockReturnValue(meState({ country: null, kyc: "none", refresh }));
+  render(<HomePage />);
+  expect(screen.getByText("Where do you live?")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Malaysia" }));
+  expect(setCountry).toHaveBeenCalledWith(expect.objectContaining({ wallet: "0xA11CE" }), "MY");
+  expect(refresh).toHaveBeenCalled();
 });
