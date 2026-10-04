@@ -24,7 +24,7 @@ The **yield fee**: 20% of the yield earned by every borrower's collateral. Borro
 
 The collateral ratio crosses 100% at score **72**. Above it, a borrower's limit exceeds their collateral. If such a borrower defaults owing more than their collateral is worth, all of it is seized into the pool and the **shortfall is the pool's loss**.
 
-Below score 72, a default is fully covered by the seized collateral.
+Below score 72, a default is fully covered by the seized collateral, unless the vault has lost value since the draw.
 
 | | Carried by |
 |---|---|

@@ -33,7 +33,7 @@ await wallet.writeContract({
 | `repay(amount)` | Repay from wallet AUSD (needs `approve`) | `repay` |
 | `repayWithPermit(amount, deadline, v, r, s)` | Repay with an EIP-2612 permit in one transaction | `repayWithPermit` |
 | `repayFromCollateral(amount)` | Repay out of collateral | `repayFromCollateral` |
-| `depositCollateral(assets)` | Deposit AUSD from the wallet directly as collateral (needs `approve`) | `deposit` |
+| `depositCollateral(assets)` | Deposit AUSD from the wallet directly as collateral (needs `approve`) | `depositCollateral` |
 | `withdrawCollateral(shares)` | Take collateral out, if debt stays within the new limit | `withdrawCollateral` |
 | `approve` (on AUSD) | Before `repay` or a direct deposit | `approve` |
 
