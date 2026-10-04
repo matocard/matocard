@@ -7,16 +7,11 @@ RUN npm install -g bun@1.3.14
 ENV HUSKY=0
 
 WORKDIR /repo
-COPY package.json bun.lock bunfig.toml ./
-# every workspace's manifest, or the frozen lockfile refuses to install
-COPY packages/tsconfig packages/tsconfig
-COPY packages/core/package.json packages/core/
-COPY packages/contracts/package.json packages/contracts/
-COPY apps/indexer/package.json apps/indexer/
-COPY apps/backend/package.json apps/backend/
+# The whole repo, so every workspace's manifest is there for the frozen lockfile
+# and a new workspace cannot break this build again (#75). .dockerignore keeps
+# node_modules, .env files and build output out.
+COPY . .
 RUN bun install --frozen-lockfile --filter @matocard/indexer
-
-COPY apps/indexer apps/indexer
 WORKDIR /repo/apps/indexer
 RUN ./node_modules/.bin/envio codegen
 
