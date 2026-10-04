@@ -10,6 +10,7 @@ COPY packages/tsconfig packages/tsconfig
 COPY packages/core/package.json packages/core/
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/indexer/package.json apps/indexer/
+COPY apps/landing/package.json apps/landing/
 COPY apps/backend/package.json apps/backend/
 RUN bun install --frozen-lockfile --production --filter @matocard/backend
 
