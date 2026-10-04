@@ -1,5 +1,5 @@
 "use client";
-import { approxIdr, formatAusd } from "../../lib/matocard/money";
+import { approxLocal, formatAusd, type LocalCurrency } from "../../lib/matocard/money";
 import { Button, Card } from "../ui";
 
 /**
@@ -11,12 +11,14 @@ export function OwedCard({
   drawn,
   dueDate,
   rate,
+  currency,
   onSettle,
   className = "",
 }: {
   drawn: bigint;
   dueDate: string | null;
   rate: string | undefined;
+  currency: LocalCurrency;
   onSettle: () => void;
   className?: string;
 }) {
@@ -29,7 +31,9 @@ export function OwedCard({
             {formatAusd(drawn)} USD
           </div>
           <div className="text-[12.5px] text-muted">
-            {approxIdr(drawn, rate) ? `${approxIdr(drawn, rate)} today` : null}
+            {approxLocal(drawn, rate, currency)
+              ? `${approxLocal(drawn, rate, currency)} today`
+              : null}
             {dueDate ? ` · due ${dueDate}` : null}
           </div>
         </div>

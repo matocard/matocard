@@ -1,5 +1,5 @@
 "use client";
-import { approxIdr, formatAusd, formatBps } from "../../lib/matocard/money";
+import { approxLocal, formatAusd, formatBps, type LocalCurrency } from "../../lib/matocard/money";
 import { Card } from "../ui";
 
 const DASH = "—";
@@ -17,6 +17,7 @@ export function LimitBreakdown({
   yieldEarned,
   heldUntil,
   rate,
+  currency,
   className = "",
 }: {
   collateral: bigint | undefined;
@@ -27,13 +28,14 @@ export function LimitBreakdown({
   /** A card top-up still in its hold, as a readable time; null when nothing is held. */
   heldUntil: string | null;
   rate: string | undefined;
+  currency: LocalCurrency;
   className?: string;
 }) {
   const rows: { label: string; value: string; note?: string | null }[] = [
     {
       label: "Collateral",
       value: collateral === undefined ? DASH : `${formatAusd(collateral)} USD`,
-      note: approxIdr(collateral, rate),
+      note: approxLocal(collateral, rate, currency),
     },
     { label: "Credit score", value: score === undefined ? DASH : `${score} of 100` },
     {

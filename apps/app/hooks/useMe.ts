@@ -29,7 +29,10 @@ export function useMe() {
     error: query.error?.message ?? signInError,
     refresh: query.refetch,
     kyc: me?.user.kyc as KycStatus | undefined,
-    country: me?.user.country ?? undefined,
+    /** Null once read and not chosen yet; undefined while unread. */
+    country: me ? me.user.country : undefined,
+    /** 16 digits, visual only (`/me` derives it from the wallet). */
+    cardNumber: me?.card?.number,
     verified: me?.verified,
     score: big(me?.score),
     ratioBps: big(me?.ratioBps),
