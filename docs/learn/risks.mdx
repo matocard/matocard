@@ -1,0 +1,22 @@
+---
+title: "Risks"
+description: "What can go wrong, and who carries it."
+icon: "shield-halved"
+---
+
+<Warning>
+  Matocard is a testnet product built during a hackathon. The contracts have not been audited by a third party. No real money is involved today.
+</Warning>
+
+| Risk | Who carries it | Mitigation |
+|---|---|---|
+| **Smart contract bug** | Everyone | Over 100 tests at 100% coverage, invariant tests, Slither in CI with no open findings. Third-party audit before mainnet |
+| **Admin key** can upgrade anything | Everyone | Two-step admin handover with a one-day delay today; multisig and timelock before mainnet |
+| **Operator custody** of fiat between payment and credit | Users with a top-up in flight | Narrow relayer role, daily caps, daily reconciliation against the chain |
+| **Relayer key leak** | The treasury | The relayer can only credit from its own AUSD and reverse holds; daily caps; pause |
+| **Card chargebacks** | Operator | Card hold enforced by the contract; reversal inside the hold; losses after it are the operator's |
+| **Borrower default above score 72** | Lenders | Priced by the 20% yield fee; collateral seized instantly |
+| **Vault loses value or queues withdrawals** | Borrowers and lenders | Limits fall and new draws stop, but no early default; seizure works on shares, so it is instant |
+| **Exchange-rate moves** | Borrowers | Debt shown in dollars with the local amount before paying |
+| **Lost passkey** | The user | Passkeys sync across devices; recovery is on the roadmap |
+| **Regulation** | The project | Licensed partners or OJK's regulatory sandbox before real money |

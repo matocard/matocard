@@ -1,0 +1,52 @@
+---
+title: "Parameters"
+description: "Every protocol parameter, on testnet and planned for production."
+icon: "sliders"
+---
+
+## Contract
+
+| Parameter | Testnet | Production | Meaning |
+|---|---|---|---|
+| `term` | 30 days | 30 days | Time from a cycle's first draw to its due date |
+| `grace` | 3 days | 3 days | Extra time before a cycle can be defaulted |
+| `minCycleDuration` | 60 s | 7 days | Shortest cycle that counts toward the score |
+| `cardHold` | 60 s | 7 days | How long a card top-up waits before counting |
+| `minUtilizationBps` | 1000 (10%) | 1000 (10%) | Smallest peak use of the limit that counts |
+| `yieldFeeBps` | 2000 (20%) | 2000 (20%) | Share of collateral yield kept for lenders |
+
+The collateral ratio is not a parameter: it is `15000 − 7000 × score / 100` basis points, in the `CreditScoring` library.
+
+## Backend
+
+| Setting | Value |
+|---|---|
+| Quote lifetime | 60 s |
+| Session lifetime | at most 7 days |
+| Minimum top-up | RM 5.00 / Rp 10,000 |
+| Minimum cash-out | Rp 10,000 |
+| Cash-out authorization must be valid for at least | 5 minutes |
+| Daily credit cap per user | 1,000 AUSD |
+| Daily credit cap, all users | 20,000 AUSD |
+| Sends per account per day | 50 |
+| MON drip per verified account | 0.5 MON |
+| Relayer low-balance alert | under 2 MON |
+
+## Gas limits
+
+Sent with each call, since Monad charges the limit. From `@matocard/contracts`:
+
+| Call | Gas |
+|---|---|
+| `draw` | 450,000 |
+| `depositFor` | 440,000 |
+| `repayWithPermit` | 280,000 |
+| `withdrawCollateral` | 260,000 |
+| `repayFromCollateral` | 250,000 |
+| `deposit` | 240,000 |
+| `redeem` | 230,000 |
+| `repay`, `repayFor` | 210,000 |
+| `cancelPending` | 160,000 |
+| `transferWithAuthorization` (AUSD) | 150,000 |
+| `setVerified` | 140,000 |
+| `approve` (AUSD) | 90,000 |

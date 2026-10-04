@@ -1,0 +1,38 @@
+---
+title: "Exchange rates"
+description: "Rates only matter at the edges, and they are locked per quote."
+icon: "arrow-right-arrow-left"
+---
+
+## Everything onchain is AUSD
+
+Collateral, debt, repayments and sends are all in AUSD. Because collateral and debt share a currency, the collateral ratio cannot drift with exchange rates, and the contract needs no oracle.
+
+## Rates live offchain, at the edges
+
+A rate is used only when money crosses into or out of AUSD: a top-up, a settlement, a cash-out. Each needs a **quote**, locked for **60 seconds**.
+
+| Pair | Used for |
+|---|---|
+| `USD/MYR` | Top-ups and settlements in ringgit |
+| `USD/IDR` | Top-ups, settlements and cash-outs in rupiah |
+
+AUSD counts as USD.
+
+## Rounding
+
+Conversions round to the currency's smallest unit (sen, rupiah, or a millionth of an AUSD), always in the user's disfavour by at most one unit, so the treasury never pays out more than it took in:
+
+| Operation | Rounds |
+|---|---|
+| Top-up: fiat → AUSD credited | Down |
+| Settlement: AUSD owed → fiat charged | Up |
+| Cash-out: AUSD → fiat paid | Down |
+
+## Who carries the FX risk
+
+The borrower. Debt is fixed in AUSD, so if the ringgit weakens between drawing and settling, more ringgit is needed. The settle screen shows the amount before you pay.
+
+## Rate source
+
+On testnet: public ECB reference rates. In production: the payment partner's rate.

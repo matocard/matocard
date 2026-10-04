@@ -1,0 +1,29 @@
+---
+title: "Your credit record"
+description: "A public page anyone can check, with nothing personal on it."
+icon: "file-certificate"
+---
+
+Every Matocard account has a public record at `/verify/<account>`. Share the link with anyone who needs to check your history: a lender, a landlord, a bank back home.
+
+<Frame caption="Public record in the Matocard app. Placeholder until the app ships.">
+  <img src="/images/placeholders/record.svg" alt="Public record screen (placeholder)" style={{ maxWidth: "280px" }} />
+</Frame>
+
+## What it shows
+
+| | |
+|---|---|
+| Score | 0 to 100 |
+| Collateral ratio | What a new limit would need |
+| Cycles | How many, how many repaid, each with its dates, peak and outcome |
+| Proof | A link to the opening and closing transaction of every cycle on the Monad explorer |
+| Status | Verified, and whether the account has ever defaulted |
+
+## What it never shows
+
+Your name, your document number, your balance, or who you sent money to.
+
+## Why it can be trusted
+
+The page reads the contract directly for the score and counts, and the [indexer](/developers/indexer) for the history. Each cycle links to its transactions, so the reader does not need to trust Matocard: they can check every figure on the explorer themselves.

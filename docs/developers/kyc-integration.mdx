@@ -1,0 +1,45 @@
+---
+title: "KYC integration"
+description: "Verify an account with Didit and wait for it onchain."
+icon: "id-card"
+---
+
+<Steps>
+  <Step title="Start a session">
+    ```ts
+    const { url } = await post("/kyc/session", {}, authorization);
+    window.location.href = url; // Didit's hosted page
+    ```
+  </Step>
+  <Step title="The user comes back">
+    Didit returns to `https://app.matocard.xyz/?verificationSessionId=…&status=Approved`. **Do not trust `status`** in the URL.
+  </Step>
+  <Step title="Poll until verified">
+    ```ts
+    let me;
+    do {
+      await new Promise((r) => setTimeout(r, 2000));
+      me = await get("/me", authorization);
+    } while (me.user.kyc === "pending");
+    ```
+    Done when `me.verified` is `true`. Usually a few seconds: the backend binds the identity onchain and drips 0.5 MON for fees.
+  </Step>
+</Steps>
+
+## Statuses
+
+| `user.kyc` | Meaning | Final |
+|---|---|---|
+| `none` | Never started | |
+| `pending` | Session open, or approved and waiting for the onchain bind | |
+| `approved` | Bound onchain | Yes |
+| `rejected` | Didit declined | Yes |
+| `duplicate` | The document is already bound to another account | Yes |
+
+## `verified` is the source of truth
+
+Gate screens on `verified`, which is the contract's `isVerified`. `user.kyc` is only Matocard's record of Didit's decision; some demo accounts were verified onchain directly and show `kyc: "none"` with `verified: true`.
+
+## Testing
+
+Didit has a sandbox and a live environment. In **live**, one document verifies one account, so a second account with the same ID ends `duplicate`. In **sandbox**, Didit gives every tester the same document, so Matocard also mixes the wallet into the identity hash to keep test accounts apart.

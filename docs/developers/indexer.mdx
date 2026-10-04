@@ -1,0 +1,56 @@
+---
+title: "Indexer"
+description: "Envio HyperIndex over the credit line: history, records, daily totals."
+icon: "database"
+---
+
+| | |
+|---|---|
+| Engine | [Envio HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview), synced through HyperSync |
+| Contract | `MatoCreditLine` proxy, from block `66922881` |
+| GraphQL | `https://indexer.dev.hyperindex.xyz/b5ebb5c/v1/graphql` |
+
+## Entities
+
+| Entity | Used for |
+|---|---|
+| `Account` | Score, counters, outstanding balance, card top-ups on hold, lifetime totals |
+| `Activity` | One row per event for an account: the history screen |
+| `Cycle` | Each borrowing cycle with dates, peak, repayments and outcome: the public record |
+| `ScoreChange` | Every score the contract reported, with the reason |
+| `DailyTopUp` | Top-ups per UTC day, relayer and direct apart, plus reversals: reconciliation |
+| `Pool` | Line-wide totals: outstanding, drawn, repaid, written off, lender flows |
+
+Scores come from the contract's own events and are never recomputed. **Limits are not stored**, because collateral yield moves them without an event: read `limitOf` for a live figure.
+
+## Queries
+
+<CodeGroup>
+```graphql History
+{
+  Activity(
+    where: { account_id: { _eq: "0x…" } }
+    order_by: { timestamp: desc }
+  ) { kind amount counterparty method timestamp txHash }
+}
+```
+
+```graphql Public record
+{
+  Account_by_pk(id: "0x…") {
+    score cycleCount repayCount defaulted
+    cycles(order_by: { number: asc }) { number outcome openedAt closedAt peakDrawn }
+  }
+}
+```
+
+```graphql Reconciliation
+{ DailyTopUp_by_pk(id: "2026-10-04") { relayerAssets relayerCount reversedShares } }
+```
+</CodeGroup>
+
+Most apps never query it directly: `GET /me/activity` and `GET /verify/{wallet}` wrap it, and keep working with `indexer: "unavailable"` if it is down.
+
+## Health
+
+A scheduled check compares the indexer with the chain head and opens a GitHub issue if it falls more than 1,500 blocks (about ten minutes) behind. A self-hosted fallback is ready if the hosted one fails.

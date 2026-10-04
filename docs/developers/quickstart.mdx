@@ -1,0 +1,69 @@
+---
+title: "Quickstart"
+description: "Sign in and read a home screen from the live API in five minutes."
+icon: "rocket"
+---
+
+The API is live at **`https://api.matocard.xyz`**, with every route in the API reference tab and in [Swagger](https://api.matocard.xyz/docs). CORS is open, so it works from a browser, Vercel or localhost.
+
+<Frame caption="Swagger at api.matocard.xyz/docs: every route, with examples, and an Authorize button for the session header.">
+  <img src="/images/screens/swagger.jpg" alt="Matocard API in Swagger" />
+</Frame>
+
+<Steps>
+  <Step title="Check it is up">
+    ```bash
+    curl https://api.matocard.xyz/health
+    # {"ok":true}
+    ```
+  </Step>
+  <Step title="Install">
+    ```bash
+    bun add viem
+    ```
+  </Step>
+  <Step title="Sign in">
+    No passwords. The account signs a fixed message once; the result is the session.
+
+    ```ts signin.ts
+    import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+
+    // in the app this is the Mera passkey account
+    const account = privateKeyToAccount(generatePrivateKey());
+
+    const until = Math.floor(Date.now() / 1000) + 7 * 24 * 3600; // at most 7 days
+    const message = `Sign in to Matocard\n${account.address.toLowerCase()}\nuntil ${until}`;
+    const signature = await account.signMessage({ message });
+    const authorization = `Matocard ${account.address}.${until}.${signature}`;
+    ```
+  </Step>
+  <Step title="Read the home screen">
+    ```ts
+    const me = await fetch("https://api.matocard.xyz/me", {
+      headers: { authorization },
+    }).then((r) => r.json());
+
+    console.log(me.verified, me.limit, me.score);
+    // false "0" "0" for a new account
+    ```
+    The first signed call creates the user.
+  </Step>
+  <Step title="Get a quote">
+    ```ts
+    const quote = await fetch("https://api.matocard.xyz/quote", {
+      method: "POST",
+      body: JSON.stringify({ pair: "USD/MYR" }),
+    }).then((r) => r.json());
+    // { id, pair: "USD/MYR", rate: "4.0845", expiresAt }
+    ```
+  </Step>
+</Steps>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/developers/authentication">The session format and its rules.</Card>
+  <Card title="Amounts and quotes" icon="coins" href="/developers/amounts-and-quotes">Smallest units, currencies, rounding.</Card>
+  <Card title="Payments" icon="money-bill-transfer" href="/developers/payments">Top-ups, settlements and cash-outs.</Card>
+  <Card title="Contract calls" icon="file-contract" href="/developers/contract-calls">What the app sends to the chain itself.</Card>
+</CardGroup>

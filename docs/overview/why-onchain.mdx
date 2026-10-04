@@ -1,0 +1,38 @@
+---
+title: "Why onchain"
+description: "A credit record that no single bank or country owns."
+icon: "link"
+---
+
+Matocard uses a blockchain for one thing: **a portable, tamper-proof credit record**. It is not a trading venue, and users never see a token, a wallet or a gas fee.
+
+## What a bank record cannot do
+
+A bank's credit record is locked to one institution in one country. It cannot be read by a lender abroad, it cannot be checked by the person it describes, and it disappears from view when that person moves.
+
+## What the onchain record does
+
+<AccordionGroup>
+  <Accordion title="You own it" icon="key">
+    The record is tied to your account, not to Matocard's database. If Matocard disappeared tomorrow, every repayment would still be on Monad.
+  </Accordion>
+  <Accordion title="Anyone can verify it" icon="magnifying-glass">
+    Your public page shows your score, settled cycles and every transaction behind them. A lender in Indonesia can check it without asking Matocard. No name or document number is ever published.
+  </Accordion>
+  <Accordion title="Every limit can be recomputed by hand" icon="calculator">
+    The score, the collateral ratio and the limit are computed by the contract from onchain figures, with integer maths. See [Credit score](/learn/credit-score) for the formula and worked examples.
+  </Accordion>
+  <Accordion title="Money arrives while you are still on the call" icon="bolt">
+    Settlement is final in under a second. A draw to your mother's account shows on her phone straight away.
+  </Accordion>
+</AccordionGroup>
+
+## Why Monad
+
+- **Fast:** a block about every 0.4 seconds, so a send feels instant.
+- **Cheap:** a transaction costs a fraction of a cent, so Matocard can pay users' fees by giving each verified account a little MON once, instead of running a paymaster.
+- **EVM:** standard Solidity, OpenZeppelin, Foundry and viem, so the contracts are easy to audit and the tooling is mature.
+
+## Why AUSD
+
+Collateral, loans, repayments and sends are all in **AUSD**, Agora's dollar stablecoin. Because collateral and debt share one currency, the collateral ratio cannot move with exchange rates, and the contract needs no price oracle. Exchange rates only matter at the edges, when money comes in or goes out, and they are locked for 60 seconds per quote. See [FX](/learn/fx).

@@ -1,0 +1,74 @@
+---
+title: "Introduction"
+description: "A credit line that grows with how you pay, and a credit record that crosses borders with you."
+icon: "house"
+---
+
+<Info>
+  Matocard runs on **Monad testnet** and is being built for [Monad Metropolis](https://monad.xyz/developers/hackathons/metropolis), Track 02: Consumer Products & Payments. Payments run in test mode; no real money moves.
+</Info>
+
+<Frame caption="The Matocard landing page.">
+  <img src="/images/screens/landing.jpg" alt="Matocard landing page" />
+</Frame>
+
+## The problem
+
+Millions of Indonesians work abroad, and Malaysia is one of the largest destinations. A worker like **Siti**, 29, in Kuala Lumpur, sends money to her mother in Yogyakarta every month. She has a debit card and a phone. What she does not have is a credit history:
+
+- **Not in Malaysia.** She is a foreign worker with no local record, so banks treat her as a stranger.
+- **Not in Indonesia either.** She left before she ever borrowed.
+- **And it would not travel.** A record built with a Malaysian bank stays with that bank, in that country, when she moves home.
+
+When cash runs short before payday, what is left are predatory online lenders and loan sharks.
+
+## The solution
+
+Matocard is an **interest-free credit line backed by your own savings**, whose limit grows every time you settle on time, and whose record lives on a public blockchain that you own.
+
+<CardGroup cols={2}>
+  <Card title="Deposit once, borrow against it" icon="piggy-bank">
+    Top up by card or bank transfer. The money becomes collateral and earns yield while it sits there.
+  </Card>
+  <Card title="Settle on time, get more" icon="chart-line">
+    Each cycle repaid on time raises your score, and the score lowers the collateral needed: from 150% for a new account down to 80%.
+  </Card>
+  <Card title="Send home instantly" icon="paper-plane">
+    Borrow straight to your family's Matocard. It arrives in under a second, and they can cash out to their bank in rupiah.
+  </Card>
+  <Card title="A record that moves with you" icon="earth-asia">
+    Your score and history live on Monad. Anyone can verify them, nobody can edit them, and they still count when you move home.
+  </Card>
+</CardGroup>
+
+No crypto wallet, no seed phrase, no gas to buy. You sign up with your fingerprint or Face ID, and the blockchain stays out of sight.
+
+## Who these docs are for
+
+<CardGroup cols={3}>
+  <Card title="Users" icon="user" href="/guides/create-account">
+    How to sign up, top up, send money home, settle and read your record.
+  </Card>
+  <Card title="Curious minds" icon="book-open" href="/learn/credit-line">
+    How the credit line, the score, the collateral and the trust model work.
+  </Card>
+  <Card title="Developers" icon="code" href="/developers/quickstart">
+    The API, the contracts, the indexer, and how to run it all locally.
+  </Card>
+</CardGroup>
+
+## At a glance
+
+| | |
+|---|---|
+| Network | Monad testnet (chain `10143`) |
+| Unit of account | [AUSD](https://www.agora.finance) by Agora, a US dollar stablecoin |
+| Money in | Ringgit (FPX, DuitNow QR, cards) and rupiah (virtual accounts, QRIS, cards) through Xendit |
+| Money out | Rupiah to Indonesian banks through Xendit |
+| Identity | Didit: ID document and selfie, one identity per account |
+| Interest | None. The protocol keeps 20% of the yield your collateral earns |
+| Status | Contracts, backend and indexer live on testnet; the app is in progress |
+
+<Card title="Start with how it works" icon="arrow-right" href="/overview/how-it-works" horizontal>
+  The four steps, from sign-up to a higher limit.
+</Card>

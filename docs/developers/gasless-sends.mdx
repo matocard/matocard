@@ -1,0 +1,71 @@
+---
+title: "Gasless sends"
+description: "Send AUSD with one signature; the relayer pays the gas."
+icon: "feather"
+---
+
+AUSD supports **ERC-3009** `transferWithAuthorization`. The sender signs an EIP-712 message; Matocard's relayer submits it and pays the gas. No approval, no MON needed, one transaction.
+
+## Sign a transfer
+
+```ts
+import { toHex } from "viem";
+
+const AUSD = "0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC";
+
+async function signTransfer(account, { to, value, validBefore }) {
+  const message = {
+    from: account.address,
+    to,
+    value,
+    validAfter: 0n,
+    validBefore,
+    nonce: toHex(crypto.getRandomValues(new Uint8Array(32))), // random, once
+  };
+  const signature = await account.signTypedData({
+    domain: { name: "Agora Dollar", version: "1", chainId: 10143, verifyingContract: AUSD },
+    types: {
+      TransferWithAuthorization: [
+        { name: "from", type: "address" },
+        { name: "to", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "validAfter", type: "uint256" },
+        { name: "validBefore", type: "uint256" },
+        { name: "nonce", type: "bytes32" },
+      ],
+    },
+    primaryType: "TransferWithAuthorization",
+    message,
+  });
+  // the API takes every bigint as a string
+  return {
+    ...message,
+    value: String(message.value),
+    validAfter: "0",
+    validBefore: String(message.validBefore),
+    signature,
+  };
+}
+```
+
+## Send
+
+```ts
+const authorization = await signTransfer(account, {
+  to: mom,
+  value: 5_000_000n, // 5 AUSD
+  validBefore: BigInt(Math.floor(Date.now() / 1000) + 3600),
+});
+await post("/sends", { authorization }, session);
+```
+
+- Needs a **verified** sender. At most 50 sends per account per day.
+- The API answers once the transaction is mined.
+- A reused nonce answers 400 with the token's error (`AuthorizationAlreadyUsed`).
+
+## Borrowing vs sending
+
+| To move money that is… | Use |
+|---|---|
+| Credit (borrowing) | `draw(amount, to)` on the credit line, the user's own transaction. See [Contract calls](/developers/contract-calls) |
+| AUSD already in the wallet | `POST /sends` with a signed transfer, gasless |

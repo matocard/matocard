@@ -1,0 +1,35 @@
+---
+title: "Lender pool"
+description: "Who funds the credit, what they earn, and what they risk."
+icon: "hand-holding-dollar"
+---
+
+Every draw is funded by an **ERC-4626 pool over AUSD** inside the credit line. Lenders deposit AUSD and receive pool shares.
+
+## Accounting
+
+```
+totalAssets = idle AUSD + total drawn + value of seized collateral shares
+```
+
+- **Idle AUSD** is tracked internally, never read from the token balance, so a donation cannot move the share price.
+- The pool uses OpenZeppelin's decimals offset against the first-depositor inflation attack.
+- Lenders can withdraw only **idle** AUSD; money lent out comes back as borrowers repay.
+
+## What lenders earn
+
+The **yield fee**: 20% of the yield earned by every borrower's collateral. Borrowers pay no interest.
+
+## What lenders risk
+
+The collateral ratio crosses 100% at score **72**. Above it, a borrower's limit exceeds their collateral. If such a borrower defaults owing more than their collateral is worth, all of it is seized into the pool and the **shortfall is the pool's loss**.
+
+Below score 72, a default is fully covered by the seized collateral.
+
+| | Carried by |
+|---|---|
+| Shortfall on a default above score 72 | Lenders |
+| Card chargebacks after the hold | The operator, not lenders |
+| Vault losing value | Borrowers (lower limits) and lenders (seized shares worth less) |
+
+On testnet, the pool was seeded with 90,000 AUSD from Agora's faucet.

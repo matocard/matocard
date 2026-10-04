@@ -1,0 +1,43 @@
+---
+title: "Settle"
+description: "Repay before the due date to close the cycle and raise your score."
+icon: "circle-check"
+---
+
+Settling means repaying **everything you owe** before the due date. Only a full repayment closes a cycle; partial repayments reduce the debt but do not count toward your score.
+
+## Three ways to settle
+
+<CardGroup cols={3}>
+  <Card title="Pay in local money" icon="money-bill">
+    Ringgit by FPX or DuitNow, or rupiah by virtual account or QRIS. One checkout for the whole balance, rounded up to the nearest sen or rupiah.
+  </Card>
+  <Card title="From your collateral" icon="vault">
+    Deduct it from what you deposited. No payment needed.
+  </Card>
+  <Card title="From your balance" icon="wallet">
+    Use AUSD already in your account.
+  </Card>
+</CardGroup>
+
+<Frame caption="Settle in the Matocard app. Placeholder until the app ships.">
+  <img src="/images/placeholders/settle.svg" alt="Settle screen (placeholder)" style={{ maxWidth: "280px" }} />
+</Frame>
+
+## Your debt stays in dollars
+
+What you owe is recorded in AUSD, so if the ringgit weakens between borrowing and settling, the local amount to repay is higher, and if it strengthens, lower. The settle screen shows today's figure before you pay.
+
+## When does a cycle count?
+
+A cycle raises your score when all three hold:
+
+1. It is repaid **in full** by the due date.
+2. It stayed open at least the minimum cycle length (60 seconds on testnet, 7 days in production).
+3. At its peak you used **at least 10%** of your limit.
+
+Otherwise the debt is still settled, but the cycle adds nothing. This stops anyone from farming a score with tiny or instant loans. See [Credit score](/learn/credit-score).
+
+## What if I can't pay on time?
+
+You have the 30-day term plus a 3-day grace period. After that, anyone can mark the account defaulted: collateral worth the debt is taken, the rest stays yours, and the account can never borrow again. Repaying is never paused, even if the rest of the system is. See [Defaults](/learn/defaults).

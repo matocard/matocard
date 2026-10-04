@@ -1,0 +1,29 @@
+---
+title: "Collateral and yield"
+description: "Your deposit is held as yield-vault shares, so it grows."
+icon: "seedling"
+---
+
+## How collateral is held
+
+When a top-up is credited, its AUSD goes into an **ERC-4626 yield vault**, and the vault shares are recorded as your collateral. Their value is read with the vault's own `convertToAssets`, so no outside price oracle is involved.
+
+| | Testnet | Mainnet (planned) |
+|---|---|---|
+| Vault | MockEarnAUSD | earnAUSD |
+| Yield source | Whatever the operator pays in, to show the mechanism | Trading strategies (basis trade, delta-neutral) |
+| Withdrawals | Instant | Can queue up to 72 hours |
+
+## The yield fee
+
+Borrowing is interest-free. Instead, the protocol keeps **20%** (`yieldFeeBps = 2000`) of the yield your collateral earns. It is charged when collateral leaves or changes, and it is what lenders earn for funding the line.
+
+Your collateral value, and so your limit, is always shown **net** of the fee already accrued.
+
+## Taking collateral out
+
+`withdrawCollateral` returns vault shares to you, as long as your debt stays within your new, lower limit. With no debt, you can withdraw everything.
+
+## If the vault loses value
+
+Your collateral value falls, and your limit falls with it. If you are now over your limit, new draws are blocked, but **you are not defaulted** for it: default only ever follows a missed due date.

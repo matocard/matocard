@@ -1,0 +1,60 @@
+---
+title: "Run locally"
+description: "The contracts, the backend and a local chain on your machine."
+icon: "terminal"
+---
+
+Requires [Bun](https://bun.sh) 1.3+, [Foundry](https://getfoundry.sh) 1.8+ and Docker.
+
+## Clone and test
+
+```bash
+git clone https://github.com/matocard/matocard && cd matocard
+bun install
+bun run lint
+bun run test
+```
+
+## Contracts
+
+```bash
+cd contracts
+forge install foundry-rs/forge-std --no-git
+forge install OpenZeppelin/openzeppelin-contracts@v5.4.0 --no-git
+forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v5.4.0 --no-git
+forge test
+```
+
+## Backend against a local chain
+
+```bash
+cd apps/backend
+cp .env.example .env                  # set POSTGRES_PASSWORD, DATABASE_URL, IDENTITY_SALT
+scripts/local-chain.sh                # anvil + the real contracts + treasury AUSD; paste what it prints into .env
+docker compose up -d --build          # Postgres + backend on 127.0.0.1:3000
+curl 127.0.0.1:3000/health
+```
+
+Without Xendit or Didit keys the backend still runs; those routes answer 503. For development, run only the database in Docker:
+
+```bash
+docker compose up -d postgres
+bun run dev
+bun test   # the relayer and end-to-end tests also need anvil and forge
+```
+
+## Environment
+
+| Variable | What |
+|---|---|
+| `RPC_URL`, `CHAIN_ID`, `CREDIT_LINE_ADDRESS`, `AUSD_ADDRESS` | Chain; defaults are Monad testnet and the deployed contracts |
+| `RELAYER_PK` | A key with `KYC_ROLE` and `RELAYER_ROLE`, holding the treasury's AUSD and MON |
+| `IDENTITY_SALT` | Keys identity hashes and card numbers. Changing it changes all of them |
+| `XENDIT_SECRET_KEY`, `XENDIT_CALLBACK_TOKEN` | Xendit Indonesia: IDR in, every payout |
+| `XENDIT_MY_SECRET_KEY`, `XENDIT_MY_CALLBACK_TOKEN` | Xendit Malaysia: MYR in |
+| `DIDIT_API_KEY`, `DIDIT_WORKFLOW_ID`, `DIDIT_WEBHOOK_SECRET` | Didit |
+| `INDEXER_URL` | Envio GraphQL, for history, `/verify` and reconciliation |
+| `APP_URL` | Where Xendit and Didit send users back to |
+| `DAILY_CAP_USER_AUSD`, `DAILY_CAP_GLOBAL_AUSD`, `DRIP_MON` | Relayer limits |
+
+The full list with comments is [`apps/backend/.env.example`](https://github.com/matocard/matocard/blob/main/apps/backend/.env.example).

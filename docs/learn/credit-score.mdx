@@ -1,0 +1,55 @@
+---
+title: "Credit score"
+description: "0 to 100, computed by the contract, recomputable by hand."
+icon: "gauge-high"
+---
+
+## The formula
+
+```
+score = Record (0–40) + Consistency (0–20) + Volume (0–40)
+ratio = 150% − 70% × score / 100
+limit = collateral value / ratio
+```
+
+All integer maths, rounded down once per component.
+
+| Component | Formula | Rewards |
+|---|---|---|
+| **Record** | `40 × repaid × min(cycles, 3) / (cycles × 3)` | Repaying, with a ramp: one cycle cannot grant all 40 points. Defaults count as cycles with no repayment and drag it down |
+| **Consistency** | `20 × min(repaid, 10) / 10` | Many repaid cycles, up to 10 |
+| **Volume** | `40 × min(Σ utilisation, 100000) / 100000` | Actually using the line. Each cycle adds `min(peak drawn × 10000 / limit at draw, 10000)` basis points, so ten full-limit cycles reach the cap |
+
+Where `cycles` counts qualifying cycles and defaults, and `repaid` counts qualifying cycles only.
+
+## What qualifies
+
+A cycle counts only if it was:
+
+1. **Repaid to zero** by its due date,
+2. **Open at least** `minCycleDuration` (60 s on testnet, 7 days in production), and
+3. **Used at least 10%** of the limit at its peak.
+
+Anything else settles the debt and adds nothing. Partial repayments never count. This is what makes the score hard to farm.
+
+## Worked example
+
+150 AUSD of collateral, no yield.
+
+<Steps>
+  <Step title="New account">
+    Score **0**. Ratio 150%. Limit = 150 / 1.5 = **100.00 AUSD**.
+  </Step>
+  <Step title="One cycle, drew 50 (50% of the limit)">
+    Record = 40 × 1 × 1 / 3 = 13. Consistency = 20 × 1 / 10 = 2. Volume = 40 × 5000 / 100000 = 2. Score **17**. Ratio = 150% − 70% × 0.17 = 138.10%. Limit = 150 / 1.381 = **108.61 AUSD**.
+  </Step>
+  <Step title="Three cycles at 80%">
+    Record = 40. Consistency = 6. Volume = 40 × 24000 / 100000 = 9. Score **55**. Ratio 111.50%. Limit = **134.52 AUSD**.
+  </Step>
+</Steps>
+
+These exact numbers are checked as literals in the contract's tests, and were reproduced live on Monad testnet.
+
+## Above score 72
+
+The ratio crosses 100% at score **72**. From there, your limit is larger than your collateral: that is real credit, earned by your record. The risk it creates for lenders is paid for by the yield fee. See [Lender pool](/learn/lender-pool).

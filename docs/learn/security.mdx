@@ -1,0 +1,29 @@
+---
+title: "Security"
+description: "How the contracts and the backend were checked."
+icon: "lock"
+---
+
+## Contracts
+
+- **Over 100 Foundry tests** with 100% line, branch and function coverage of `src/`: unit tests per module, every refusal path, the demo figures as literals, and an upgrade test that checks every module's state survives.
+- **Invariant tests** over random activity: all vault shares assigned to a borrower or the pool, total drawn equal to the sum of debts, idle AUSD backed by real AUSD, scores within 0 to 100.
+- **[Slither](https://github.com/crytic/slither)** runs in CI and fails on any finding. Every finding from the first run was triaged and documented.
+- **Every entry point is `nonReentrant`**; the vault and the asset are fixed at initialisation.
+- **Storage per module** in its own ERC-7201 namespace, so an upgrade to one module cannot shift another's state.
+- **Verified** on MonadVision and Sourcify.
+- **Live runs** on Monad testnet with every figure read back from the chain.
+- **Not audited** by a third party yet.
+
+## Backend
+
+- Webhooks verified (Xendit callback token, Didit HMAC with a 5-minute window) and processed exactly once.
+- Payment state machine and append-only, double-entry ledger enforced **by the database**, not just the code.
+- The relayer logs every transaction before sending, dry-runs it first, keeps its own nonce, sends one at a time, and reads back the state each call was meant to change. It never resends blindly: anything uncertain is left for a person.
+- Daily caps on credited top-ups; daily reconciliation against the indexer.
+- Postgres and the API listen on localhost only, behind a reverse proxy with TLS; daily database backups.
+- Money is always integers in the smallest unit, never floats.
+
+## Reporting a vulnerability
+
+Please do not post vulnerability details in a public issue. Open an issue on [GitHub](https://github.com/matocard/matocard/issues) asking for a private contact, and the team will reach out.

@@ -1,0 +1,49 @@
+---
+title: "Trust model"
+description: "What you have to trust, who you trust, and what bounds it."
+icon: "scale-balanced"
+---
+
+Matocard is honest about where it is custodial. Every statement here was checked against the contract code. **Nothing has been audited by a third party yet.**
+
+## At a glance
+
+| Part | Trusted party | Bounded by |
+|---|---|---|
+| Score, limit, cycle rules, defaults | **Nobody.** The contract, recomputable by anyone | Code, and the admin's upgrade power |
+| Fiat in and out | **The operator**, custodial | The relayer's narrow role, daily caps, daily reconciliation |
+| Identity | The operator and Didit | Only a hash goes onchain; one hash per wallet, forever |
+| Exchange rates | The operator | Used only at the edges; the onchain ratio is unaffected |
+| Collateral yield | The yield vault | Vault risk is the borrower's and the pool's |
+| The rules themselves | **The admin**, through parameters and upgrades | Two-step admin handover with a one-day delay |
+| Lenders' capital | Borrowers with high scores | The yield fee prices that risk |
+| Account access | Your passkey | Synced by iCloud or Google; no recovery yet |
+
+## Roles
+
+| Role | Can | Cannot |
+|---|---|---|
+| Admin | Upgrade, pause, change parameters, grant and revoke roles | Nothing is out of reach through an upgrade, so the admin is fully trusted today |
+| `KYC_ROLE` | Bind an identity hash to a wallet | Unbind or rebind one |
+| `RELAYER_ROLE` | Credit fiat top-ups (`depositFor`, from its own AUSD), reverse a top-up still in its hold | Move settled collateral, pool AUSD, or anyone's debt |
+| Anyone | `repayFor`, `settlePending`, `markDefaulted` once overdue, `redeemPoolShares` | Take value from someone else |
+
+On testnet the admin is a single key. The backend has its own key with only `KYC_ROLE` and `RELAYER_ROLE`. In production the admin moves behind a multisig and a timelock long enough for users to repay and leave.
+
+## When a parameter change bites
+
+| Parameter | Fixed per loan at | So a change affects |
+|---|---|---|
+| `term`, `grace`, `minCycleDuration`, `minUtilizationBps` | The cycle's first draw | New cycles only |
+| `cardHold` | The top-up | New top-ups only |
+| `yieldFeeBps` | Not fixed; applied when collateral next changes | Yield already earned but not yet charged |
+
+## Pause
+
+Pausing stops new risk, never a way out of debt.
+
+| Paused | Never paused |
+|---|---|
+| `draw`, `depositFor`, `depositCollateral`, `withdrawCollateral` | `repay`, `repayWithPermit`, `repayFor`, `repayFromCollateral`, `markDefaulted`, `settlePending`, `cancelPending`, `redeemPoolShares`, lender deposits and withdrawals |
+
+The full document lives in the repository: [`contracts/TRUST.md`](https://github.com/matocard/matocard/blob/main/contracts/TRUST.md).

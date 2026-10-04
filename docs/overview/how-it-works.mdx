@@ -1,0 +1,44 @@
+---
+title: "How it works"
+description: "Four steps, from sign-up to a higher limit."
+icon: "gears"
+---
+
+<Steps>
+  <Step title="Sign up and verify once">
+    A passkey (fingerprint or Face ID) creates the account; there is no password and no seed phrase. An ID check binds one person to one account, so a defaulter cannot start over with a new one. See [Verify your identity](/guides/verify-identity).
+  </Step>
+  <Step title="Top up">
+    Pay by card, online banking or QR, in ringgit or rupiah. The money becomes **collateral**, held as shares of a yield vault, so it grows while it sits there. See [Top up](/guides/top-up).
+  </Step>
+  <Step title="Spend or send">
+    Draw against your limit, for example straight to your family's Matocard in Indonesia. Borrowing is **interest-free**. See [Send money home](/guides/send-money).
+  </Step>
+  <Step title="Settle on time, get more">
+    Repay the whole amount before the due date. Each qualifying cycle raises your score, and a higher score needs less collateral per unit of credit, so your limit rises. See [Settle](/guides/settle).
+  </Step>
+</Steps>
+
+## The numbers
+
+With **150 AUSD** of collateral and no yield:
+
+| Account | Score | Collateral ratio | Limit |
+|---|---|---|---|
+| New | 0 | 150.00% | **100.00 AUSD** |
+| After one cycle, using 50% of the limit | 17 | 138.10% | **108.61 AUSD** |
+| After three cycles at 80% | 55 | 111.50% | **134.52 AUSD** |
+
+These figures come straight from the contract on Monad testnet. The formula is in [Credit score](/learn/credit-score).
+
+## Who does what
+
+| Part | Done by |
+|---|---|
+| Score, limit, due dates, defaults | The **contract** on Monad. Anyone can recompute them |
+| Card and bank payments, payouts | Matocard's **payments service**, through Xendit |
+| Identity checks | **Didit**; only a hash of the document goes onchain |
+| Paying users' network fees | Matocard's **relayer** |
+| History and the public record page | The **Envio indexer** |
+
+The full picture is in [Architecture](/developers/architecture) and the [Trust model](/learn/trust-model).

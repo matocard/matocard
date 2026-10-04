@@ -1,0 +1,41 @@
+---
+title: "Authentication"
+description: "A signed message, no passwords, no cookies."
+icon: "key"
+---
+
+Every signed route takes this header:
+
+```
+Authorization: Matocard <wallet>.<until>.<signature>
+```
+
+| Part | Value |
+|---|---|
+| `wallet` | The account address, any case |
+| `until` | Unix time when the session ends, **at most 7 days** ahead |
+| `signature` | `personal_sign` (viem `signMessage`) of the exact message below |
+
+```text Message
+Sign in to Matocard
+<wallet in lowercase>
+until <until>
+```
+
+```ts
+const until = Math.floor(Date.now() / 1000) + 7 * 24 * 3600;
+const message = `Sign in to Matocard\n${address.toLowerCase()}\nuntil ${until}`;
+const signature = await account.signMessage({ message });
+const authorization = `Matocard ${address}.${until}.${signature}`;
+```
+
+## Rules
+
+- The **first** signed call creates the user.
+- Keep the header until `until`, then sign again. With Mera's signing session, this needs no prompt.
+- An expired, future-dated beyond 7 days, or mismatched session answers **401** `session expired` or similar: sign again.
+- Sessions ride in a header, never a cookie, so CORS allows any origin.
+
+## Verified routes
+
+Top-ups and sends also need the account to be **verified onchain** (`isVerified` on the credit line), which `GET /me` returns as `verified`. Otherwise they answer `400 verify your identity first`. See [KYC integration](/developers/kyc-integration).
