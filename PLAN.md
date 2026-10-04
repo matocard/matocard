@@ -58,6 +58,8 @@ Everything in this repo is built during the hackathon window (see §14).
 
 Amounts below assume 1 USD = 4.00 MYR = 16,000 IDR for readability. The live app uses the real rate.
 
+Siti pays in and settles in **ringgit** through Xendit's Malaysian account; Mom cashes out in **rupiah** through the Indonesian one (Q3, #79).
+
 ```
 1. Sign up with Face ID / fingerprint                      (Mera passkey, account derived silently)
 2. Verify identity: ID/passport photo + selfie             (Didit sandbox, auto-approve)
@@ -74,7 +76,7 @@ Amounts below assume 1 USD = 4.00 MYR = 16,000 IDR for readability. The live app
    → draw(50 AUSD, to = Mom's Matocard) settles in under a second
    → Mom's phone (second device, her own passkey) shows +50.00 instantly
    → Mom taps "Cash out to BRI" → rupiah in her bank account   (Xendit Disbursement test)
-6. Payday → "Settle" via DuitNow QR / FPX (Xendit)
+6. Payday → "Settle" via FPX / DuitNow (Xendit Malaysia)
    → Score goes up, limit goes up, and the breakdown is shown
 7. Open /verify/siti-7F3A: score, settled cycles, history. No personal data, read straight from the contract
    "A bank in Indonesia can still read this record when Siti moves home."
@@ -234,9 +236,9 @@ Score 0–100 = **Record (40) + Consistency (20) + Volume (40)**. Integer maths,
 |---|---|
 | `api` | Per-screen endpoints: `/me`, `/me/activity`, `/quote`, `/verify/:id` |
 | `kyc` | Didit session + webhook, then `setVerified` + MON drip |
-| `payments` | Xendit, one Indonesian account, all in IDR: card / virtual account / QRIS (top-up + settlement), payouts (cash out to an Indonesian bank). Production: Agora Routes for fiat ↔ AUSD (D12) |
+| `payments` | Xendit, one account per country: the Malaysian one collects MYR (card / FPX / DuitNow), the Indonesian one collects IDR (card / virtual account / QRIS) and pays every cash-out to an Indonesian bank. The quote's pair picks the account. Production: Agora Routes for fiat ↔ AUSD (D12) |
 | `relayer` | Tx queue: `depositFor`, `repayFor`, `cancelPending`, `setVerified`, ERC-3009 sends (D11), MON drip. Sends the published gas limits (`@matocard/contracts`) |
-| `fx` | USD/IDR quotes for money, USD/MYR for display, locked for 60 seconds |
+| `fx` | USD/MYR and USD/IDR quotes, locked for 60 seconds |
 
 ### 7.2 Money-handling rules (mandatory)
 1. **Verify webhooks**: check Xendit's `x-callback-token` header. Reject on mismatch.
@@ -396,7 +398,7 @@ packages/
 |---|---|---|---|
 | Q1 | Does the Agora bounty accept testnet AUSD, or want their staging environment / mainnet? | Deploy target | **Answered 29 Sep: yes**, Monad testnet AUSD is sufficient (Agora). |
 | Q2 | Is there a testnet AUSD faucet? | Without it the pool cannot be funded | **Resolved 30 Sep:** Agora refilled the faucet `0xd236…e6C` (10,000 AUSD per request, up to 100,000 held). The stack moves to real AUSD (#59). |
-| Q3 | Xendit test: MYR (Malaysia) + IDR disbursement from one account? | Decides the persona | **Answered 3 Oct: no**, Xendit ties an account to its country, and ours is Indonesian. The backend collects and pays out in **IDR** (#69); MYR stays a display quote. §3, §8 and the demo script still describe MYR, FPX and DuitNow: the story is open |
+| Q3 | Xendit test: MYR (Malaysia) + IDR disbursement from one account? | Decides the persona | **Answered 3 Oct: no**, Xendit ties an account to its country. **Resolved 4 Oct with two accounts** (#79): the Malaysian one collects MYR, the Indonesian one collects IDR and pays out. The §3 story stands |
 | Q4 | Does a PWA count as the "mobile application" Agora asks for? | Native app vs PWA | **Answered 29 Sep: yes**, a PWA qualifies (Agora). |
 | Q5 | earnAUSD is not on testnet | Yield is mock-only | Real mechanism in the contract, mock vault stated plainly |
 | Q6 | Is the Record ramp (N=3) too slow for the demo? | Small limit jump on stage (100 → 108.61) | Also show the aged account (134.52); do not weaken the anti-farming standard |
