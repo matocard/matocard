@@ -6,7 +6,11 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), back: vi.
 
 const credit = vi.fn();
 vi.mock("../../../hooks/useCredit", () => ({ useCredit: () => credit() }));
-vi.mock("../../../hooks/useFx", () => ({ useFx: () => ({ rate: "16000" }) }));
+vi.mock("../../../hooks/useFx", () => ({
+  useFx: (pair: string) => ({ rate: pair === "USD/MYR" ? "4" : "16000" }),
+}));
+const me = vi.fn();
+vi.mock("../../../hooks/useMe", () => ({ useMe: () => me() }));
 vi.mock("../../../hooks/useMyActivity", () => ({ useMyActivity: () => ({ items: [] }) }));
 const session = { wallet: "0xA11CE", until: 9_999_999_999, signature: "0x5" };
 vi.mock("../../../hooks/useSession", () => ({
@@ -26,6 +30,7 @@ const type = async (digits: string) => {
 
 beforeEach(() => {
   credit.mockReturnValue({ verified: true });
+  me.mockReturnValue({ country: "ID" });
   getQuote.mockResolvedValue({ id: "q-1", pair: "USD/IDR", rate: "16000", expiresAt: "" });
   startTopUp.mockResolvedValue({
     paymentId: "p-1",
@@ -81,4 +86,28 @@ test("before verification there is no card to top up", () => {
   credit.mockReturnValue({ verified: false });
   render(<TopUpScreen />);
   expect(screen.getByText("Verify your identity first")).toBeInTheDocument();
+});
+
+test("in Malaysia it is ringgit: typed in RM, sent in sen, on a USD/MYR quote, by FPX", async () => {
+  me.mockReturnValue({ country: "MY" });
+  render(<TopUpScreen />);
+  expect(screen.getByRole("button", { name: "FPX" })).toBeInTheDocument();
+  await type("600");
+  expect(screen.getByText("≈ 150.00 USD of collateral, held as AUSD")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Pay RM 600.00" }));
+  await waitFor(() => expect(startTopUp).toHaveBeenCalled());
+  expect(getQuote).toHaveBeenCalledWith("USD/MYR");
+  expect(startTopUp).toHaveBeenCalledWith(session, {
+    amount: "60000",
+    method: "bank",
+    quoteId: "q-1",
+  });
+});
+
+test("ringgit below RM 5 is refused before it reaches the backend", async () => {
+  me.mockReturnValue({ country: "MY" });
+  render(<TopUpScreen />);
+  await type("4");
+  expect(screen.getByText("The smallest top-up is RM 5.00")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /^Pay/ })).toBeDisabled();
 });
