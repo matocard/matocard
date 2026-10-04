@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import type { SQL } from "bun";
 import { type Address, getAddress, isAddress, verifyMessage } from "viem";
 import type { Chain } from "./chain";
@@ -62,6 +63,25 @@ export async function authenticate(sql: SQL, req: Request): Promise<User> {
     RETURNING id, wallet, kyc_status, country`;
   return { ...user, wallet: getAddress(user.wallet) } as User;
 }
+
+/**
+ * The number on the card the app draws (PLAN §8): visual only, no issuer behind
+ * it (PLAN §9). 16 digits from an HMAC of the wallet, under a private prefix
+ * no card network uses, with a Luhn check digit so it reads like a card.
+ */
+export function cardNumber(wallet: Address, secret: string): string {
+  const hash = createHmac("sha256", `card:${secret}`).update(wallet.toLowerCase()).digest();
+  const body = `9988${(hash.readBigUInt64BE() % 10n ** 11n).toString().padStart(11, "0")}`;
+  // Luhn: double every second digit from the right, the check digit included
+  const sum = [...body].reverse().reduce((total, c, i) => {
+    const d = Number(c) * (i % 2 === 0 ? 2 : 1);
+    return total + (d > 9 ? d - 9 : d);
+  }, 0);
+  return body + ((10 - (sum % 10)) % 10);
+}
+
+/** ISO 3166-1 alpha-2, such as MY or ID. */
+const COUNTRY = /^[A-Z]{2}$/;
 
 /** Envio's GraphQL, or null when no indexer is configured. */
 export function createIndexer(url: string | undefined) {
@@ -153,8 +173,9 @@ export function createRoutes(deps: {
   kyc: Kyc;
   indexer: Indexer;
   wake: () => void;
+  cardSecret: string;
 }) {
-  const { sql, chain, fx, payments, kyc, indexer, wake } = deps;
+  const { sql, chain, fx, payments, kyc, indexer, wake, cardSecret } = deps;
   type Handler = (req: Request & { params: Record<string, string> }) => Promise<Response>;
   type Method = "GET" | "POST" | "OPTIONS";
   // the contract is the authority (depositFor reverts NotVerified without it), and it also
@@ -185,8 +206,20 @@ export function createRoutes(deps: {
     "/me": {
       GET: signedIn(async (user) => ({
         user: { wallet: user.wallet, kyc: user.kyc_status, country: user.country },
+        card: { number: cardNumber(user.wallet, cardSecret) },
         ...(await account(chain, user.wallet)),
       })),
+    },
+
+    "/me/country": {
+      // where the user lives, picked at onboarding
+      POST: signedIn(async (user, req) => {
+        const { country } = await body(req);
+        if (typeof country !== "string" || !COUNTRY.test(country))
+          throw new UserError("country is a two-letter code such as MY");
+        await sql`UPDATE users SET country = ${country} WHERE id = ${user.id}`;
+        return { country };
+      }),
     },
 
     "/me/activity": {

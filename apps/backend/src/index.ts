@@ -63,7 +63,16 @@ setInterval(async () => {
 
 const server = Bun.serve({
   port: config.port,
-  routes: createRoutes({ sql, chain, fx, payments, kyc, indexer, wake }),
+  routes: createRoutes({
+    sql,
+    chain,
+    fx,
+    payments,
+    kyc,
+    indexer,
+    wake,
+    cardSecret: config.identitySalt,
+  }),
   fetch: () => json({ error: "not found" }, 404),
 });
 console.log(`backend on :${server.port}, relayer ${chain.relayer}`);

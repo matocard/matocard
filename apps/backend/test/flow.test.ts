@@ -195,6 +195,7 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
         kyc,
         indexer: createIndexer(undefined),
         wake: () => {},
+        cardSecret: "card-secret",
       }),
       fetch: () => new Response("not found", { status: 404 }),
     });
@@ -230,6 +231,16 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     const res = await fetch(`${base}/me`);
     expect(res.status).toBe(401);
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
+  test("onboarding: country picked, card number shown", async () => {
+    expect((await call(siti, "POST", "/me/country", { country: "my" })).status).toBe(400);
+    expect((await call(siti, "POST", "/me/country", { country: "MY" })).body).toEqual({
+      country: "MY",
+    });
+    const me = (await call(siti, "GET", "/me")).body;
+    expect(me.user.country).toBe("MY");
+    expect(me.card.number).toMatch(/^9988\d{12}$/);
   });
 
   test("an account verified onchain without Didit may top up (#68)", async () => {
@@ -474,6 +485,7 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
       kyc: createKyc(db.sql, chain, config),
       indexer: createIndexer("http://127.0.0.1:1/v1/graphql"),
       wake: () => {},
+      cardSecret: "card-secret",
     });
     const down = Bun.serve({ port: 0, routes, fetch: () => new Response("", { status: 404 }) });
     const v = await fetch(`http://127.0.0.1:${down.port}/verify/${siti.address}`).then((r) =>

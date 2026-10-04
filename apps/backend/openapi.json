@@ -77,6 +77,18 @@
               "country": { "type": ["string", "null"] }
             }
           },
+          "card": {
+            "type": "object",
+            "description": "For the card on the home screen. Visual only: no card network or issuer behind it",
+            "properties": {
+              "number": {
+                "type": "string",
+                "pattern": "^9988[0-9]{12}$",
+                "description": "16 digits, the same for a wallet every time; group them in fours",
+                "examples": ["9988301477215569"]
+              }
+            }
+          },
           "verified": { "type": "boolean", "description": "Verified onchain; can top up and draw" },
           "score": { "$ref": "#/components/schemas/Amount", "description": "0–100" },
           "ratioBps": {
@@ -358,6 +370,35 @@
             "description": "The account",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Me" } } }
           },
+          "401": { "$ref": "#/components/responses/SignIn" }
+        }
+      }
+    },
+    "/me/country": {
+      "post": {
+        "tags": ["Account"],
+        "summary": "Set where the user lives (onboarding)",
+        "description": "ISO 3166-1 alpha-2, uppercase. Shown back as `user.country` in `GET /me`. Can be changed any time.",
+        "security": [{ "session": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["country"],
+                "properties": { "country": { "type": "string", "pattern": "^[A-Z]{2}$" } }
+              },
+              "example": { "country": "MY" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": { "application/json": { "example": { "country": "MY" } } }
+          },
+          "400": { "$ref": "#/components/responses/Bad" },
           "401": { "$ref": "#/components/responses/SignIn" }
         }
       }
