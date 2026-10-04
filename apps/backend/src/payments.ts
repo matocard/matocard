@@ -190,11 +190,23 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
   }
 
   /** A refund or chargeback: remember it; `work()` reverses what it still can. */
-  async function reversed(paymentId: unknown) {
-    if (!paymentId) return;
-    await sql`UPDATE payments SET chargeback = 'received'
-              WHERE provider_event_id = ${String(paymentId)} AND kind = 'topup'
-                AND status IN ('PAID', 'CREDITED_ONCHAIN', 'SETTLED') AND chargeback IS NULL`;
+  async function reversed(id: unknown) {
+    if (!id) return;
+    let paymentId = String(id);
+    // refund.succeeded names the payment request (pr-…) in `payment_id`, while we
+    // keep the payment (py-…). A failed lookup throws, so Xendit delivers it again
+    if (paymentId.startsWith("pr-")) {
+      const request = await xendit(x.secretKey, `/v3/payment_requests/${paymentId}`, undefined, {
+        "api-version": "2024-11-11",
+      });
+      paymentId = String(request.latest_payment_id ?? paymentId);
+    }
+    const marked = await sql`UPDATE payments SET chargeback = 'received'
+              WHERE provider_event_id = ${paymentId} AND kind = 'topup'
+                AND status IN ('PAID', 'CREDITED_ONCHAIN', 'SETTLED') AND chargeback IS NULL
+              RETURNING id`;
+    // money went back to the payer: never let that pass without a trace
+    if (marked.length === 0) console.error(`refund or chargeback for ${id}: no top-up matched`);
   }
 
   async function payoutResult(event: string, data: Record<string, unknown>) {

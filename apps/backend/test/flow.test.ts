@@ -38,8 +38,13 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Promise<R
     // what Xendit has on a session and its payment request, for the channel lookup
     if (url.pathname.startsWith("/sessions/"))
       return reply({ latest_payment_request_id: `pr-${url.pathname.split("/")[2]}` });
-    if (url.pathname.startsWith("/v3/payment_requests/"))
-      return reply({ channel_code: "BCA_VIRTUAL_ACCOUNT" });
+    if (url.pathname.startsWith("/v3/payment_requests/")) {
+      const id = url.pathname.split("/")[3]!;
+      return reply({
+        channel_code: "BCA_VIRTUAL_ACCOUNT",
+        latest_payment_id: id.replace("pr-", "py-"),
+      });
+    }
     const body = JSON.parse(String(init?.body));
     xenditCalls.push({ path: url.pathname, body, headers: new Headers(init?.headers) });
     if (url.pathname === "/sessions") {
@@ -345,8 +350,12 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     ]);
   });
 
-  test("a chargeback inside the hold takes the deposit back", async () => {
-    await xenditHook({ event: "dispute.action_required", data: { payment_id: "py-1" } });
+  test("a refund inside the hold takes the deposit back", async () => {
+    // as Xendit sends it: payment_id holds the payment request's id, not the payment's
+    await xenditHook({
+      event: "refund.succeeded",
+      data: { id: "rfd-1", payment_id: "pr-1", payment_request_id: "pr-1" },
+    });
     await work();
     const me = await call(siti, "GET", "/me");
     expect(me.body.collateral.pendingShares).toBe("0");
