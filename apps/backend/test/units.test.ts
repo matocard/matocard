@@ -110,3 +110,14 @@ test("the card number: 16 digits, private prefix, Luhn-valid, one per wallet", (
   expect(cardNumber(b, "s")).not.toBe(n);
   expect(cardNumber(a, "other")).not.toBe(n);
 });
+
+test("the Dockerfile copies every workspace's package.json, or the frozen install fails", async () => {
+  const root = `${import.meta.dir}/../../..`;
+  const dockerfile = await Bun.file(`${import.meta.dir}/../Dockerfile`).text();
+  const workspaces = [...new Bun.Glob("{apps,packages}/*/package.json").scanSync(root)];
+  expect(workspaces.length).toBeGreaterThan(4);
+  for (const manifest of workspaces) {
+    if (manifest.startsWith("packages/tsconfig")) continue; // copied whole
+    expect(dockerfile).toContain(`COPY ${manifest} `);
+  }
+});
