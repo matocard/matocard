@@ -1,36 +1,44 @@
 import type { ActivityItem } from "../../lib/matocard/activity";
 
 /**
- * The six kinds `useTransactions` emits, worded for someone who has used a secured credit card and
- * never a blockchain: a security deposit earns a limit, you spend against it, you pay it back. No
- * chain names in a title.
- *
- * There were twenty cases here and fourteen could never fire: "Put to work", "Rewards added",
- * "Auto reinvest updated", freeze, proposed-exit, sign-mandate, consented, approve-exit. All of them
- * described an automated agent moving money between yield buckets, which is not a thing this
- * product does. Dead branches in a `switch` are worse than dead files: they read as behaviour.
+ * What each kind of row is called (the kinds `useMyActivity` emits), worded for someone who has
+ * used a debit card and never a blockchain: no chain words in a title. Wording is Axel's call.
  */
+const TITLE: Record<string, string> = {
+  sent: "Sent",
+  settled: "Settled",
+  topup: "Top-up",
+  "topup-held": "Top-up, on hold",
+  "topup-cleared": "Top-up cleared",
+  "topup-reversed": "Top-up reversed",
+  "topup-pending": "Top-up",
+  "settle-pending": "Settlement",
+  cashout: "Cash out to bank",
+  withdrawn: "Collateral taken out",
+  verified: "Identity verified",
+  defaulted: "Missed the due date",
+};
+
 function humanize(item: ActivityItem): { title: string; description: string } {
-  switch (item.kind) {
-    case "drew":
-      return { title: "Spent", description: item.detail };
-    case "repaid":
-      return { title: "Repay", description: item.detail };
-    case "collateral-locked":
-      // "Deposit", not "Deposit". It sits directly above "Deposit confirmed" once the
-      // guardians have signed, and the pair read as two different things rather than two moments
-      // of one.
-      return { title: "Deposit", description: item.detail };
-    case "collateral-released":
-      return { title: "Deposit returned", description: item.detail };
-    case "proved":
-      return { title: "Deposit confirmed", description: item.detail };
-    case "defaulted":
-      return { title: "Missed payment", description: item.detail };
-    default:
-      return { title: item.detail, description: "" };
-  }
+  const title = TITLE[item.kind];
+  return title ? { title, description: item.detail } : { title: item.detail, description: "" };
 }
+
+/** Which of the icons below a kind gets. */
+const ICON: Record<string, "out" | "in" | "coin" | "check" | "pause"> = {
+  sent: "out",
+  cashout: "out",
+  withdrawn: "out",
+  settled: "in",
+  topup: "coin",
+  "topup-held": "coin",
+  "topup-pending": "coin",
+  "settle-pending": "in",
+  "topup-reversed": "out",
+  "topup-cleared": "check",
+  verified: "check",
+  defaulted: "pause",
+};
 
 function ActivityIcon({ kind }: { kind: string }) {
   const common = {
@@ -45,8 +53,8 @@ function ActivityIcon({ kind }: { kind: string }) {
     "aria-hidden": true,
   };
 
-  switch (kind) {
-    case "repaid":
+  switch (ICON[kind]) {
+    case "in":
       return (
         // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden comes from the spread
         <svg {...common}>
@@ -55,8 +63,7 @@ function ActivityIcon({ kind }: { kind: string }) {
           <path d="M5 21h14" />
         </svg>
       );
-    case "drew":
-    case "collateral-released":
+    case "out":
       return (
         // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden comes from the spread
         <svg {...common}>
@@ -65,7 +72,7 @@ function ActivityIcon({ kind }: { kind: string }) {
           <path d="M5 3h14" />
         </svg>
       );
-    case "collateral-locked":
+    case "coin":
       return (
         // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden comes from the spread
         <svg {...common}>
@@ -73,7 +80,7 @@ function ActivityIcon({ kind }: { kind: string }) {
           <path d="M17 7.5c0-1.7-2.1-2.8-5-2.8s-5 1.1-5 2.8 2.1 2.8 5 2.8 5 1.1 5 2.8-2.1 2.8-5 2.8-5-1.1-5-2.8" />
         </svg>
       );
-    case "defaulted":
+    case "pause":
       return (
         // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden comes from the spread
         <svg {...common}>
@@ -82,7 +89,7 @@ function ActivityIcon({ kind }: { kind: string }) {
           <path d="M14 9v6" />
         </svg>
       );
-    case "proved":
+    case "check":
       return (
         // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden comes from the spread
         <svg {...common}>

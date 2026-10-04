@@ -12,35 +12,35 @@ import { useSession } from "./useSession";
 const short = (a: string | null) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 const ausd = (v: string | null) => (v === null ? "" : `${formatAusd(BigInt(v))} AUSD`);
 
-/** What each indexed event is called on screen. Wording is Axel's to change. */
+/** Each indexed event as a kind (titled by `ActivityRow`) and its detail line. */
 function describe(
   row: ActivityRow,
 ): { kind: string; detail: string; group: "card" | "deposit" } | null {
   switch (row.kind) {
     case "TopUp":
       return {
-        kind: row.method === "Card" ? "Top-up, on hold" : "Top-up",
+        kind: row.method === "Card" ? "topup-held" : "topup",
         detail: `+${ausd(row.amount)}`,
         group: "deposit",
       };
     case "TopUpCleared":
-      return { kind: "Top-up cleared", detail: "Now counts toward your limit", group: "deposit" };
+      return { kind: "topup-cleared", detail: "Now counts toward your limit", group: "deposit" };
     case "TopUpReversed":
-      return { kind: "Top-up reversed", detail: "Refunded to the card", group: "deposit" };
+      return { kind: "topup-reversed", detail: "Refunded to the card", group: "deposit" };
     case "Draw":
       return {
-        kind: "Sent",
+        kind: "sent",
         detail: `${ausd(row.amount)} to ${short(row.counterparty)}`,
         group: "card",
       };
     case "Repay":
-      return { kind: "Settled", detail: ausd(row.amount), group: "card" };
+      return { kind: "settled", detail: ausd(row.amount), group: "card" };
     case "CollateralWithdrawn":
-      return { kind: "Collateral taken out", detail: ausd(row.amount), group: "deposit" };
+      return { kind: "withdrawn", detail: ausd(row.amount), group: "deposit" };
     case "Verified":
-      return { kind: "Identity verified", detail: "Your card is ready", group: "card" };
+      return { kind: "verified", detail: "Your card is ready", group: "card" };
     case "Default":
-      return { kind: "Missed the due date", detail: "Settled from collateral", group: "card" };
+      return { kind: "defaulted", detail: "Settled from collateral", group: "card" };
     default:
       // The yield fee is bookkeeping between the vault and the pool, not something the user did.
       return null;
@@ -49,8 +49,8 @@ function describe(
 
 function describeInFlight(row: InFlightRow): { kind: string; detail: string } {
   const fiat = row.currency === "IDR" ? formatIdr(BigInt(row.fiat)) : `${row.fiat} ${row.currency}`;
-  if (row.kind === "cashout") return { kind: "Cash out to bank", detail: `${fiat}, on its way` };
-  const what = row.kind === "repay" ? "Settlement" : "Top-up";
+  if (row.kind === "cashout") return { kind: "cashout", detail: `${fiat}, on its way` };
+  const what = row.kind === "repay" ? "settle-pending" : "topup-pending";
   return row.status === "PENDING"
     ? { kind: what, detail: `${fiat}, waiting for payment` }
     : { kind: what, detail: `${fiat}, paid, crediting now` };
