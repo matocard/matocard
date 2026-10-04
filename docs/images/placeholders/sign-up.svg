@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="800" viewBox="0 0 390 800" font-family="Inter, Helvetica, Arial, sans-serif">
+<title>Sign up screen, placeholder</title>
+<rect x="4" y="4" width="382" height="792" rx="48" fill="#ffffff" stroke="#0D212C" stroke-width="8"/>
+<rect x="150" y="22" width="90" height="10" rx="5" fill="#0D212C"/>
+<text x="40" y="110" font-size="15" fill="#49484F" letter-spacing="2">MATOCARD</text>
+<text x="40" y="160" font-size="34" font-weight="700" fill="#0D212C">Sign up</text>
+<rect x="40" y="200" width="200" height="34" rx="17" fill="#0D212C"/>
+<text x="58" y="223" font-size="15" fill="#ffffff">App in progress</text>
+<rect x="40" y="300" width="310" height="86" rx="18" fill="#F4F0ED"/><text x="64" y="350" font-size="20" fill="#18161B">Create a passkey</text><rect x="40" y="410" width="310" height="86" rx="18" fill="#F4F0ED"/><text x="64" y="460" font-size="20" fill="#18161B">Choose your country</text>
+<text x="195" y="740" font-size="14" fill="#49484F" text-anchor="middle">Placeholder · screenshot replaces this</text>
+</svg>
