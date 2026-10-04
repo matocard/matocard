@@ -3,7 +3,8 @@ import type { ComponentProps } from "react";
 import FlowLayout from "../layout";
 
 const nav = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => nav, usePathname: () => "/deposit" }));
+const path = vi.hoisted(() => ({ current: "/topup" }));
+vi.mock("next/navigation", () => ({ useRouter: () => nav, usePathname: () => path.current }));
 vi.mock("next/link", () => ({ default: (props: ComponentProps<"a">) => <a {...props} /> }));
 const useWallet = vi.fn();
 vi.mock("../../../hooks/useWallet", () => ({ useWallet: () => useWallet() }));
@@ -23,6 +24,7 @@ function mockMatchMedia(matches: boolean) {
 
 beforeEach(() => {
   nav.replace.mockClear();
+  path.current = "/topup";
   // jsdom has no matchMedia by default; useIsDesktop guards that and stays false (mobile).
   (window as { matchMedia?: unknown }).matchMedia = undefined;
 });
@@ -39,14 +41,27 @@ test("mobile: flow layout renders children and no bottom nav", () => {
   expect(nav.replace).not.toHaveBeenCalled();
 });
 
-test("desktop: a flow-route visitor is redirected to the matching drawer, children not shown", async () => {
+test("desktop: a Matocard flow renders in place", () => {
   useWallet.mockReturnValue({ isConnected: true, hydrated: true });
-  mockMatchMedia(true); // desktop viewport → /deposit maps to the deposit drawer
+  mockMatchMedia(true);
   render(
     <FlowLayout>
       <p>flow body</p>
     </FlowLayout>,
   );
-  await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/home?panel=deposit"));
+  expect(screen.getByText("flow body")).toBeInTheDocument();
+  expect(nav.replace).not.toHaveBeenCalled();
+});
+
+test("desktop: a path that is not a flow goes Home rather than rendering nothing", async () => {
+  path.current = "/nonsense";
+  useWallet.mockReturnValue({ isConnected: true, hydrated: true });
+  mockMatchMedia(true);
+  render(
+    <FlowLayout>
+      <p>flow body</p>
+    </FlowLayout>,
+  );
+  await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/home"));
   expect(screen.queryByText("flow body")).toBeNull();
 });
