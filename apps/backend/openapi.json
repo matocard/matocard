@@ -265,7 +265,7 @@
         "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
       },
       "NotVerified": {
-        "description": "KYC not approved yet",
+        "description": "Not verified onchain yet (KYC approved and `setVerified` confirmed)",
         "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
       },
       "NotConfigured": {

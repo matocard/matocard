@@ -232,6 +232,17 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
   });
 
+  test("an account verified onchain without Didit may top up (#68)", async () => {
+    const demo = privateKeyToAccount(generatePrivateKey());
+    const quote = await call(null, "POST", "/quote", { pair: "USD/IDR" });
+    const topup = () =>
+      call(demo, "POST", "/topups", { amount: "50000", method: "bank", quoteId: quote.body.id });
+    expect((await topup()).status).toBe(403);
+    await chain.setVerified(demo.address, keccak256(toHex("demo-account")));
+    expect((await call(demo, "GET", "/me")).body.user.kyc).toBe("none");
+    expect((await topup()).status).toBe(200);
+  });
+
   test("1–2. sign up and verify: identity onchain, MON dripped once", async () => {
     await verify(siti, "A1234567");
     const me = await call(siti, "GET", "/me");
