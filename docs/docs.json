@@ -19,7 +19,7 @@
       { "label": "GitHub", "href": "https://github.com/matocard/matocard" },
       { "label": "API status", "href": "https://api.matocard.xyz/health" }
     ],
-    "primary": { "type": "button", "label": "Open Matocard", "href": "https://app.matocard.xyz" }
+    "primary": { "type": "button", "label": "Open Matocard", "href": "https://matocard.xyz" }
   },
   "navigation": {
     "tabs": [
