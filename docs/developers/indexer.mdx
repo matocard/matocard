@@ -53,4 +53,4 @@ Most apps never query it directly: `GET /me/activity` and `GET /verify/{wallet}`
 
 ## Health
 
-A scheduled check compares the indexer with the chain head and opens a GitHub issue if it falls more than 1,500 blocks (about ten minutes) behind. A self-hosted fallback is ready if the hosted one fails.
+A scheduled check compares the indexer with the chain head and opens a GitHub issue if it falls more than 1,500 blocks (about ten minutes) behind. GitHub runs it every few hours rather than on its 30-minute schedule, so check `_meta` by hand before a demo. A self-hosted fallback is ready if the hosted one fails.
