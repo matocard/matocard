@@ -86,6 +86,10 @@ The hold follows how the payer actually paid (the channel in Xendit's webhook), 
 - A payment moves only `PENDING → PAID → CREDITED_ONCHAIN → SETTLED | REVERSED`, `PAID → REVERSED` (chargeback before credit), or `PENDING → FAILED`. A trigger refuses anything else and logs every step in `payment_transitions`.
 - `ledger` and `payment_transitions` are append-only; payments are never deleted. Every posting is one side of a double entry, and each currency balances.
 
+## Relayer health
+
+The relayer pays every backend transaction's gas and drips `DRIP_MON` to each new user, so sign-ups stop when it runs dry. `.github/workflows/relayer-health.yml` runs `scripts/relayer-health.sh` every hour: under 2 MON it opens an issue, *Relayer is low on MON*, and closes it once topped up. `DRY_RUN=1 scripts/relayer-health.sh` only prints.
+
 ## Reconciliation
 
 `bun src/reconcile.ts [YYYY-MM-DD]` compares the day's credited top-ups and repayments with the indexer, and exits 1 on any difference. The server runs it for the previous day shortly after midnight UTC when `INDEXER_URL` is set.

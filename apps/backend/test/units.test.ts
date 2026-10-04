@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { createRoutes } from "../src/api";
+import { cardNumber, createRoutes } from "../src/api";
 import { identityHash } from "../src/kyc";
 import { methodOf } from "../src/payments";
 import { reconcile } from "../src/reconcile";
@@ -90,4 +90,23 @@ test("openapi.json documents every route", async () => {
     (p) => p !== "/docs" && p !== "/openapi.json",
   );
   expect(documented.sort()).toEqual(served.sort());
+});
+
+test("the card number: 16 digits, private prefix, Luhn-valid, one per wallet", () => {
+  const luhn = (n: string) =>
+    [...n].reverse().reduce((t, c, i) => {
+      const d = Number(c) * (i % 2 ? 2 : 1);
+      return t + (d > 9 ? d - 9 : d);
+    }, 0) %
+      10 ===
+    0;
+  const a = "0xC0519BE562f0De7E32e9A48e50AdecBAde605aAD";
+  const b = "0xc6E0De07b60a412c1bb990B77612754B9254DBDa";
+  const n = cardNumber(a, "s");
+  expect(n).toMatch(/^9988\d{12}$/);
+  expect(luhn(n)).toBe(true);
+  expect(luhn(cardNumber(b, "s"))).toBe(true);
+  expect(cardNumber(a.toLowerCase() as never, "s")).toBe(n);
+  expect(cardNumber(b, "s")).not.toBe(n);
+  expect(cardNumber(a, "other")).not.toBe(n);
 });
