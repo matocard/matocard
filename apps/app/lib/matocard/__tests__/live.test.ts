@@ -13,6 +13,8 @@ import {
   SESSION_SECONDS,
   type Session,
   sessionMessage,
+  setCountry,
+  startKyc,
   startTopUp,
   TREASURY,
 } from "../backend";
@@ -74,6 +76,31 @@ describe.skipIf(!LIVE)("live: backend and chain", () => {
     const ttl = Date.parse(quote.expiresAt) - Date.now();
     expect(ttl).toBeGreaterThan(30_000);
     expect(ttl).toBeLessThanOrEqual(61_000);
+  });
+
+  test("onboarding: the country is saved, and the card number is the account's own", async () => {
+    await setCountry(session, "MY");
+    const first = await getMe(session);
+    expect(first.user.country).toBe("MY");
+    expect(first.card.number).toMatch(/^\d{16}$/);
+    expect((await getMe(session)).card.number).toBe(first.card.number);
+  });
+
+  test("KYC: a new account gets Didit's hosted flow, and its status turns pending", async () => {
+    const { url } = await startKyc(session);
+    expect(new URL(url).hostname).toMatch(/didit\.me$/);
+    const me = await getMe(session);
+    expect(me.user.kyc).toBe("pending");
+    // Not verified until the identity is bound onchain, which the app reads from the contract.
+    expect(me.verified).toBe(false);
+  });
+
+  test("ringgit: a USD/MYR quote, and a top-up in sen refused until verified", async () => {
+    const quote = await getQuote("USD/MYR");
+    expect(Number(quote.rate)).toBeGreaterThan(1);
+    expect(Number(quote.rate)).toBeLessThan(10);
+    const refusal = startTopUp(session, { amount: "60000", method: "bank", quoteId: quote.id });
+    await expect(refusal).rejects.toMatchObject({ status: 403 });
   });
 
   test("a top-up before verification is refused, with the backend's own words", async () => {
