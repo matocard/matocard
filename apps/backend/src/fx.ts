@@ -36,16 +36,19 @@ export function createFx(sql: SQL, source = fetchRate) {
       return row as { id: string; pair: Pair; rate: string; expiresAt: Date };
     },
 
-    /** The rate of an unexpired quote for `pair`, or an error the app can show. */
-    async use(id: unknown, pair: Pair): Promise<{ id: string; rate: string }> {
+    /** An unexpired quote for one of `pairs`, or an error the app can show. */
+    async use(
+      id: unknown,
+      pairs: readonly Pair[] = PAIRS,
+    ): Promise<{ id: string; rate: string; pair: Pair }> {
       if (typeof id !== "string" || !/^[0-9a-f-]{36}$/.test(id))
         throw new UserError("quote id missing");
       const [row] = await sql`
-        SELECT id, rate::text AS rate, expires_at > now() AS live FROM fx_quotes
-        WHERE id = ${id} AND pair = ${pair}`;
-      if (!row) throw new UserError("unknown quote");
+        SELECT id, pair, rate::text AS rate, expires_at > now() AS live FROM fx_quotes
+        WHERE id = ${id}`;
+      if (!row || !pairs.includes(row.pair)) throw new UserError("unknown quote");
       if (!row.live) throw new UserError("quote expired, ask for a new one");
-      return { id: row.id, rate: row.rate };
+      return { id: row.id, rate: row.rate, pair: row.pair };
     },
   };
 }

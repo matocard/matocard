@@ -84,6 +84,8 @@ export function testConfig(
     IDENTITY_SALT: "test-salt",
     XENDIT_SECRET_KEY: "xnd_development_test",
     XENDIT_CALLBACK_TOKEN: "xendit-token",
+    XENDIT_MY_SECRET_KEY: "xnd_development_my",
+    XENDIT_MY_CALLBACK_TOKEN: "xendit-my-token",
     DIDIT_API_KEY: "didit-key",
     DIDIT_WORKFLOW_ID: "workflow",
     DIDIT_WEBHOOK_SECRET: "didit-secret",

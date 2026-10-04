@@ -38,12 +38,12 @@ export function loadConfig() {
     dripWei: parseEther(env("DRIP_MON", "0.5")),
     indexerUrl: optional("INDEXER_URL"),
     xendit: {
+      // Xendit ties an account to its country: the Indonesian one collects IDR and pays
+      // out, the Malaysian one collects MYR
       secretKey: optional("XENDIT_SECRET_KEY"),
       callbackToken: optional("XENDIT_CALLBACK_TOKEN"),
-      // one account collects and pays out; a second only if collecting moves to another country
-      payoutSecretKey: optional("XENDIT_PAYOUT_SECRET_KEY") ?? optional("XENDIT_SECRET_KEY"),
-      payoutCallbackToken:
-        optional("XENDIT_PAYOUT_CALLBACK_TOKEN") ?? optional("XENDIT_CALLBACK_TOKEN"),
+      mySecretKey: optional("XENDIT_MY_SECRET_KEY"),
+      myCallbackToken: optional("XENDIT_MY_CALLBACK_TOKEN"),
       returnUrl: optional("APP_URL"),
     },
     didit: {

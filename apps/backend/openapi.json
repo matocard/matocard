@@ -201,7 +201,10 @@
             "format": "uri",
             "description": "Xendit's hosted page; open it"
           },
-          "fiat": { "$ref": "#/components/schemas/Amount", "description": "IDR charged" },
+          "fiat": {
+            "$ref": "#/components/schemas/Amount",
+            "description": "Charged in the quote's currency: rupiah or sen"
+          },
           "ausd": {
             "$ref": "#/components/schemas/Amount",
             "description": "AUSD credited (top-up) or repaid (settlement)"
@@ -308,7 +311,7 @@
         "tags": ["Public"],
         "security": [],
         "summary": "Lock an exchange rate for 60 seconds",
-        "description": "Every top-up, settlement and cash-out needs a fresh quote id. Top-ups and settlements use `USD/IDR`; `USD/MYR` is for display.",
+        "description": "Every top-up, settlement and cash-out needs a fresh quote id. Top-ups and settlements take `USD/IDR` (paid in rupiah, Indonesian channels) or `USD/MYR` (paid in ringgit: FPX, DuitNow, Malaysian cards); the pair picks the currency. Cash-outs take `USD/IDR` only.",
         "requestBody": {
           "required": true,
           "content": {
@@ -470,8 +473,8 @@
     "/topups": {
       "post": {
         "tags": ["Money"],
-        "summary": "Add collateral by paying in IDR",
-        "description": "`amount` is whole rupiah, at least 10000. `method` is what the user picked, but the hold follows how they actually paid: virtual account and QRIS count at once, cards and e-wallets are held first (`collateral.pendingShares`).",
+        "summary": "Add collateral by paying in IDR or MYR",
+        "description": "The quote's pair picks the currency. `amount` is in its smallest unit: whole rupiah (at least 10000) for `USD/IDR`, sen (at least 500, RM 5) for `USD/MYR`. `method` is what the user picked, but the hold follows how they actually paid: virtual account and QRIS count at once, cards and e-wallets are held first (`collateral.pendingShares`).",
         "security": [{ "session": [] }],
         "requestBody": {
           "required": true,
@@ -481,7 +484,10 @@
                 "type": "object",
                 "required": ["amount", "method", "quoteId"],
                 "properties": {
-                  "amount": { "type": "string", "description": "IDR, whole rupiah" },
+                  "amount": {
+                    "type": "string",
+                    "description": "Rupiah for a `USD/IDR` quote, sen for `USD/MYR`"
+                  },
                   "method": {
                     "type": "string",
                     "enum": ["bank", "card", "qr"],
@@ -490,7 +496,7 @@
                   "quoteId": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "A `USD/IDR` quote"
+                    "description": "A `USD/IDR` or `USD/MYR` quote"
                   }
                 }
               },
@@ -527,8 +533,8 @@
     "/settlements": {
       "post": {
         "tags": ["Money"],
-        "summary": "Pay the whole debt in IDR",
-        "description": "Charges `drawn` converted at the quote, rounded up. Once paid, the backend repays the contract for the user, which closes the cycle and moves the score.",
+        "summary": "Pay the whole debt in IDR or MYR",
+        "description": "Charges `drawn` converted at the quote, rounded up, in the quote's currency. Once paid, the backend repays the contract for the user, which closes the cycle and moves the score.",
         "security": [{ "session": [] }],
         "requestBody": {
           "required": true,
@@ -541,7 +547,7 @@
                   "quoteId": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "A `USD/IDR` quote"
+                    "description": "A `USD/IDR` or `USD/MYR` quote"
                   }
                 }
               }

@@ -1,4 +1,4 @@
-import { baseToQuote, formatAmount, parseAmount, quoteToBase } from "@matocard/core";
+import { baseToQuote, formatAmount, quoteToBase } from "@matocard/core";
 import type { SQL } from "bun";
 import { type Address, getAddress, type Hex, isAddress, isHex } from "viem";
 import type { Authorization, Chain } from "./chain";
@@ -8,9 +8,13 @@ import type { Fx } from "./fx";
 import { sameSecret, UserError } from "./http";
 
 const XENDIT = "https://api.xendit.co";
-// ponytail: one Indonesian Xendit account collects and pays out. Collecting MYR needs a
-// Malaysian account (country of origin); switch these three back when there is one
-const COLLECT = { currency: "IDR", country: "ID", pair: "USD/IDR" } as const;
+// The quote's pair picks the account money comes in through: Xendit ties an account to
+// its country. Payouts always go through the Indonesian one (families are in Indonesia)
+const COLLECT = {
+  "USD/IDR": { currency: "IDR", country: "ID", min: 10_000n }, // Rp 10,000
+  "USD/MYR": { currency: "MYR", country: "MY", min: 500n }, // RM 5.00
+} as const;
+type Collect = (typeof COLLECT)[keyof typeof COLLECT];
 
 type User = { id: string; wallet: Address };
 
@@ -110,26 +114,30 @@ export function parseAuthorization(value: unknown): Authorization {
  */
 export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
   const { xendit: x } = config;
+  const keyOf = (currency: string) => (currency === "MYR" ? x.mySecretKey : x.secretKey);
 
   async function checkout(
     user: User,
     kind: "topup" | "repay",
     method: string,
+    collect: Collect,
     fiat: bigint,
     ausd: bigint,
     quoteId: string,
   ) {
+    const key = keyOf(collect.currency);
+    if (!key) throw new UserError(`${collect.currency} payments are not configured`, 503);
     const [payment] = await sql`
       INSERT INTO payments (user_id, kind, method, fiat_amount, currency, quote_id, ausd_amount)
-      VALUES (${user.id}, ${kind}, ${method}, ${fiat}, ${COLLECT.currency}, ${quoteId}, ${ausd})
+      VALUES (${user.id}, ${kind}, ${method}, ${fiat}, ${collect.currency}, ${quoteId}, ${ausd})
       RETURNING id`;
-    const session = await xendit(x.secretKey, "/sessions", {
+    const session = await xendit(key, "/sessions", {
       reference_id: payment.id,
       session_type: "PAY",
       mode: "PAYMENT_LINK",
-      amount: Number(formatAmount(fiat, COLLECT.currency)),
-      currency: COLLECT.currency,
-      country: COLLECT.country,
+      amount: Number(formatAmount(fiat, collect.currency)),
+      currency: collect.currency,
+      country: collect.country,
       ...(method === "card" ? { allowed_payment_channels: ["CARDS"] } : {}),
       ...(x.returnUrl ? { success_return_url: x.returnUrl, cancel_return_url: x.returnUrl } : {}),
     });
@@ -148,12 +156,14 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
    * arrive before the payment's own webhook. The session's payment request does.
    */
   async function channelOf(reference: string): Promise<string | null> {
-    const [p] = await sql`SELECT provider_session_id FROM payments WHERE id = ${reference}`;
+    const [p] =
+      await sql`SELECT provider_session_id, currency FROM payments WHERE id = ${reference}`;
     if (!p?.provider_session_id) return null;
-    const session = await xendit(x.secretKey, `/sessions/${p.provider_session_id}`);
+    const key = keyOf(p.currency);
+    const session = await xendit(key, `/sessions/${p.provider_session_id}`);
     if (!session.latest_payment_request_id) return null;
     const request = await xendit(
-      x.secretKey,
+      key,
       `/v3/payment_requests/${session.latest_payment_request_id}`,
       undefined,
       { "api-version": "2024-11-11" },
@@ -190,13 +200,13 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
   }
 
   /** A refund or chargeback: remember it; `work()` reverses what it still can. */
-  async function reversed(id: unknown) {
+  async function reversed(id: unknown, key: string | undefined) {
     if (!id) return;
     let paymentId = String(id);
     // refund.succeeded names the payment request (pr-…) in `payment_id`, while we
     // keep the payment (py-…). A failed lookup throws, so Xendit delivers it again
     if (paymentId.startsWith("pr-")) {
-      const request = await xendit(x.secretKey, `/v3/payment_requests/${paymentId}`, undefined, {
+      const request = await xendit(key, `/v3/payment_requests/${paymentId}`, undefined, {
         "api-version": "2024-11-11",
       });
       paymentId = String(request.latest_payment_id ?? paymentId);
@@ -322,7 +332,7 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
     // the idempotency key makes a retry after a lost answer return the same payout
     const bank = p.recipient_json.bank;
     const res = await xendit(
-      x.payoutSecretKey,
+      x.secretKey,
       "/v2/payouts",
       {
         reference_id: p.id,
@@ -346,30 +356,34 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
       const method = input.method;
       if (method !== "card" && method !== "bank" && method !== "qr")
         throw new UserError("method is card, bank or qr");
-      const quote = await fx.use(input.quoteId, COLLECT.pair);
-      let fiat: bigint;
-      try {
-        fiat = parseAmount(String(input.amount ?? ""), COLLECT.currency);
-      } catch {
-        throw new UserError(`amount is not a ${COLLECT.currency} amount`);
-      }
-      if (fiat < 10_000n) throw new UserError("the smallest top-up is Rp 10,000");
-      const ausd = quoteToBase(fiat, COLLECT.currency, "AUSD", quote.rate, "down");
-      return checkout(user, "topup", method, fiat, ausd, quote.id);
+      const quote = await fx.use(input.quoteId);
+      const collect = COLLECT[quote.pair];
+      // the smallest unit, like every amount in the API: sen for MYR, rupiah for IDR
+      const amount = String(input.amount ?? "");
+      if (!/^\d{1,15}$/.test(amount))
+        throw new UserError(`amount is not a ${collect.currency} amount`);
+      const fiat = BigInt(amount);
+      if (fiat < collect.min)
+        throw new UserError(
+          `the smallest top-up is ${formatAmount(collect.min, collect.currency)} ${collect.currency}`,
+        );
+      const ausd = quoteToBase(fiat, collect.currency, "AUSD", quote.rate, "down");
+      return checkout(user, "topup", method, collect, fiat, ausd, quote.id);
     },
 
     /** Settlement (#45): the whole debt, charged in local money rounded up. */
     async settle(user: User, input: Record<string, unknown>) {
-      const quote = await fx.use(input.quoteId, COLLECT.pair);
+      const quote = await fx.use(input.quoteId);
+      const collect = COLLECT[quote.pair];
       const { drawn } = await chain.read.accountOf(user.wallet);
       if (drawn === 0n) throw new UserError("nothing is owed");
-      const fiat = baseToQuote(drawn, "AUSD", COLLECT.currency, quote.rate, "up");
-      return checkout(user, "repay", "bank", fiat, drawn, quote.id);
+      const fiat = baseToQuote(drawn, "AUSD", collect.currency, quote.rate, "up");
+      return checkout(user, "repay", "bank", collect, fiat, drawn, quote.id);
     },
 
     /** Cash out (#46): the user signs AUSD to the treasury, then Xendit pays IDR to their bank. */
     async cashout(user: User, input: Record<string, unknown>) {
-      const quote = await fx.use(input.quoteId, "USD/IDR");
+      const quote = await fx.use(input.quoteId, ["USD/IDR"]);
       const auth = parseAuthorization(input.authorization);
       if (auth.from !== getAddress(user.wallet))
         throw new UserError("authorization is not from this account");
@@ -409,8 +423,10 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
 
     /** Every Xendit webhook: payments, refunds, disputes and payouts. */
     async webhook(req: Request): Promise<Response> {
+      // the token says which account is calling, and so which key looks things up there
       const token = req.headers.get("x-callback-token");
-      if (!sameSecret(token, x.callbackToken) && !sameSecret(token, x.payoutCallbackToken)) {
+      const fromMy = sameSecret(token, x.myCallbackToken);
+      if (!fromMy && !sameSecret(token, x.callbackToken)) {
         return new Response("bad callback token", { status: 401 });
       }
       const payload = (await req.json().catch(() => null)) as {
@@ -437,7 +453,10 @@ export function createPayments(sql: SQL, chain: Chain, fx: Fx, config: Config) {
           await failed(data.reference_id);
         } else if (event === "refund.succeeded" || event.startsWith("dispute.")) {
           if (event !== "dispute.won")
-            await reversed(data.payment_id ?? (payload as Record<string, unknown>).payment_id);
+            await reversed(
+              data.payment_id ?? (payload as Record<string, unknown>).payment_id,
+              fromMy ? x.mySecretKey : x.secretKey,
+            );
         } else if (event.startsWith("payout.")) {
           await payoutResult(event, data);
         }
