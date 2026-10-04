@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaucetSection } from "../../../components/account/FaucetSection";
 import { Identicon } from "../../../components/account/Identicon";
 import { LogoutSheet } from "../../../components/account/LogoutSheet";
 import { Button, Toast } from "../../../components/ui";
@@ -117,8 +116,6 @@ export default function AccountPage() {
             </button>
           </div>
         </section>
-
-        <FaucetSection />
 
         <Button variant="glass" className="mt-4 text-neg!" onClick={() => setConfirming(true)}>
           Log out

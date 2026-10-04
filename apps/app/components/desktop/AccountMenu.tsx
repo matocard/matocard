@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useNav } from "../../hooks/useNav";
 import { usePanel } from "../../hooks/usePanel";
 import { useWallet } from "../../hooks/useWallet";
-import { FaucetSection } from "../account/FaucetSection";
 import { Identicon } from "../account/Identicon";
 import { LogoutSheet } from "../account/LogoutSheet";
 import { Dropdown } from "../ui/Dropdown";
@@ -127,8 +126,6 @@ export function AccountMenu() {
             </svg>
           </button>
         </div>
-
-        <FaucetSection compact />
 
         <div className="mx-2 my-1.5 h-px bg-line" />
         <button
