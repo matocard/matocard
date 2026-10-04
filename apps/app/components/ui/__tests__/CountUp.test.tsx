@@ -4,11 +4,10 @@ import { CountUp } from "../CountUp";
 /**
  * The figure on screen has to be the figure it was given, from the first paint.
  *
- * It used to start at zero and rely on an effect to walk up to the value. Measured in the dev
- * browser on 13 September 2026 that walk did not complete: the Credit limit rendered "0 tCTC"
- * against a chain reporting 41.4594, and "In your wallet" showed "0 tCTC" and "0 ETH" against a
- * wallet holding 7,998 tCTC. Swapping the component for plain text made the right figure appear
- * immediately, which is what isolated it to here.
+ * It used to start at zero and rely on an effect to walk up to the value, and in the dev browser
+ * that walk did not complete: a limit rendered 0 against a chain reporting the real figure.
+ * Swapping the component for plain text made the right figure appear immediately, which is what
+ * isolated it to here.
  *
  * **These tests could not have caught the original bug**, and that is worth stating rather than
  * pretending otherwise: the component disabled its own animation under `NODE_ENV=test`, so the
@@ -18,16 +17,16 @@ import { CountUp } from "../CountUp";
  */
 
 test("renders the value it was given, not a zero it counts up from", () => {
-  render(<CountUp value={41.4594} format={(n) => `${n.toFixed(4)} tCTC`} />);
+  render(<CountUp value={41.4594} format={(n) => `${n.toFixed(4)} USD`} />);
 
-  expect(screen.getByText("41.4594 tCTC")).toBeInTheDocument();
-  expect(screen.queryByText("0.0000 tCTC")).toBeNull();
+  expect(screen.getByText("41.4594 USD")).toBeInTheDocument();
+  expect(screen.queryByText("0.0000 USD")).toBeNull();
 });
 
 test("a genuine zero is still a zero", () => {
   // The fix must not turn a real zero into something else.
-  render(<CountUp value={0} format={(n) => `${n.toFixed(2)} tCTC`} />);
-  expect(screen.getByText("0.00 tCTC")).toBeInTheDocument();
+  render(<CountUp value={0} format={(n) => `${n.toFixed(2)} USD`} />);
+  expect(screen.getByText("0.00 USD")).toBeInTheDocument();
 });
 
 test("formatting belongs to the caller", () => {

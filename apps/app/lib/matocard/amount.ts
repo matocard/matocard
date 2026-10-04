@@ -5,7 +5,7 @@ import { formatUnits } from "viem";
  *
  * **The bug this exists to fix.** Every one of those buttons did
  * `formatUnits(total * pct / 100n, decimals)` and handed the result straight to the keypad. At 18
- * decimals half of 34.3333 tCTC is `17.166666666666666666`, which is twenty characters: it ran off
+ * decimals half of 34.3333 is `17.166666666666666666`, which is twenty characters: it ran off
  * the side of a 60px display, and clearing it took twenty presses of backspace because each one
  * removes a single character. Somebody who tapped 50% by accident had no way back to where they
  * were.

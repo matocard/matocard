@@ -1,7 +1,7 @@
 import { quickAmount, trimTo } from "../amount";
 
 /**
- * The shipped bug: 50% of 34.3333 tCTC at 18 decimals is `17.166666666666666666`.
+ * The shipped bug: 50% of 34.3333 at 18 decimals is `17.166666666666666666`.
  *
  * Twenty characters, in a 60px display, cleared one character per press of backspace. Somebody who
  * tapped 50% by mistake had no way back.

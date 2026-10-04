@@ -20,10 +20,9 @@ export function CountUp({
    * **Mount at the real figure, never at `from`.**
    *
    * `animateOnMount` started the display at 0 and relied on an effect to walk it up to `value`. In
-   * the dev browser that walk does not complete: measured on 13 September 2026, the Credit limit
-   * rendered "0 tCTC" indefinitely against a chain that reported 41.4594, and "In your wallet"
-   * showed "0 tCTC" and "0 ETH" against a wallet holding 7,998 tCTC. Replacing the component with
-   * plain text made the correct figure appear immediately, which is what isolated it to here.
+   * the dev browser that walk did not complete: a limit rendered 0 indefinitely against a chain
+   * that reported the real figure. Replacing the component with plain text made the correct figure
+   * appear immediately, which is what isolated it to here.
    *
    * The prop is kept so call sites do not have to change, but it no longer starts below the value.
    * Two reasons beyond the bug: a money figure animating up from zero means the screen displays a
@@ -47,7 +46,7 @@ export function CountUp({
      *
      * This also checked `NODE_ENV === "test"`, which meant the component disabled its own animation
      * whenever a test ran: every assertion saw the settled figure while the browser could see a
-     * stalled one, and the bug that stranded a limit at "0 tCTC" was structurally untestable.
+     * stalled one, and the bug that stranded a limit at 0 was structurally untestable.
      * `vitest.setup.ts` already shims `matchMedia` to report reduced motion, so the test
      * environment still reads final text by default, and a test that wants the animated path can
      * now stub `matchMedia` to get it.
@@ -81,8 +80,8 @@ export function CountUp({
      * The figure lands on `value` whether or not the animation finishes.
      *
      * Added because a real one did not. Mounted with a placeholder 0 and then handed the true
-     * balance, this component stayed at 0 indefinitely in the dev browser: the Credit limit read
-     * "0 tCTC" against a chain reporting 41.4594, and the wallet rows read "0 tCTC" against 7,998.
+     * balance, this component stayed at 0 indefinitely in the dev browser, against a chain that
+     * reported the real figure.
      * Removing the placeholder mount fixed both, and I could not reproduce the stall from reading
      * the code, so this is a guarantee rather than a diagnosis. On a screen that states what
      * somebody's money is, an animation that can strand a figure part-way is not acceptable even

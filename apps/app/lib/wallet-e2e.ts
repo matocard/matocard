@@ -10,8 +10,8 @@ import { STORAGE } from "./storage";
  * The address specs run as. An **EVM** address, because Home reads balances for whatever this
  * returns and anything else makes every `eth_getBalance` fail.
  *
- * This is the funded testnet dev wallet, so a headless run sees real Sepolia and Monad
- * balances rather than zeroes. It holds nothing of value and its key is not in this repo.
+ * It has never been verified on the credit line, so a headless run sees a new account's screens
+ * against real Monad testnet reads. It holds nothing of value and its key is not in this repo.
  */
 export const E2E_ADDRESS = "0xE4db09135Ab50c59A8824ca99a6CC59D5c418fa0";
 

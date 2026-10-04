@@ -31,9 +31,9 @@ test("a success with no read-back passes", async () => {
 });
 
 test("a status-1 receipt is not enough when the state did not move", async () => {
-  // Measured by @FjrREPO against the Fuji and Arbitrum public RPCs: both returned a status-1
-  // receipt for transactions `eth_getTransactionReceipt` afterwards reported as unknown. The only
-  // honest test on those chains is reading back what the transaction was supposed to change.
+  // Public RPCs have returned a status-1 receipt for transactions `eth_getTransactionReceipt`
+  // afterwards reported as unknown. The only honest test is reading back what the transaction was
+  // supposed to change.
   receipt.mockResolvedValue({ status: "success" });
 
   await expect(awaitSuccess(config, HASH, 1, async () => false)).rejects.toThrow("not on chain");

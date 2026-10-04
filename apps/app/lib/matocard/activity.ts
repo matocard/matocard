@@ -1,16 +1,9 @@
 /**
- * One row in the activity list.
+ * One row in the activity list, built by `useMyActivity` from `/me/activity`.
  *
- * This lived in `lib/vault/data.ts` beside a fixture generator for yield buckets, which is how
- * three live files (`useTransactions`, `ActivityList`, `ActivityRow`) ended up importing a seam
- * from the old product to render Matocard's own transactions. The import was type-only and the
- * rows are built from Monad logs, so nothing was ever mocked; but it was the only thing
- * keeping that module alive.
- *
- * `cat` is the pair the old Earn screen split its feed by: the holder's own actions against the
- * agent's. Matocard has no agent, so every row is `"you"`, and the field stays only because
- * `ActivityList` still renders the distinction. `group` is the one that earns its place: it is what
- * the Transactions filter and the desktop drawer sort on.
+ * `kind` is a machine kind (`sent`, `settled`, `topup`, …) that `ActivityRow` titles and draws.
+ * `cat` is always `"you"` and stays only because `ActivityList` still renders the distinction.
+ * `group` is what the history filter sorts on.
  */
 export interface ActivityItem {
   id: number;

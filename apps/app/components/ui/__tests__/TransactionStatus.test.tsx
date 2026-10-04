@@ -29,11 +29,11 @@ test("shows a reason and an explorer link when there is one", () => {
     <TransactionStatus
       status="failed"
       detail="insufficient funds"
-      href="https://monad-testnet.blockscout.com/tx/0xabc"
+      href="https://testnet.monadvision.com/tx/0xabc"
     />,
   );
   expect(screen.getByText("insufficient funds")).toBeInTheDocument();
   const link = screen.getByRole("link", { name: "View transaction" });
-  expect(link).toHaveAttribute("href", "https://monad-testnet.blockscout.com/tx/0xabc");
+  expect(link).toHaveAttribute("href", "https://testnet.monadvision.com/tx/0xabc");
   expect(link).toHaveAttribute("target", "_blank");
 });

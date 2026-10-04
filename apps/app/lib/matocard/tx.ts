@@ -2,18 +2,16 @@ import type { Config } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
 
 /**
- * Waiting for a receipt is not the same as the transaction having worked, and this app had been
- * treating them as the same thing in four places.
+ * Waiting for a receipt is not the same as the transaction having worked.
  *
  * **A receipt is not a success.** A reverted transaction produces one, with `status: "reverted"`.
  * Awaiting `waitForTransactionReceipt` and then showing a green check reports a revert as a
- * confirmation: on the lock screen, the faucet, and, through `receipt.isSuccess` (which is wagmi's
- * "the query resolved", not "the transaction succeeded"), on every draw and repayment.
+ * confirmation, and wagmi's `receipt.isSuccess` means "the query resolved", not "the transaction
+ * succeeded".
  *
- * **And a success is not always proof.** @FjrREPO hit this writing the worker's release sweep: the
- * Fuji and Arbitrum public RPCs both returned a status-1 receipt for transactions that
- * `eth_getTransactionReceipt` afterwards reported as unknown. On those chains the only honest test
- * is reading back the state the transaction was supposed to change, which is what `landed` is for.
+ * **And a success is not always proof.** Public RPCs have returned a status-1 receipt for
+ * transactions they afterwards reported as unknown. The only honest test is reading back the state
+ * the transaction was meant to change (PLAN §7.2 rule 7), which is what `landed` is for.
  *
  * `tx.wait()` resolving to null without throwing is the ethers-side version of the same trap, and
  * it is why this returns nothing rather than a receipt: there is no shape of return value a caller

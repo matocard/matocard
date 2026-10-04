@@ -5,10 +5,8 @@ export { USER_CLOSED_MODAL, WalletError } from "./wallet-error";
 
 // `real` is Reown AppKit (`wallet-reown.ts`); `e2e` is a stub that signs without a prompt.
 //
-// Four functions, not five. `signTransaction` used to sit here and is gone: its only caller was a
-// mock vault client from the product this app was ported from, it took an envelope format that
-// nothing in this codebase produces, and no screen ever called it. Monad writes do not come
-// through this seam at all, they are `writeContract` calls in `lib/matocard/contracts.ts`.
+// Four functions. Contract writes do not come through this seam: they are `writeContract` calls in
+// `hooks/useCredit.ts`, and signed transfers are `lib/matocard/authorization.ts`.
 
 /**
  * Next inlines NEXT_PUBLIC_* at build time, so in a production build this reads `"" === "1"` and every
