@@ -31,7 +31,9 @@ export function rendersOnDesktop(path: string): boolean {
     // Matocard's top up and settle have no drawer either.
     path === "/topup" ||
     path === "/settle" ||
-    path === "/cashout"
+    path === "/cashout" ||
+    // History has no drawer on the rebuilt Home.
+    path === "/transactions"
   );
 }
 
@@ -41,7 +43,6 @@ export const PANEL_ROUTES: { match: (path: string) => boolean; to: string }[] = 
     match: (p) => p === "/add-funds" || p === "/deposit" || p.startsWith("/deposit/"),
     to: "/home?panel=deposit",
   },
-  { match: (p) => p === "/transactions", to: "/home?panel=activity" },
 ];
 
 /**

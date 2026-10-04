@@ -2,41 +2,38 @@
 import { useEffect, useState } from "react";
 import { ActivityList } from "../../../components/activity/ActivityList";
 import { SlidingTabs, SubHeader, TabPanel } from "../../../components/ui";
-import { useTransactions } from "../../../hooks/useTransactions";
+import { useMyActivity } from "../../../hooks/useMyActivity";
 
 /**
- * Every on-chain thing that has happened to this wallet, newest first.
- *
- * The filters are named for a secured credit card, which is the thing most people have actually
- * held: you put down a deposit, you get a limit, you spend and you pay it back. "Collateral",
- * "attestation" and the chain names stay out of the tabs; they are accurate and they are also the
- * vocabulary that makes a person close the screen.
+ * History (PLAN §8): everything that happened to this account, newest first, from the indexer
+ * plus what the backend holds that is not settled yet (`useMyActivity`). If the indexer is down
+ * the rest still shows, and the empty state says history is catching up rather than empty.
  */
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "card", label: "Card" },
-  { key: "deposit", label: "Deposit" },
+  { key: "deposit", label: "Top-ups" },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 const EMPTY_COPY: Record<FilterKey, { title: string; description: string }> = {
   all: {
-    title: "No transactions yet",
-    description: "Put down a deposit and everything that follows will show here.",
+    title: "Nothing yet",
+    description: "Top up and everything that follows will show here.",
   },
   card: {
-    title: "Nothing spent yet",
-    description: "What you spend and pay back on the card will show here.",
+    title: "Nothing sent yet",
+    description: "What you send and settle will show here.",
   },
   deposit: {
-    title: "No deposit yet",
-    description: "Money you put down to earn your limit will show here.",
+    title: "No top-ups yet",
+    description: "Money you top up becomes your collateral, and shows here.",
   },
 };
 
 export default function TransactionsPage() {
-  const { loading, items } = useTransactions();
+  const { loading, items, indexerDown } = useMyActivity();
   const [filter, setFilter] = useState<FilterKey>("all");
   // Read after mount, never during render: deciding "Today" while rendering bakes the server's
   // clock into the HTML and makes the first client paint disagree with it.
@@ -74,8 +71,10 @@ export default function TransactionsPage() {
             grouped
             now={now}
             pageSize={12}
-            emptyTitle={empty.title}
-            emptyDescription={empty.description}
+            emptyTitle={indexerDown ? "History is catching up" : empty.title}
+            emptyDescription={
+              indexerDown ? "Payments still in progress are shown." : empty.description
+            }
           />
         </TabPanel>
       </div>

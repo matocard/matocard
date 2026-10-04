@@ -30,7 +30,7 @@ const FLOW_ROUTES = {
   "/cashout": null,
   "/settle": null,
   "/topup": null,
-  "/transactions": "/home?panel=activity",
+  "/transactions": null,
   "/withdraw/tusdc": null,
   "/withdraw/x/0xabc": null,
 } as const;
