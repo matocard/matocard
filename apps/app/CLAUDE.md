@@ -14,27 +14,24 @@ bun run typecheck
 
 ## Where this app stands
 
-Copied on 3 Oct 2026 from the frontend owner's earlier card app, which locked collateral on one
-chain and proved it on another. The shell and the UI kit carry over; **the screens are being
-rebuilt for Matocard's flows** (Axel's decision, 4 Oct): top up by card or bank, send to family,
-receive and cash out, settle, history, the public `/verify` page.
+Copied on 3 Oct 2026 from the frontend owner's earlier card app and rebuilt for Matocard (4 Oct):
+the shell and the UI kit carried over, every screen and its data layer are Matocard's own.
 
-The order of work, so the app keeps building and running at every commit:
+| Route | What it does | Data |
+| --- | --- | --- |
+| `/` | Onboarding tour, then connect | none |
+| `/home` | Available in local currency (AUSD on the detail row), sign-in, country, KYC, why the limit, owed, balance, recent activity, the card | `useCredit`, `useMe`, `useFx`, `useMyActivity` |
+| `/topup` | Ringgit (FPX, DuitNow, card) or rupiah (bank, QRIS, card) by country, through Xendit | `/quote`, `/topups` |
+| `/send` | To family, typed in rupiah: from the card (`draw`) or the balance (ERC-3009 via `/sends`) | `useCredit`, `signTransfer` |
+| `/settle` | In local currency, from the balance (permit) or from collateral | `/settlements`, `useCredit` |
+| `/cashout` | Balance to an Indonesian bank in rupiah | `signTransfer`, `/cashouts` |
+| `/transactions` | History, by card and top-ups | `useMyActivity` |
+| `/credit` | Your record and the link to share it | `useVerifyRecord` |
+| `/verify/[id]` | Public record, no sign-in, nothing personal | `/verify/:wallet` |
+| `/account` | Account and log out | `useWallet` |
 
-1. Monad testnet is the default network (done). The earlier networks stay in `lib/matocard/wagmi.ts`
-   only until nothing reads them.
-2. Contracts from `@matocard/contracts` (addresses, ABIs, gas limits) and a credit-line hook on
-   `MatoCreditLine`.
-3. The backend client (`apps/backend`, see its `CLAUDE.md`): signed session, `/me`, `/me/activity`,
-   `/quote`, `/kyc/session`, `/topups`, `/settlements`, `/sends`, `/cashouts`, `/verify/:wallet`.
-4. Indexer queries for `Activity`, `Cycle` and `ScoreChange` (`apps/indexer/schema.graphql`).
-5. Screens, one at a time, each replacing its old counterpart.
-6. Delete what is left of the earlier flows: `hooks/useRemote*`, `useCollateral`,
-   `useWalletAssets`, `usePrices`, `components/deposit`, `components/withdraw`,
-   `components/account/FaucetSection.tsx`, `lib/matocard/{vaa,eip681,pendingRelease,faucets,oracle,prices}.ts`,
-   `app/api/prices`, and the extra networks.
-
-Until step 6 lands, anything in that list is not Matocard and should not be extended.
+Local currency comes from `user.country` (`lib/matocard/local.ts`): `MY` pays in ringgit through
+the Malaysian Xendit account, everyone else in rupiah; cash-outs are always rupiah.
 
 ## Rules for every screen
 
@@ -63,8 +60,8 @@ stack into the SSR graph.
 `useAccount()` from wagmi instead makes one screen disagree with the rest. Never use
 `config.connectors[0]`: that is the first registered connector, not the connected one.
 
-**Monad first.** `networks[0]` is AppKit's default, and `selectMonad()` switches to it again after
-connect through `switchChain`, which adds the chain to a wallet that lacks it.
+**Monad only.** It is the one network and AppKit's default, and `selectMonad()` switches to it
+again after connect through `switchChain`, which adds the chain to a wallet that lacks it.
 
 **Do not add `@reown/appkit-adapter-ethers`.** It and the wagmi adapter both register `eip155`.
 
@@ -89,7 +86,7 @@ glyph, the one allowed use of that character) while a figure is loading.
 
 **Read the clock after mount, never during render.**
 
-**`localStorage` keys live in `lib/storage.ts`**, prefixed `matocard.`.
+**`localStorage` keys live in `lib/storage.ts`**, prefixed `matocard.`; the backend session is one.
 
 **KYC opens Didit in an iframe** (`components/card/KycSheet.tsx`) with `allow="camera; microphone"`.
 The verdict never comes through the iframe; the sheet polls the backend.
@@ -102,6 +99,11 @@ a mark on a white square, the same as the landing page (Axel, 4 Oct); the JPEG s
 `apps/landing/public`. The favicon is the transparent pair, picked by `prefers-color-scheme` in
 `app/layout.tsx`; there is deliberately no `app/icon.png`. Monad, MON and AUSD marks are in `public/chains/monad.svg` and `public/tokens/`.
 
+## Tests
+
+`bun run test` (vitest), `bun run test:live` (against the live backend and chain), `bun run e2e`
+(Playwright; stop `bun run dev` first). `e2e/CLAUDE.md` has the details.
+
 ## Lint
 
 The repo root lints this app with **Biome** (`bun run lint` at the root, and the pre-commit hook).
@@ -109,5 +111,5 @@ The `lint` script in this package runs ESLint and is left over; Biome is what CI
 
 ## Per-folder notes
 
-`app/`, `components/`, `hooks/`, `lib/`, `providers/`, `public/`, `e2e/` and `docs/` each have a
+`app/`, `components/`, `hooks/`, `lib/`, `providers/`, `public/` and `e2e/` each have a
 `CLAUDE.md` with what is specific to them.
