@@ -45,6 +45,18 @@ contract GasLimitsTest is Deployers {
         _check("depositFor", g - gasleft());
     }
 
+    /// @dev A borrower's own AUSD as collateral, their first, with nothing settled yet.
+    function test_depositCollateral() public {
+        ausd.mint(stranger, 50 * AUSD);
+        _verify(stranger, "gas direct depositor");
+        vm.startPrank(stranger);
+        ausd.approve(address(line), 50 * AUSD);
+        uint256 g = gasleft();
+        line.depositCollateral(50 * AUSD);
+        _check("depositCollateral", g - gasleft());
+        vm.stopPrank();
+    }
+
     function test_cancelPending() public {
         _topUp(siti, 100 * AUSD, DepositMethod.Card);
         uint256 shares = line.collateralOf(siti).pendingShares;
@@ -182,9 +194,10 @@ contract GasLimitsTest is Deployers {
 
     /// @dev Every limit in the file has a test here, so none goes unchecked.
     function test_everyLimitIsExercised() public view {
-        string[13] memory names = [
+        string[14] memory names = [
             "setVerified",
             "depositFor",
+            "depositCollateral",
             "cancelPending",
             "draw",
             "repay",

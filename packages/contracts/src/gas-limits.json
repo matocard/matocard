@@ -11,5 +11,6 @@
   "redeem": 230000,
   "approve": 90000,
   "repayWithPermit": 280000,
-  "transferWithAuthorization": 150000
+  "transferWithAuthorization": 150000,
+  "depositCollateral": 370000
 }
