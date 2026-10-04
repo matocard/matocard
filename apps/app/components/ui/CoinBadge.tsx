@@ -1,61 +1,30 @@
 /* eslint-disable @next/next/no-img-element -- tiny static icons that must paint the moment
-   they appear; next/image defers them, and one mishandles a local SVG. The biome-ignore
-   comments below have to sit directly above each tag, so a second next-line directive
-   cannot also be there, hence file scope. */
+   they appear; next/image defers them. */
 
 /**
- * Every symbol a screen can put a logo against. AUSD is Matocard's money (Agora's dollar on
- * Monad), MON is Monad's own coin (fees, dripped after KYC) and IDR is the rupiah a top-up is paid
- * in. The rest are left from the earlier project's multi-chain screens and go when those screens
- * are rewired.
+ * Every symbol a screen can put a logo against: AUSD is Matocard's money (Agora's dollar on
+ * Monad), MON is Monad's own coin (fees, dripped after KYC) and IDR is the rupiah a top-up or
+ * cash-out is paid in.
  */
-export type TokenSym = "AUSD" | "MON" | "IDR" | "USDC" | "USDT" | "MON" | "ETH" | "BNB" | "AVAX";
+export type TokenSym = "AUSD" | "MON" | "IDR";
 
-// Official token logos under /public/tokens (USDC → Circle SVG, USDT → Tether, MON → Monad's
-// symbol, knocked out white on the brand black so it reads as a coin).
-// Real brand assets, so this is the one deliberate exception to the monochrome palette (PM-approved).
 const FILE: Record<TokenSym, string> = {
   // Agora's AUSD mark, and Monad's MON token from monad.xyz/brand-page-assets.
   AUSD: "/tokens/ausd.png",
   MON: "/tokens/mon.svg",
   // A currency, not a token: the round Indonesian flag.
   IDR: "/tokens/idr.svg",
-  USDC: "/tokens/usdc.svg",
-  USDT: "/tokens/usdt.svg",
-  MON: "/tokens/mon.png",
-  ETH: "/tokens/eth.svg",
-  // Not every chain pays in ether. BSC's native coin is BNB and Fuji's is AVAX, and falling back to
-  // the MON mark for them put Monad's logo on someone else's money.
-  BNB: "/tokens/bnb.png",
-  AVAX: "/tokens/avax.png",
 };
 
-/**
- * The badge for a collateral asset's on-chain symbol.
- *
- * The Sepolia collateral tokens are faucet stand-ins, so their symbols carry a `t` prefix (`tUSDC`,
- * `tWETH`) that no logo file is named after. Mapping happens here, once, rather than in each screen
- * that lists collateral. An unknown symbol falls back to AUSD rather than rendering a broken image.
- */
+/** The badge for a symbol; anything unknown gets AUSD rather than a broken image. */
 export function badgeForSymbol(symbol: string): TokenSym {
-  const bare = symbol.replace(/^t/, "").toUpperCase();
-  if (bare === "WETH" || bare === "ETH") return "ETH";
-  if (bare === "BNB") return "BNB";
-  if (bare === "AVAX") return "AVAX";
-  if (bare === "USDC") return "USDC";
-  if (bare === "USDT") return "USDT";
+  const bare = symbol.toUpperCase();
   if (bare === "MON") return "MON";
   if (bare === "IDR") return "IDR";
   return "AUSD";
 }
 
-/**
- * Circular token logo. `object-cover` keeps non-circular source art inside the round badge.
- *
- * It used to take a `currency` prop as well, mapping USD, EUR and MXN onto the stablecoin that
- * funded each one. No screen passed it, the last two logos it reached are gone, and a prop with no
- * caller is a prop somebody will one day trust.
- */
+/** Circular logo. `object-cover` keeps non-circular source art inside the round badge. */
 export function CoinBadge({
   token,
   size = 40,
