@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { SettleScreen } from "../SettleScreen";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
-vi.mock("../../../hooks/useFx", () => ({ useFx: () => ({ rate: "16000" }) }));
+vi.mock("../../../hooks/useFx", () => ({
+  useFx: (pair: string) => ({ rate: pair === "USD/MYR" ? "4" : "16000" }),
+}));
+const me = vi.fn();
+vi.mock("../../../hooks/useMe", () => ({ useMe: () => me() }));
 const session = { wallet: "0xA11CE", until: 9_999_999_999, signature: "0x5" };
 vi.mock("../../../hooks/useSession", () => ({
   useSession: () => ({ session, signIn: vi.fn(async () => session) }),
@@ -30,6 +34,7 @@ const owing = (over: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
+  me.mockReturnValue({ country: "ID" });
   credit.mockReturnValue(owing());
   repay.mockResolvedValue(HASH);
   repayFromCollateral.mockResolvedValue(HASH);
@@ -83,4 +88,13 @@ test("nothing owed, nothing to settle", () => {
   credit.mockReturnValue(owing({ drawn: 0n }));
   render(<SettleScreen />);
   expect(screen.getByText("Nothing is owed.")).toBeInTheDocument();
+});
+
+test("in Malaysia the debt reads in ringgit and settles on a USD/MYR quote", async () => {
+  me.mockReturnValue({ country: "MY" });
+  render(<SettleScreen />);
+  expect(screen.getByText("≈ RM 200.00 today")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /Pay in ringgit/ }));
+  await waitFor(() => expect(startSettlement).toHaveBeenCalled());
+  expect(getQuote).toHaveBeenCalledWith("USD/MYR");
 });

@@ -4,27 +4,31 @@ import { useState } from "react";
 import { useBackend } from "../../hooks/useBackend";
 import { useCredit } from "../../hooks/useCredit";
 import { useFx } from "../../hooks/useFx";
+import { useMe } from "../../hooks/useMe";
 import { getQuote, startSettlement } from "../../lib/matocard/backend";
+import { localFor } from "../../lib/matocard/local";
 import { explorerTx } from "../../lib/matocard/monad";
-import { approxIdr, formatAusd } from "../../lib/matocard/money";
+import { approxLocal, formatAusd } from "../../lib/matocard/money";
 import { Button, Card, Spinner, TransactionStatus } from "../ui";
 import { SubHeader } from "../ui/SubHeader";
 
-type Way = "rupiah" | "balance" | "collateral";
+type Way = "local" | "balance" | "collateral";
 
 /**
  * Settle (PLAN §3 step 6, §8): pay back what is owed. Only paying to zero, on time, closes a cycle
  * and raises the score.
  *
- * Three ways, from issue #71: in rupiah at Xendit's checkout (the backend's relayer then repays
+ * Three ways, from issue #71: in the user's own currency at Xendit's checkout (ringgit by FPX or
+ * DuitNow in Malaysia, rupiah otherwise) (the backend's relayer then repays
  * onchain), from AUSD already in the account (`repayWithPermit`, one transaction), or from
- * collateral (`repayFromCollateral`). The debt is in dollars, so the rupiah figure moves with the
+ * collateral (`repayFromCollateral`). The debt is in dollars, so the local figure moves with the
  * rate; the screen says so (PLAN §7.4).
  */
 export function SettleScreen() {
   const router = useRouter();
   const credit = useCredit();
-  const { rate } = useFx();
+  const local = localFor(useMe().country);
+  const { rate } = useFx(local.pair);
   const backend = useBackend();
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [done, setDone] = useState<`0x${string}` | null>(null);
@@ -36,9 +40,9 @@ export function SettleScreen() {
   const canFromCollateral = owed !== undefined && (credit.collateral?.value ?? 0n) >= owed;
 
   const inRupiah = async () => {
-    setWorking("rupiah");
+    setWorking("local");
     const checkout = await backend.run(async (session) => {
-      const quote = await getQuote("USD/IDR");
+      const quote = await getQuote(local.pair);
       return startSettlement(session, quote.id);
     });
     setWorking(null);
@@ -106,8 +110,10 @@ export function SettleScreen() {
         <div className="mt-1 text-[clamp(30px,10vw,44px)] font-semibold [font-variant-numeric:tabular-nums]">
           {owed === undefined ? "—" : `${formatAusd(owed)} USD`}
         </div>
-        {owed !== undefined && approxIdr(owed, rate) ? (
-          <div className="text-[13px] text-muted">{approxIdr(owed, rate)} today</div>
+        {owed !== undefined && approxLocal(owed, rate, local.currency) ? (
+          <div className="text-[13px] text-muted">
+            {approxLocal(owed, rate, local.currency)} today
+          </div>
         ) : null}
       </div>
 
@@ -116,9 +122,11 @@ export function SettleScreen() {
       ) : (
         <div className="space-y-3">
           <Option
-            title="Pay in rupiah"
-            body="Bank transfer or QRIS. The amount is rounded up to the next rupiah."
-            busy={working === "rupiah"}
+            title={local.currency === "MYR" ? "Pay in ringgit" : "Pay in rupiah"}
+            body={`${local.methods.bank} or ${local.methods.qr}. Rounded up to the next ${
+              local.currency === "MYR" ? "sen" : "rupiah"
+            }.`}
+            busy={working === "local"}
             disabled={working !== null || owed === undefined}
             onClick={inRupiah}
           />
@@ -150,8 +158,8 @@ export function SettleScreen() {
       ) : null}
       {owed === 0n ? null : (
         <p className="mt-auto pt-4 text-center text-[12px] text-muted">
-          What you owe is fixed in dollars. In rupiah it moves with the rate, so it can cost a
-          little more or less than when you spent it. Interest-free either way.
+          What you owe is fixed in dollars. In your own money it moves with the rate, so it can cost
+          a little more or less than when you spent it. Interest-free either way.
         </p>
       )}
     </div>
