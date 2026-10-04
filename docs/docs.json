@@ -1,0 +1,137 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Matocard",
+  "description": "A credit line that grows with how you pay, and a credit record that crosses borders with you. Built on Monad.",
+  "colors": {
+    "primary": "#0D212C",
+    "light": "#9CC3D1",
+    "dark": "#0D212C"
+  },
+  "favicon": "/favicon.png",
+  "logo": {
+    "light": "/logo/matocard.png",
+    "dark": "/logo/matocard-white.png",
+    "href": "https://matocard.xyz"
+  },
+  "navbar": {
+    "links": [
+      { "label": "GitHub", "href": "https://github.com/matocard/matocard" },
+      { "label": "API status", "href": "https://api.matocard.xyz/health" }
+    ],
+    "primary": { "type": "button", "label": "Open Matocard", "href": "https://app.matocard.xyz" }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Get started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "index",
+              "overview/why-onchain",
+              "overview/how-it-works",
+              "overview/user-flow",
+              "overview/supported",
+              "overview/fees-and-limits"
+            ]
+          },
+          {
+            "group": "Using Matocard",
+            "pages": [
+              "guides/create-account",
+              "guides/verify-identity",
+              "guides/top-up",
+              "guides/send-money",
+              "guides/cash-out",
+              "guides/settle",
+              "guides/credit-record"
+            ]
+          },
+          {
+            "group": "Project",
+            "pages": ["overview/roadmap", "overview/faq"]
+          }
+        ]
+      },
+      {
+        "tab": "Learn",
+        "groups": [
+          {
+            "group": "Credit",
+            "pages": [
+              "learn/credit-line",
+              "learn/credit-score",
+              "learn/collateral-and-yield",
+              "learn/defaults"
+            ]
+          },
+          {
+            "group": "Money in and out",
+            "pages": ["learn/payment-gateway", "learn/card-hold", "learn/fx"]
+          },
+          {
+            "group": "Identity",
+            "pages": ["learn/kyc"]
+          },
+          {
+            "group": "Lenders",
+            "pages": ["learn/lender-pool"]
+          },
+          {
+            "group": "Trust and security",
+            "pages": ["learn/trust-model", "learn/risks", "learn/security"]
+          }
+        ]
+      },
+      {
+        "tab": "Build",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "developers/architecture",
+              "developers/quickstart",
+              "developers/authentication",
+              "developers/amounts-and-quotes"
+            ]
+          },
+          {
+            "group": "Integrate",
+            "pages": [
+              "developers/payments",
+              "developers/kyc-integration",
+              "developers/gasless-sends",
+              "developers/contract-calls",
+              "developers/indexer"
+            ]
+          },
+          {
+            "group": "Operate",
+            "pages": ["developers/operations", "developers/run-locally"]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "openapi": "https://api.matocard.xyz/openapi.json"
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Reference",
+            "pages": ["resources/contracts", "resources/parameters", "resources/glossary"]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/matocard/matocard",
+      "website": "https://matocard.xyz"
+    }
+  }
+}

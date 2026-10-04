@@ -1,0 +1,61 @@
+---
+title: "What's supported"
+description: "Networks, currencies, payment methods and providers."
+icon: "list-check"
+---
+
+## Network and assets
+
+| | |
+|---|---|
+| Network | Monad testnet, chain ID `10143`. Mainnet is on the [roadmap](/overview/roadmap) |
+| Stablecoin | AUSD by Agora, 6 decimals |
+| Collateral vault | MockEarnAUSD on testnet, standing in for earnAUSD (mainnet only) |
+| Gas token | MON, paid for users by Matocard |
+
+Addresses are in [Contract addresses](/resources/contracts).
+
+## Countries and currencies
+
+| Country | Role | Currency | Through |
+|---|---|---|---|
+| Malaysia | Senders: top up and settle | MYR | Xendit Malaysia |
+| Indonesia | Receivers: cash out. Also top up and settle in rupiah | IDR | Xendit Indonesia |
+
+Amounts on screen are shown in local currency next to the AUSD figure. Any other currency is display-only for now.
+
+## Payment methods
+
+<Tabs>
+  <Tab title="Malaysia (MYR)">
+    | Method | Counts toward the limit | Checked live on testnet |
+    |---|---|---|
+    | FPX online banking | At once | Yes |
+    | DuitNow QR | At once | Yes |
+    | Debit and credit cards | After the card hold | Not yet |
+  </Tab>
+  <Tab title="Indonesia (IDR)">
+    | Method | Counts toward the limit | Checked live on testnet |
+    |---|---|---|
+    | Bank virtual accounts (BCA, BRI, …) | At once | Yes |
+    | Debit and credit cards | After the card hold | Yes |
+    | QRIS | At once | Not yet |
+    | E-wallets, where Xendit offers them | After the card hold | Not yet |
+  </Tab>
+</Tabs>
+
+The hold follows how you **actually** paid, not what you picked in the app. Anything unrecognised is treated as a card, the safe side. See [Card hold](/learn/card-hold).
+
+## Payouts
+
+Cash-outs go to **Indonesian bank accounts** in rupiah through Xendit payouts (for example `ID_BCA`, `ID_BRI`). BCA has been checked live.
+
+## Providers
+
+| Need | Provider | Mode today |
+|---|---|---|
+| Payments in and out | [Xendit](https://www.xendit.co), one account per country | Test mode |
+| Identity verification | [Didit](https://didit.me) | See [KYC](/learn/kyc) |
+| Indexing | [Envio HyperIndex](https://envio.dev) | Hosted |
+| Account (passkeys) | Mera | In the app, in progress |
+| Production fiat rail | Agora Routes API (fiat ↔ AUSD) | Planned |

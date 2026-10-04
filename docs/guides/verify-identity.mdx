@@ -1,0 +1,42 @@
+---
+title: "Verify your identity"
+description: "One ID check, once. It is what makes your record mean something."
+icon: "id-card"
+---
+
+You need to verify before you can top up or send. It takes a few minutes.
+
+<Steps>
+  <Step title="Start the check">
+    Tap **Verify**. Matocard opens a secure page from Didit, our identity provider.
+  </Step>
+  <Step title="Photograph your ID">
+    A passport or a national ID card (for Indonesians, the KTP).
+  </Step>
+  <Step title="Take a selfie">
+    Didit checks that you are the person on the document.
+  </Step>
+  <Step title="Back to Matocard">
+    You return to the app automatically. Approval usually takes a few seconds; the app updates on its own.
+  </Step>
+</Steps>
+
+## Possible results
+
+| Result | What it means |
+|---|---|
+| **Approved** | You are verified. Matocard also gives your account a little MON so you never pay network fees |
+| **Declined** | The check did not pass. The decision is final for that attempt |
+| **Duplicate** | This document is already verified on another Matocard account |
+
+## Why one person, one account
+
+Without it, someone who defaulted could open a new account and start over, and every score would mean nothing. So the check binds one identity to one account **permanently**, in the contract itself.
+
+## What is stored, and where
+
+- **Onchain:** only a keyed hash of your document's country, type and number. It cannot be turned back into your document number.
+- **At Didit:** your document and selfie, under Didit's own data policy.
+- **At Matocard:** whether you passed, and the hash.
+
+Your name and document number never appear on your public record. Details: [KYC](/learn/kyc).

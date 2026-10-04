@@ -1,0 +1,59 @@
+---
+title: "Amounts and quotes"
+description: "Strings in the smallest unit, and a fresh quote for every conversion."
+icon: "coins"
+---
+
+## Amounts
+
+Every amount in the API is a **decimal string in the currency's smallest unit**. Never floats, never `Number()`.
+
+| Currency | Decimals | Example |
+|---|---|---|
+| AUSD | 6 | `"1000000"` = 1.00 AUSD |
+| MYR | 2 (sen) | `"60000"` = RM 600.00 |
+| IDR | 0 | `"50000"` = Rp 50,000 |
+
+Format and parse with `@matocard/core`:
+
+```ts
+import { formatAmount, parseAmount } from "@matocard/core";
+
+formatAmount(BigInt(me.limit), "AUSD"); // "100.00…"
+parseAmount("600.00", "MYR");           // 60000n
+```
+
+## Quotes
+
+Top-ups, settlements and cash-outs each need a fresh quote id:
+
+```http
+POST /quote
+{ "pair": "USD/MYR" }
+```
+
+```json
+{ "id": "9d8891a8-…", "pair": "USD/MYR", "rate": "4.0845", "expiresAt": "…" }
+```
+
+- A quote is valid for **60 seconds**.
+- **The pair picks the currency**, and with it the Xendit account:
+
+| User | Top-ups and settlements | Cash-outs |
+|---|---|---|
+| `user.country` is `MY` | `USD/MYR`, amount in sen | `USD/IDR` |
+| Otherwise | `USD/IDR`, amount in rupiah | `USD/IDR` |
+
+- An expired quote answers `400 quote expired, ask for a new one`; a quote for the wrong route, `400 unknown quote`.
+
+## Rounding
+
+| Operation | Rounds |
+|---|---|
+| Top-up: fiat → AUSD | Down |
+| Settlement: AUSD → fiat charged | Up |
+| Cash-out: AUSD → fiat paid | Down |
+
+## Errors
+
+Errors are `{ "error": "…" }` with a 4xx status, and the message is safe to show to the user. A 500 is `something went wrong` and is logged on the server.

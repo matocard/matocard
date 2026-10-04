@@ -1,0 +1,42 @@
+---
+title: "Top up"
+description: "Add savings that become collateral and earn yield."
+icon: "circle-plus"
+---
+
+A top-up is money you put in. It becomes **collateral**: it stays yours, it earns yield, and it sets how much you can borrow.
+
+<Steps>
+  <Step title="Enter an amount">
+    In your local currency: at least RM 5 or Rp 10,000. The app shows what it will be in AUSD at a rate locked for 60 seconds.
+  </Step>
+  <Step title="Pick how to pay">
+    <Tabs>
+      <Tab title="Malaysia">FPX online banking, DuitNow QR, or a debit or credit card.</Tab>
+      <Tab title="Indonesia">Bank virtual account, QRIS, or a debit or credit card.</Tab>
+    </Tabs>
+  </Step>
+  <Step title="Pay on the checkout page">
+    Matocard opens Xendit's secure checkout. When you finish, you come back to the app.
+  </Step>
+  <Step title="Watch it land">
+    Your collateral and limit update within seconds of the payment.
+  </Step>
+</Steps>
+
+## When it counts toward your limit
+
+| Paid by | Counts |
+|---|---|
+| FPX, DuitNow, bank virtual account, QRIS | At once |
+| Card or e-wallet | After the card hold: about a minute on testnet, 7 days planned for production. The app shows it as **on hold** until then |
+
+The hold protects against a card payment being reversed after you have borrowed against it. See [Card hold](/learn/card-hold).
+
+<Tip>
+  On testnet nothing is charged. FPX and DuitNow test pages have a button to succeed. Never transfer real money to a test virtual account number.
+</Tip>
+
+## Your collateral grows
+
+Collateral is held as shares of a yield vault, so its value rises over time and your limit rises with it, even before your score changes. The protocol keeps 20% of that yield. See [Collateral and yield](/learn/collateral-and-yield).

@@ -1,0 +1,44 @@
+---
+title: "Fees and limits"
+description: "What Matocard charges, and the limits that keep the system safe."
+icon: "receipt"
+---
+
+## Fees
+
+| | |
+|---|---|
+| Interest on what you borrow | **None** |
+| Fee to draw, send or repay | **None** |
+| Network (gas) fees | **Paid by Matocard.** Each verified account receives 0.5 MON once; sends and cash-outs are submitted by the relayer |
+| Yield fee | **20%** of the yield your collateral earns, kept by the protocol for lenders. Charged when collateral next changes |
+| Exchange rate | The quoted rate, locked for 60 seconds. Top-ups and cash-outs round down, settlements round up, to the smallest unit |
+
+<Note>
+  On testnet the rate comes from public ECB reference rates. In production it will be the payment partner's rate, shown before you confirm.
+</Note>
+
+## Limits
+
+| Limit | Value |
+|---|---|
+| Smallest top-up | RM 5.00, or Rp 10,000 |
+| Smallest cash-out | Rp 10,000 |
+| Top-ups credited per account per day | 1,000 AUSD |
+| Top-ups credited across all accounts per day | 20,000 AUSD |
+| Sends per account per day | 50 |
+| A quoted rate is valid for | 60 seconds |
+| A sign-in session lasts at most | 7 days |
+
+## Credit terms
+
+| | Testnet | Production |
+|---|---|---|
+| Repayment term | 30 days | 30 days |
+| Grace period after the due date | 3 days | 3 days |
+| Shortest cycle that counts toward the score | 60 seconds | 7 days |
+| Smallest use of the limit that counts | 10% | 10% |
+| Card hold | 60 seconds | 7 days |
+| Collateral ratio | 150% at score 0, down to 80% at score 100 | Same |
+
+Testnet values are short so a full cycle can be shown in a demo. See [Parameters](/resources/parameters).

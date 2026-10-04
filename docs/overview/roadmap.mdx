@@ -1,0 +1,40 @@
+---
+title: "Roadmap"
+description: "Where Matocard is, and where it goes next."
+icon: "map"
+---
+
+## Now: testnet (September – October 2026)
+
+Built during Monad Metropolis.
+
+- [x] Credit line contract: modular UUPS proxy, lender pool, collateral in a yield vault, card hold, one identity per account, score and limit, defaults. Verified on Monad testnet
+- [x] Over 100 Foundry tests at 100% coverage, invariant tests, Slither in CI
+- [x] Gasless sends (ERC-3009) and one-transaction repayments (permit)
+- [x] Envio indexer: history, public record page, daily reconciliation
+- [x] Backend live: KYC with Didit, payments with Xendit, relayer, API with Swagger
+- [x] Ringgit in through Xendit Malaysia (FPX, DuitNow), rupiah in and out through Xendit Indonesia
+- [x] Landing site
+- [ ] Passkey app (PWA)
+- [ ] User testing with at least five Indonesian workers in Malaysia and their families
+
+## Next: mainnet
+
+- **Real yield:** move collateral from the testnet mock to earnAUSD.
+- **Issuer-side fiat:** Agora's Routes API to mint and redeem AUSD directly against fiat, removing Matocard's own treasury float.
+- **Governance:** the admin key behind a multisig and a timelock long enough for users to repay and leave.
+- **Third-party audit** of the contracts.
+- **Licensed partners** for the card and the remittance legs.
+
+## Later
+
+- **A real card:** a physical and virtual card through a licensed issuer. Today the card number is visual only.
+- **Passkey recovery:** rebind a verified identity to a new account after a waiting period.
+- **A credit passport:** the record read directly by partner banks and other protocols.
+- **More corridors** beyond Malaysia → Indonesia.
+- **Native app and WhatsApp notifications.**
+- **Collateral options:** rebalancing across vaults, collateral from other chains.
+
+## Regulation
+
+Credit and a card need a licensed bank or issuer. Remittance needs a Bank Indonesia licence and Malaysian approval. Crypto assets in Indonesia are supervised by OJK. The realistic path is licensed partners, or OJK's regulatory sandbox (POJK 3/2024). Matocard is a testnet product until then.

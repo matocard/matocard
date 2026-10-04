@@ -1,0 +1,29 @@
+---
+title: "Card hold"
+description: "Why card top-ups wait before they count, and who decides."
+icon: "hourglass-half"
+---
+
+A card payment can be reversed by the cardholder's bank weeks later. If a borrower could top up by card, borrow against it at once, and then charge it back, the lenders would lose the money.
+
+## The rule
+
+- Card and e-wallet top-ups go into **pending** collateral, which does not count toward the limit until `pendingUntil`.
+- Bank transfers, virtual accounts, QRIS, FPX and DuitNow count at once.
+
+| | Testnet | Production |
+|---|---|---|
+| `cardHold` | 60 seconds | 7 days |
+
+## Who decides the hold
+
+**The contract.** The relayer only says *how* the user paid (`card` or `bank`); the hold length is a contract parameter, so the relayer cannot shorten it. And the backend reads the method from the channel Xendit actually charged, so picking "bank" in the app and paying by card still gets the card hold. Anything unrecognised is treated as a card.
+
+## Chargebacks
+
+| When | Result |
+|---|---|
+| During the hold | `cancelPending` returns the pending shares to the treasury. Settled collateral can never be touched this way |
+| After the hold | The operator absorbs the loss |
+
+After the hold, pending shares move into collateral automatically on the borrower's next draw, or anyone can call `settlePending`.

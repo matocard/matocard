@@ -1,0 +1,66 @@
+---
+title: "Contract calls"
+description: "What the app sends to the credit line itself."
+icon: "file-contract"
+---
+
+Some actions are the **user's own transactions** on `MatoCreditLine`, paid with the MON dripped after KYC. Always talk to the **proxy**.
+
+```ts
+import { matoCreditLineAbi, monadTestnet, gasLimits } from "@matocard/contracts";
+
+const line = { address: monadTestnet.matoCreditLine, abi: matoCreditLineAbi } as const;
+```
+
+## Send with the published gas limit
+
+Monad charges the **gas limit**, not the gas used. `gasLimits` holds, per function, the largest estimate seen on testnet plus 25%, so passing it is cheaper than a padded estimate and saves a round trip.
+
+```ts
+await wallet.writeContract({
+  ...line,
+  functionName: "draw",
+  args: [50_000_000n, mom], // 50 AUSD, straight to Mom
+  gas: gasLimits.draw,
+});
+```
+
+## User functions
+
+| Function | What it does | `gasLimits` |
+|---|---|---|
+| `draw(amount, to)` | Borrow to any address. Settles a finished card hold first | `draw` |
+| `repay(amount)` | Repay from wallet AUSD (needs `approve`) | `repay` |
+| `repayWithPermit(amount, deadline, v, r, s)` | Repay with an EIP-2612 permit in one transaction | `repayWithPermit` |
+| `repayFromCollateral(amount)` | Repay out of collateral | `repayFromCollateral` |
+| `depositCollateral(assets)` | Deposit AUSD from the wallet directly as collateral (needs `approve`) | `deposit` |
+| `withdrawCollateral(shares)` | Take collateral out, if debt stays within the new limit | `withdrawCollateral` |
+| `approve` (on AUSD) | Before `repay` or a direct deposit | `approve` |
+
+Only repaying **to zero** closes a cycle. Overpaying is capped at what is owed.
+
+## Views
+
+| Function | Returns |
+|---|---|
+| `limitOf(user)`, `availableOf(user)` | The limit, and what is left to draw |
+| `scoreOf(user)` | Score 0–100 |
+| `accountOf(user)` | Debt, due date, cycle counters, defaulted |
+| `collateralOf(user)` | Shares, pending shares, `pendingUntil` |
+| `collateralValueOf(user)` | AUSD value, net of the yield fee |
+| `isVerified(user)`, `identityOf(user)` | Identity binding |
+
+`GET /me` already combines these per screen; read them directly only when you need a live figure.
+
+## Anyone can call
+
+| Function | When |
+|---|---|
+| `repayFor(user, amount)` | Pay someone else's debt |
+| `settlePending(user)` | Move a finished card hold into collateral |
+| `markDefaulted(user)` | After due date + grace. Estimate its gas: it has not run on testnet yet |
+| `redeemPoolShares(shares)` | Turn seized collateral back into pool AUSD |
+
+## Events
+
+`Verified`, `CollateralDeposited`, `PendingSettled`, `PendingCancelled`, `CollateralWithdrawn`, `YieldFeeTaken`, `Drawn`, `Repaid`, `CycleClosed`, `Defaulted`, `PoolSharesRedeemed`, `ParamsChanged`. Signatures and errors are in [`IMatoCreditLine.sol`](https://github.com/matocard/matocard/blob/main/contracts/src/interfaces/IMatoCreditLine.sol).

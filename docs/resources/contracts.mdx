@@ -1,0 +1,38 @@
+---
+title: "Contract addresses"
+description: "Monad testnet deployments. Always talk to the proxy."
+icon: "address-book"
+---
+
+**Monad testnet**, chain ID `10143`. All contracts verified on [MonadVision](https://testnet.monadvision.com).
+
+| Contract | Address |
+|---|---|
+| **MatoCreditLine** (proxy) | [`0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a`](https://testnet.monadvision.com/address/0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a) |
+| MatoCreditLine (implementation) | [`0x55768e1Cf5B2c6FcAAa0bA2f29e72601898F3548`](https://testnet.monadvision.com/address/0x55768e1Cf5B2c6FcAAa0bA2f29e72601898F3548) |
+| MockEarnAUSD (yield vault) | [`0xF93Dc9038F4209675C3ab7909d0FEE4738Dd7C08`](https://testnet.monadvision.com/address/0xF93Dc9038F4209675C3ab7909d0FEE4738Dd7C08) |
+| AUSD (Agora) | [`0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC`](https://testnet.monadvision.com/address/0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC) |
+| Treasury (cash-outs are signed to it) | [`0xcf330A7E5D4eae35250f00B4af96eBcf38347Df1`](https://testnet.monadvision.com/address/0xcf330A7E5D4eae35250f00B4af96eBcf38347Df1) |
+
+The same values ship in `@matocard/contracts`:
+
+```ts
+import { monadTestnet } from "@matocard/contracts";
+monadTestnet.matoCreditLine; // proxy
+monadTestnet.ausd;
+monadTestnet.yieldVault;
+monadTestnet.deployBlock;    // 66922881
+```
+
+## Endpoints
+
+| | |
+|---|---|
+| API | `https://api.matocard.xyz` ([Swagger](https://api.matocard.xyz/docs)) |
+| Indexer (GraphQL) | `https://indexer.dev.hyperindex.xyz/b5ebb5c/v1/graphql` |
+| RPC | `https://testnet-rpc.monad.xyz` |
+| Explorer | [testnet.monadvision.com](https://testnet.monadvision.com) |
+
+## Retired deployments
+
+This is the third deployment (30 September 2026), made to move onto real AUSD. The first two ran on a test token and are retired: `0x39BE…9C59` and `0x142A…394C`. Every transaction of their runs is in the [testnet run record](https://github.com/matocard/matocard/blob/main/docs/e2e-testnet-run.md).

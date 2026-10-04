@@ -1,0 +1,39 @@
+---
+title: "Operations"
+description: "The relayer, reconciliation and health checks."
+icon: "server"
+---
+
+## Relayer
+
+One key, with `KYC_ROLE` and `RELAYER_ROLE` only, submits every backend transaction: `setVerified`, MON drips, `depositFor`, `repayFor`, `cancelPending`, and users' ERC-3009 sends and cash-outs.
+
+| Rule | Why |
+|---|---|
+| One transaction at a time, nonce kept locally | Monad has no global mempool: back-to-back sends from one key fail |
+| Published gas limits | Monad charges the limit |
+| Logged in `relayer_txs` **before** sending | Nothing goes out unrecorded |
+| Dry-run first | A revert costs nothing and returns the contract's error |
+| Read back the state each call meant to change | A receipt is not success |
+| Never resend if an earlier attempt was sent | Anything uncertain is left for a person, never doubled |
+| Daily caps: 1,000 AUSD per user, 20,000 in total | Bounds a leaked key |
+
+### Relayer health
+
+The relayer pays all gas and drips 0.5 MON per new user, so sign-ups stop when it runs dry. An hourly check opens a GitHub issue, *Relayer is low on MON*, under 2 MON, and closes it once topped up.
+
+## Reconciliation
+
+Every day shortly after midnight UTC, the backend compares the previous day's credited top-ups and repayments with the indexer's `DailyTopUp` totals:
+
+```bash
+bun src/reconcile.ts 2026-10-04   # exits 1 on any difference
+```
+
+## Indexer health
+
+A scheduled check opens *Indexer is behind the chain* if the hosted indexer falls more than 1,500 blocks behind or stops answering. Check `_meta` by hand before a demo.
+
+## Deploys
+
+The backend runs in Docker on a VPS behind a shared reverse proxy with TLS. Postgres and the API listen on localhost only; Postgres is backed up daily and kept 14 days. A failed image build keeps the old container running, so after a deploy check the code inside the running container, not just `/health`.

@@ -1,0 +1,31 @@
+---
+title: "Create an account"
+description: "Sign up with your fingerprint or Face ID. No password, no seed phrase."
+icon: "fingerprint"
+---
+
+<Warning>
+  The Matocard app is in progress. These guides describe the flow the app follows; the backend and contracts behind each step are already live on testnet.
+</Warning>
+
+<Steps>
+  <Step title="Open Matocard">
+    Go to [app.matocard.xyz](https://app.matocard.xyz) on your phone and add it to your home screen. It works like an app, without an app store.
+  </Step>
+  <Step title="Create a passkey">
+    Confirm with your fingerprint or Face ID. Your phone keeps the key; Matocard never sees it. Passkeys sync through iCloud Keychain or Google Password Manager, so a new phone signed in to the same account keeps access.
+  </Step>
+  <Step title="Choose where you live">
+    Pick your country. It decides which currency and payment methods you see: ringgit in Malaysia, rupiah in Indonesia.
+  </Step>
+</Steps>
+
+## What happens behind the scenes
+
+Your passkey derives an ordinary account on Monad. The app signs you in once with it, and the session lasts up to 7 days, so you are not asked to confirm every screen.
+
+<Note>
+  A lost passkey means a lost account today. A recovery path, rebinding a verified identity to a new account after a waiting period, is on the [roadmap](/overview/roadmap).
+</Note>
+
+<Card title="Next: verify your identity" icon="arrow-right" href="/guides/verify-identity" horizontal />

@@ -1,0 +1,87 @@
+---
+title: "Payments"
+description: "Top-ups, settlements and cash-outs through Xendit."
+icon: "money-bill-transfer"
+---
+
+All three return at once; the money lands asynchronously. Poll `GET /me`, or `GET /me/activity`, whose `inFlight` lists payments and payouts not onchain yet.
+
+## Top up
+
+```ts
+const quote = await post("/quote", { pair: "USD/MYR" });
+const topup = await post("/topups", {
+  amount: "60000",        // RM 600, in sen
+  method: "bank",         // "bank" | "card" | "qr": what the user picked
+  quoteId: quote.id,
+}, authorization);
+// { paymentId, checkoutUrl, fiat: "60000", ausd: "146893…" }
+window.location.href = topup.checkoutUrl;
+```
+
+- Needs a **verified** account.
+- Minimum RM 5.00 (`"500"`) or Rp 10,000 (`"10000"`).
+- `method: "card"` limits the checkout to cards; anything else shows every channel.
+- After paying, Xendit sends the user back to `https://app.matocard.xyz`.
+
+### When it shows in `GET /me`
+
+| Paid by | Shows as |
+|---|---|
+| FPX, DuitNow, virtual account, QRIS | `collateral.value` and `limit`, at once |
+| Card, e-wallet | `collateral.pendingShares` with `pendingUntil`; `limit` moves when the hold ends |
+
+The hold follows the channel Xendit actually charged, not `method`.
+
+## Settle
+
+```ts
+const quote = await post("/quote", { pair: "USD/MYR" });
+const settle = await post("/settlements", { quoteId: quote.id }, authorization);
+// { paymentId, checkoutUrl, fiat: "4085", ausd: "10000000" }
+```
+
+Charges the **whole** debt (`drawn`) converted at the quote, rounded up. Once paid, the relayer calls `repayFor`, which closes the cycle and moves the score. `400 nothing is owed` when `drawn` is 0.
+
+## Cash out
+
+The user signs an ERC-3009 transfer **to the treasury**, then the backend takes the AUSD and pays rupiah to the bank.
+
+```ts
+const quote = await post("/quote", { pair: "USD/IDR" });
+const authorization = await signTransfer({
+  to: "0xcf330A7E5D4eae35250f00B4af96eBcf38347Df1", // treasury
+  value: 10_000_000n,                                // 10 AUSD
+  validBefore: now + 3600n,                          // at least 5 minutes ahead
+});
+const out = await post("/cashouts", {
+  quoteId: quote.id,
+  authorization,
+  bank: { channelCode: "ID_BCA", accountNumber: "1234567890", accountHolderName: "Siti" },
+}, session);
+// { payoutId, ausd: "10000000", fiat: "160000" }
+```
+
+- Only a `USD/IDR` quote; at least Rp 10,000.
+- `signTransfer` is in [Gasless sends](/developers/gasless-sends).
+- The payout shows in `inFlight` until Xendit confirms it.
+
+## Testing
+
+Xendit runs in **test mode** on both accounts:
+
+| Account | How to pay in test mode |
+|---|---|
+| Malaysia | FPX and DuitNow pages have a button to succeed |
+| Indonesia | Virtual account numbers are fake: never transfer to them. Pick one and ask the backend owner to simulate it, or pay with a [Xendit test card](https://docs.xendit.co) |
+
+## Webhooks (operators)
+
+Both Xendit accounts post to `https://api.matocard.xyz/webhooks/xendit`. The `x-callback-token` header says which account is calling.
+
+| Account | Events |
+|---|---|
+| Both | Payment Session (completed, expired), Payment Requests V3, Unified Refunds |
+| Indonesia | Payouts v2 |
+
+Each delivery is recorded once; replays answer `duplicate`.

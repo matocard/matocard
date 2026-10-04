@@ -1,0 +1,26 @@
+---
+title: "Defaults"
+description: "What happens when a cycle is not repaid in time."
+icon: "triangle-exclamation"
+---
+
+## When
+
+A cycle can be defaulted once it is past its **due date plus the grace period** (30 + 3 days). Anyone can call `markDefaulted(user)`; it does not depend on Matocard being online.
+
+## What happens
+
+1. Collateral shares worth the debt, rounded up, are **seized into the lender pool**. Shares are seized, not redeemed, so this is instant even if the vault's withdrawals are queued.
+2. The debt is written off.
+3. **Everything above the debt stays yours** to withdraw.
+4. The default is counted as a cycle with no repayment, which lowers the score, and stays on the public record.
+5. The account can **never draw again**, and the identity behind it cannot open another account.
+
+## If the collateral is not enough
+
+Above score 72 a limit can exceed collateral. If such a borrower defaults, all their collateral is seized and the shortfall is written off against the lender pool. That is the lenders' risk, and the yield fee is its price. See [Lender pool](/learn/lender-pool).
+
+## What never triggers a default
+
+- A fall in the vault's value.
+- The contract being paused. Repayment is never paused, and `markDefaulted` keeps running, so a pause neither traps anyone nor extends a due date.
