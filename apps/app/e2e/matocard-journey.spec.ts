@@ -42,3 +42,42 @@ test("the onboarding tour tells the story in rupiah, AUSD and MON", async ({ pag
     await expect(page.locator(`img[alt="${alt}"]`)).toHaveCount(1);
   }
 });
+
+test("send: nothing to send from yet, so the button waits", async ({ page }) => {
+  await connectWallet(page);
+  await page.goto("/send");
+  await expect(page.getByText("Their Matocard account")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Send", exact: true })).toBeDisabled();
+});
+
+test("cash out and history render for a new account", async ({ page }) => {
+  await connectWallet(page);
+  await page.goto("/cashout");
+  await expect(page.getByText(/in your balance/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("button", { name: "Cash out" })).toBeDisabled();
+  await page.goto("/transactions");
+  await expect(page.getByRole("button", { name: "Top-ups" })).toBeVisible();
+});
+
+test("the public record needs no sign-in and reads the live chain", async ({ page }) => {
+  // Siti, the demo account: three cycles repaid on time, score 55 (docs/e2e-testnet-run.md).
+  await page.goto("/verify/0xc6E0De07b60a412c1bb990B77612754B9254DBDa");
+  await expect(page.getByText("Credit record")).toBeVisible();
+  await expect(page.getByText("Cycle 3: Repaid on time")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Score 55")).toBeVisible();
+  await expect(page.getByText("111.5%")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Check it yourself" })).toBeVisible();
+});
+
+test("the Credit tab shows your own record and the link to share it", async ({ page }) => {
+  await connectWallet(page);
+  await page.goto("/credit");
+  await expect(page.getByText("Your credit record")).toBeVisible();
+  await expect(page.getByText(/\/verify\/0x/)).toBeVisible({ timeout: 20_000 });
+});
+
+test("coming back from Didit lands on Home", async ({ page }) => {
+  await connectWallet(page);
+  await page.goto("/?verificationSessionId=e2e&status=Approved");
+  await expect(page).toHaveURL(/\/home$/);
+});
