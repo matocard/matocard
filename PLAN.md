@@ -120,7 +120,7 @@ Optional if time allows: **Scan a merchant QR** (demo merchant page) as a second
 ┌───────────────▼────────────── Backend (Hostinger VPS, Docker) ───────────────┐
 │  api        : one response per screen, combining indexer + contract + DB     │
 │  kyc        : Didit sessions + webhook                                       │
-│  payments   : Xendit card/FPX/QR + disbursement, webhooks, ledger (Postgres) │
+│  payments   : Xendit card/VA/QRIS + IDR payouts, webhooks, ledger (Postgres) │
 │  fx         : FX quotes locked for 60 seconds                                │
 │  relayer    : depositFor / repayFor / cancelPending / setVerified, MON drip  │
 └───────┬─────────────────────────────┬────────────────────────────────────────┘
@@ -234,9 +234,9 @@ Score 0–100 = **Record (40) + Consistency (20) + Volume (40)**. Integer maths,
 |---|---|
 | `api` | Per-screen endpoints: `/me`, `/me/activity`, `/quote`, `/verify/:id` |
 | `kyc` | Didit session + webhook, then `setVerified` + MON drip |
-| `payments` | Xendit: card/FPX/DuitNow QR (top-up + settlement), disbursement (cash out to an Indonesian bank). Production: Agora Routes for fiat ↔ AUSD (D12) |
+| `payments` | Xendit, one Indonesian account, all in IDR: card / virtual account / QRIS (top-up + settlement), payouts (cash out to an Indonesian bank). Production: Agora Routes for fiat ↔ AUSD (D12) |
 | `relayer` | Tx queue: `depositFor`, `repayFor`, `cancelPending`, `setVerified`, ERC-3009 sends (D11), MON drip. Sends the published gas limits (`@matocard/contracts`) |
-| `fx` | MYR/IDR/USD quotes, locked for 60 seconds |
+| `fx` | USD/IDR quotes for money, USD/MYR for display, locked for 60 seconds |
 
 ### 7.2 Money-handling rules (mandatory)
 1. **Verify webhooks**: check Xendit's `x-callback-token` header. Reject on mismatch.
@@ -341,18 +341,18 @@ packages/
 |---|---|---|
 | [Mera](https://mera.category.xyz/getting-started/) | Passkey account + signing sessions | Client-side library, no contract, no API key. Account still needs MON (relayer drip) |
 | [Agora docs](https://docs.agora.finance/contract-overview) | AUSD | Bounty says build against Agora's public docs and staging environment |
-| [Xendit](https://docs.xendit.co/docs/available-payment-channels) | Card, FPX / DuitNow QR (MY), disbursement (ID) | Countries: ID, MY, PH, TH, VN. Test key `xnd_development_…` |
+| [Xendit](https://docs.xendit.co/docs/available-payment-channels) | Card, virtual account, QRIS, payouts, all IDR | One Indonesian account in test mode (Q3). Test key `xnd_development_…` |
 | [Didit](https://didit.me) | Document + liveness KYC | Use the sandbox |
 | [Envio](https://envio.dev) | Indexer | Monad testnet. Dev tier keeps 3 deployments: a redeploy deletes the oldest URL |
-| Hostinger VPS (Docker) | api, kyc, payments, relayer, Postgres | docker compose + Caddy for HTTPS |
+| Hostinger VPS (Docker) | api, kyc, payments, relayer, Postgres | Live at `https://api.matocard.xyz`, Swagger at `/docs`; HTTPS through the VPS's shared Caddy (`apps/backend/README.md`) |
 | Vercel | App | |
 | Public FX API | Demo FX quotes | Pick a free one |
 
 ### 11.3 Accounts and credentials to prepare
 - [ ] Register for Metropolis (closes 6 Oct), create team + project, pick **Track 02**, set community to **DevWeb3Jogja** on every member's profile
 - [ ] Join the Monad Discord, get the Metropolis role
-- [ ] Xendit test account: **check whether one account can accept MYR and disburse IDR** (§13)
-- [ ] Didit sandbox
+- [x] Xendit test account: one Indonesian account, IDR in and out (§13 Q3)
+- [x] Didit sandbox
 - [ ] Hostinger VPS (Docker) + Postgres, Vercel, Envio
 - [ ] Deployer + relayer + treasury wallets, funded with testnet MON (the relayer also funds user drips)
 - [ ] **Testnet AUSD**: no documented faucet. Ask Agora (Discord / bounty channel)
@@ -396,7 +396,7 @@ packages/
 |---|---|---|---|
 | Q1 | Does the Agora bounty accept testnet AUSD, or want their staging environment / mainnet? | Deploy target | **Answered 29 Sep: yes**, Monad testnet AUSD is sufficient (Agora). |
 | Q2 | Is there a testnet AUSD faucet? | Without it the pool cannot be funded | **Resolved 30 Sep:** Agora refilled the faucet `0xd236…e6C` (10,000 AUSD per request, up to 100,000 held). The stack moves to real AUSD (#59). |
-| Q3 | Xendit test: MYR (Malaysia) + IDR disbursement from one account? | Decides the persona | If not: top up in IDR, keep cross-border via disbursement to another supported country, or flip the story (family in ID sends to Siti in MY) |
+| Q3 | Xendit test: MYR (Malaysia) + IDR disbursement from one account? | Decides the persona | **Answered 3 Oct: no**, Xendit ties an account to its country, and ours is Indonesian. The backend collects and pays out in **IDR** (#69); MYR stays a display quote. §3, §8 and the demo script still describe MYR, FPX and DuitNow: the story is open |
 | Q4 | Does a PWA count as the "mobile application" Agora asks for? | Native app vs PWA | **Answered 29 Sep: yes**, a PWA qualifies (Agora). |
 | Q5 | earnAUSD is not on testnet | Yield is mock-only | Real mechanism in the contract, mock vault stated plainly |
 | Q6 | Is the Record ramp (N=3) too slow for the demo? | Small limit jump on stage (100 → 108.61) | Also show the aged account (134.52); do not weaken the anti-farming standard |

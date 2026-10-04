@@ -34,7 +34,8 @@ All addresses, the contract architecture and the scoring formula are in [contrac
 | Credit line, scoring, limits, defaults | Live contracts on Monad testnet, verified |
 | Stablecoin | Agora's AUSD on Monad testnet |
 | Collateral yield | MockEarnAUSD stands in for earnAUSD, which is mainnet only |
-| App, payments, KYC and relayer services | In progress |
+| Backend: payments, KYC, relayer, API | Live at [`api.matocard.xyz`](https://api.matocard.xyz/docs) (Swagger), Xendit and Didit in test mode |
+| App | In progress |
 | Card | Not issued; a licensed issuer is needed |
 
 ## Repository
