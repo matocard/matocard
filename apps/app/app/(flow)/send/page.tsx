@@ -1,9 +1,6 @@
-import { SendPicker } from "../../../components/send/SendPicker";
+import { SendScreen } from "../../../components/send/SendScreen";
 
-/**
- * Where the credit goes, asked before how much. `/send/me` is the draw on its own; `/send/to` is the
- * draw plus a transfer.
- */
+/** Send to family: from the card's limit or from the balance, straight to their account. */
 export default function SendPage() {
-  return <SendPicker />;
+  return <SendScreen />;
 }
