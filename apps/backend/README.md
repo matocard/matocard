@@ -123,6 +123,7 @@ Run on `https://api.matocard.xyz` on 3–4 Oct 2026, Xendit in test mode, Didit 
 - **Xendit money out:** a v2 payout to `ID_BCA`, `ACCEPTED` then `DISBURSED` by webhook
 - **Refund** of a card top-up after its hold: booked as an operator loss
 - **Onchain:** `depositFor`, `draw` by the user, a gasless ERC-3009 send, `repayFor`, the score moving 0 → 17, and `/verify` reading the cycle from the indexer
+- **Ringgit, through the Malaysian account** (4 Oct, #79): a RM 200 top-up by FPX (`AFFIN_FPX`, counted as bank, no hold) credited 48.97 AUSD with `depositFor`; a RM 40.85 settlement by DuitNow QR (`DUITNOW_QR`) repaid a 10 AUSD draw with `repayFor`, score 17 → 33. Both booked in MYR in the ledger
 
 **Not checked live:**
 - A refund or chargeback *inside* the hold (`cancelPending`): the testnet hold is about a minute, too short to refund from the dashboard. The flow test covers it with Xendit's real payload
