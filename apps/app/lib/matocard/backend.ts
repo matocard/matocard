@@ -70,6 +70,8 @@ export type KycStatus = "none" | "pending" | "approved" | "rejected" | "duplicat
 /** `GET /me`: the home screen, straight from the contract plus the user's KYC state. */
 export type Me = {
   user: { wallet: string; kyc: KycStatus; country: string | null };
+  /** Visual only: 16 digits from an HMAC of the wallet, the same every time, no network behind it. */
+  card: { number: string };
   verified: boolean;
   score: string;
   ratioBps: string;
@@ -185,20 +187,26 @@ export const getMyActivity = (session: Session) => call<MyActivity>("/me/activit
 
 export const getQuote = (pair: Pair) => call<Quote>("/quote", { body: { pair } });
 
+/** Where the user lives (ISO two letters, uppercase), chosen at onboarding; can change any time. */
+export const setCountry = (session: Session, country: string) =>
+  call<{ country: string }>("/me/country", { body: { country }, session });
+
 /** Didit's hosted verification, to open in the KYC sheet. */
 export const startKyc = (session: Session) =>
   call<{ url: string }>("/kyc/session", { method: "POST", body: {}, session });
 
 /**
- * A top-up in whole rupiah (`"50000"`, at least Rp 10,000) at a locked `USD/IDR` quote; answers
- * with Xendit's checkout. Virtual account and QRIS count at once, a card waits out its hold.
+ * A top-up at a locked quote; answers with Xendit's checkout. `amount` is in the quote's smallest
+ * unit: whole rupiah for `USD/IDR` (at least Rp 10,000) or sen for `USD/MYR` (`"60000"` = RM 600,
+ * at least RM 5). Which Xendit account collects follows the pair (#79). Virtual accounts, QRIS,
+ * FPX and DuitNow count at once; a card waits out its hold.
  */
 export const startTopUp = (
   session: Session,
   input: { amount: string; method: "card" | "bank" | "qr"; quoteId: string },
 ) => call<Checkout>("/topups", { body: input, session });
 
-/** Settles the whole debt in rupiah, rounded up, at a locked `USD/IDR` quote. */
+/** Settles the whole debt, rounded up, in the quote's currency (`USD/MYR` or `USD/IDR`). */
 export const startSettlement = (session: Session, quoteId: string) =>
   call<Checkout>("/settlements", { body: { quoteId }, session });
 
@@ -206,7 +214,8 @@ export const startSettlement = (session: Session, quoteId: string) =>
 export const sendSigned = (session: Session, authorization: TransferAuthorization) =>
   call<{ hash: string }>("/sends", { body: { authorization }, session });
 
-/** Cash out to an Indonesian bank: AUSD signed over to the treasury, rupiah paid out by Xendit. */
+/** Cash out to an Indonesian bank: AUSD signed over to the treasury, rupiah paid out by Xendit.
+ *  Always a `USD/IDR` quote. */
 export const startCashout = (
   session: Session,
   input: { quoteId: string; authorization: TransferAuthorization; bank: BankAccount },
