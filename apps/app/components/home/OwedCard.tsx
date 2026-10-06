@@ -28,7 +28,7 @@ export function OwedCard({
         <div>
           <h2 className="text-sm font-medium text-muted">Owed</h2>
           <div className="mt-1 text-[22px] font-semibold [font-variant-numeric:tabular-nums]">
-            {formatAusd(drawn)} USD
+            {formatAusd(drawn, "up")} USD
           </div>
           <div className="text-[12.5px] text-muted">
             {approxLocal(drawn, rate, currency)

@@ -7,8 +7,20 @@ import { baseToQuote, formatAmount } from "@matocard/core";
  * quote, not a promise.
  */
 
-/** 150_000_000n → "150.00". */
-export const formatAusd = (amount: bigint) => groupThousands(formatAmount(amount, "AUSD"));
+/**
+ * Dollars on screen, always two decimals: 134_529_147n → "134.52". AUSD carries six, which reads
+ * as noise to someone checking what they can spend. Rounded down by default, so a balance or a
+ * limit never shows more than is there; pass "up" for what someone owes, so a debt never shows
+ * less. Transactions always use the exact figure from the contract, never this text.
+ */
+export function formatAusd(amount: bigint, rounding: "down" | "up" = "down"): string {
+  const unit = 10_000n; // AUSD's 6 decimals down to cents
+  const negative = amount < 0n;
+  const abs = negative ? -amount : amount;
+  const cents = rounding === "up" ? (abs + unit - 1n) / unit : abs / unit;
+  const text = groupThousands(`${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`);
+  return negative ? `-${text}` : text;
+}
 
 /** 2_400_000n → "Rp 2,400,000". */
 export const formatIdr = (rupiah: bigint) => `Rp ${groupThousands(rupiah.toString())}`;

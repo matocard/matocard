@@ -3,8 +3,9 @@ import { approxIdr, ausdToIdr, formatAusd, formatBps, formatIdr } from "../money
 
 test("AUSD and rupiah format the way the screens show them", () => {
   expect(formatAusd(150_000_000n)).toBe("150.00");
-  expect(formatAusd(134_529_147n)).toBe("134.529147");
+  expect(formatAusd(134_529_147n)).toBe("134.52");
   expect(formatAusd(1_234_500_000n)).toBe("1,234.50");
+  expect(formatAusd(0n)).toBe("0.00");
   expect(formatIdr(2_400_000n)).toBe("Rp 2,400,000");
 });
 
@@ -48,4 +49,13 @@ test("where you live picks the currency, the Xendit account and the minimum", as
   });
   // Not chosen yet: rupiah, the currency every account can use.
   expect(localFor(null).currency).toBe("IDR");
+});
+
+test("dollars round down by default and up for a debt, never to a figure that is not there", async () => {
+  const { formatAusd } = await import("../money");
+  expect(formatAusd(44_568_245n)).toBe("44.56");
+  expect(formatAusd(44_568_245n, "up")).toBe("44.57");
+  expect(formatAusd(50_000_000n, "up")).toBe("50.00"); // exact stays exact
+  expect(formatAusd(1n)).toBe("0.00");
+  expect(formatAusd(1n, "up")).toBe("0.01"); // a speck owed is still owed
 });

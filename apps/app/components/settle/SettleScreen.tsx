@@ -108,7 +108,7 @@ export function SettleScreen() {
       <div className="mb-5 text-center">
         <div className="text-[15px] font-medium text-muted">You owe</div>
         <div className="mt-1 text-[clamp(30px,10vw,44px)] font-semibold [font-variant-numeric:tabular-nums]">
-          {owed === undefined ? "—" : `${formatAusd(owed)} USD`}
+          {owed === undefined ? "—" : `${formatAusd(owed, "up")} USD`}
         </div>
         {owed !== undefined && approxLocal(owed, rate, local.currency) ? (
           <div className="text-[13px] text-muted">
