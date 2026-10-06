@@ -11,7 +11,7 @@ import { connectWallet } from "./support/journey";
 test("an unverified account sees no card yet and the step that opens one", async ({ page }) => {
   await connectWallet(page);
   await expect(page.getByText("Not issued yet")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText("Open your card")).toBeVisible();
+  await expect(page.getByText("Activate your card")).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
   // Nothing to spend from, so the money actions are not offered.
   await expect(page.getByRole("button", { name: "Send" })).toHaveCount(0);

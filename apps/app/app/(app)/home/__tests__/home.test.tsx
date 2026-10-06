@@ -125,6 +125,9 @@ test("before verification, the card is not issued and the next step is offered",
   me.mockReturnValue(meState({ session: null, kyc: undefined, signIn }));
   render(<HomePage />);
   expect(screen.getByText("Not issued yet")).toBeInTheDocument();
+  // The card itself, blurred, carries the step that activates it.
+  expect(screen.getByRole("region", { name: "Your card, not issued yet" })).toBeInTheDocument();
+  expect(screen.getByText("Activate your card")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "Continue" }));
   expect(signIn).toHaveBeenCalled();

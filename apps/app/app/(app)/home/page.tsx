@@ -125,8 +125,32 @@ export default function HomePage() {
             <ActionPill onClick={() => nav.forward("/topup")}>Top up</ActionPill>
             {owes ? <ActionPill onClick={() => nav.forward("/settle")}>Settle</ActionPill> : null}
           </ActionRow>
+        ) : null}
+
+        {verified ? (
+          <div className="mb-[26px] flex justify-center">
+            <CardFolder
+              title=""
+              ariaLabel="Your card"
+              cardNumber={me.cardNumber ?? ""}
+              expiry="••/••"
+              cvv="•••"
+              detailsVisible={cardShown}
+              onDetailsVisibleChange={setCardShown}
+              className="w-full max-w-[340px]"
+              card={
+                <CardArtwork
+                  holder=""
+                  number={me.cardNumber}
+                  expiry="••/••"
+                  detailsVisible={cardShown}
+                />
+              }
+            />
+          </div>
         ) : credit.loading ? null : (
           <VerifyCard
+            className="mb-[26px]"
             signedIn={Boolean(me.session)}
             country={me.country}
             kyc={me.kyc}
@@ -136,27 +160,6 @@ export default function HomePage() {
             onVerify={verify}
           />
         )}
-
-        <div className="mb-[26px] flex justify-center">
-          <CardFolder
-            title=""
-            ariaLabel={verified ? "Your card" : "Your card, not issued yet"}
-            cardNumber={verified ? (me.cardNumber ?? "") : ""}
-            expiry="••/••"
-            cvv="•••"
-            detailsVisible={cardShown}
-            onDetailsVisibleChange={setCardShown}
-            className="w-full max-w-[340px]"
-            card={
-              <CardArtwork
-                holder=""
-                number={verified ? me.cardNumber : undefined}
-                expiry="••/••"
-                detailsVisible={cardShown}
-              />
-            }
-          />
-        </div>
 
         {owes && credit.drawn !== undefined ? (
           <OwedCard
