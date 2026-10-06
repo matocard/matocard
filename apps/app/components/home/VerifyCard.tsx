@@ -35,7 +35,7 @@ export function VerifyCard({
 }) {
   const choosing = signedIn && country === null;
   const [title, body, action] = !signedIn
-    ? ["Activate your card", "Confirm it is you once. Nothing is charged.", "Continue"]
+    ? ["Activate your card", "", "Continue"]
     : choosing
       ? ["Where do you live?", "You top up and settle in its money.", null]
       : kyc === "pending"
@@ -65,7 +65,7 @@ export function VerifyCard({
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 px-6 text-center text-white">
         <h2 className="text-[18px] font-semibold tracking-[-0.01em]">{title}</h2>
-        <p className="mt-1 text-[13px] text-white/75">{body}</p>
+        {body ? <p className="mt-1 text-[13px] text-white/75">{body}</p> : null}
         {choosing ? (
           <div className="mt-3 flex w-full gap-2">
             {COUNTRIES.map((c) => (

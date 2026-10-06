@@ -4,11 +4,12 @@ import { ActivityList } from "../../../components/activity/ActivityList";
 import { CardArtwork } from "../../../components/card/CardArtwork";
 import { KycSheet } from "../../../components/card/KycSheet";
 import { AvailableHero } from "../../../components/home/AvailableHero";
+import { BalanceSection } from "../../../components/home/BalanceSection";
 import { LimitBreakdown } from "../../../components/home/LimitBreakdown";
 import { OwedCard } from "../../../components/home/OwedCard";
 import { VerifyCard } from "../../../components/home/VerifyCard";
 import { CardFolder } from "../../../components/motion/card-folder";
-import { ActionPill, ActionRow, Card, CoinBadge, Toast } from "../../../components/ui";
+import { ActionPill, ActionRow, Card, Toast } from "../../../components/ui";
 import { useCredit } from "../../../hooks/useCredit";
 import { useFx } from "../../../hooks/useFx";
 import { useMe } from "../../../hooks/useMe";
@@ -16,7 +17,6 @@ import { useMyActivity } from "../../../hooks/useMyActivity";
 import { useNav } from "../../../hooks/useNav";
 import { setCountry, startKyc } from "../../../lib/matocard/backend";
 import { localFor } from "../../../lib/matocard/local";
-import { approxLocal, formatAusd } from "../../../lib/matocard/money";
 
 /** A unix-seconds timestamp as "3 Nov". Formatted after mount only, where the screen renders. */
 const day = (seconds: bigint) =>
@@ -188,25 +188,12 @@ export default function HomePage() {
 
         {/* Money sent to this account (Mom's side of a send) lands here, as AUSD. */}
         {credit.ausdBalance !== undefined && credit.ausdBalance > 0n ? (
-          <Card className="mb-[22px] flex items-center gap-3 px-5 py-4">
-            <CoinBadge token="AUSD" size={36} />
-            <div className="flex-1">
-              <div className="text-[14.5px] font-semibold">Balance</div>
-              <div className="text-[12.5px] text-muted">
-                {approxLocal(credit.ausdBalance, rate, local.currency)}
-              </div>
-            </div>
-            <div className="text-right text-[14.5px] font-semibold [font-variant-numeric:tabular-nums]">
-              {formatAusd(credit.ausdBalance)} USD · AUSD
-              <button
-                type="button"
-                onClick={() => nav.forward("/cashout")}
-                className="mt-1 block w-full text-right text-[12.5px] font-medium underline"
-              >
-                Cash out
-              </button>
-            </div>
-          </Card>
+          <BalanceSection
+            className="mb-[22px]"
+            balance={credit.ausdBalance}
+            rate={rate}
+            currency={local.currency}
+          />
         ) : null}
 
         <h2 className="mx-1 mb-2 text-sm font-medium text-muted">Activity</h2>

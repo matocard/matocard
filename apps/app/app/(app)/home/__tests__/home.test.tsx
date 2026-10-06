@@ -128,6 +128,7 @@ test("before verification, the card is not issued and the next step is offered",
   // The card itself, blurred, carries the step that activates it.
   expect(screen.getByRole("region", { name: "Your card, not issued yet" })).toBeInTheDocument();
   expect(screen.getByText("Activate your card")).toBeInTheDocument();
+  expect(screen.queryByText(/Nothing is charged/)).toBeNull();
   expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "Continue" }));
   expect(signIn).toHaveBeenCalled();
@@ -141,12 +142,18 @@ test("a verification in progress says so instead of asking again", () => {
   expect(screen.queryByRole("button", { name: "Verify identity" })).not.toBeInTheDocument();
 });
 
-test("money received shows as a balance, in AUSD on the detail row", () => {
+test("money received shows as a balance, and cashing out is its own row", () => {
   credit.mockReturnValue(verifiedCredit({ ausdBalance: 50_000_000n }));
   render(<HomePage />);
-  expect(screen.getByText("Balance")).toBeInTheDocument();
-  expect(screen.getByText("50.00 USD · AUSD")).toBeInTheDocument();
-  expect(screen.getByText("≈ Rp 800,000")).toBeInTheDocument();
+  const balance = screen
+    .getByRole("heading", { name: "Balance" })
+    .closest("section") as HTMLElement;
+  expect(within(balance).getByText("50.00 USD")).toBeInTheDocument();
+  expect(within(balance).getByText("AUSD on Monad")).toBeInTheDocument();
+  expect(within(balance).getByText("≈ Rp 800,000")).toBeInTheDocument();
+  // Not a link inside the balance: a section of its own.
+  expect(within(balance).queryByRole("link")).toBeNull();
+  expect(screen.getByRole("link", { name: /To your bank/ })).toHaveAttribute("href", "/cashout");
 });
 
 test("someone in Malaysia reads the headline in ringgit", () => {
