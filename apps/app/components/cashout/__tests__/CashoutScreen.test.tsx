@@ -75,3 +75,26 @@ test("an account number the bank would refuse keeps the button off", async () =>
   await fillBank("123");
   expect(screen.getByRole("button", { name: "Cash out" })).toBeDisabled();
 });
+
+test("typed in rupiah, Rp 800,000 at 16,000 signs 50 USD", async () => {
+  render(<CashoutScreen />);
+  await userEvent.click(screen.getByRole("button", { name: "In rupiah" }));
+  await type("800000");
+  expect(screen.getByText("50.00 USD from your balance")).toBeInTheDocument();
+  await fillBank();
+  await userEvent.click(screen.getByRole("button", { name: "Cash out" }));
+  await waitFor(() => expect(screen.getByText("Rp 800,000 is on its way")).toBeInTheDocument());
+  expect(signTransfer).toHaveBeenCalledWith(
+    {},
+    { from: MOM, to: TREASURY, value: 50_000_000n, validForSeconds: 3600 },
+  );
+});
+
+test("in rupiah, less than Rp 10,000 cannot be cashed out", async () => {
+  render(<CashoutScreen />);
+  await userEvent.click(screen.getByRole("button", { name: "In rupiah" }));
+  await type("9000");
+  await fillBank();
+  expect(screen.getByText("The smallest cash out is Rp 10,000")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Cash out" })).toBeDisabled();
+});

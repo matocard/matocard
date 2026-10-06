@@ -1,5 +1,5 @@
 "use client";
-import { baseToQuote, parseAmount } from "@matocard/core";
+import { baseToQuote, parseAmount, quoteToBase } from "@matocard/core";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getAddress } from "viem";
@@ -25,6 +25,11 @@ const BANK_NAME: Record<Bank, string> = {
   ID_MANDIRI: "Mandiri",
 };
 
+/** What the keypad types in: dollars from the balance, or the rupiah the bank should receive. */
+const UNITS = ["USD", "IDR"] as const;
+type Unit = (typeof UNITS)[number];
+const UNIT_LABEL: Record<Unit, string> = { USD: "In USD", IDR: "In rupiah" };
+
 /** The backend's floor for a payout. */
 const MIN_CASHOUT = 10_000n;
 
@@ -41,6 +46,9 @@ const ausdOf = (text: string): bigint | null => {
  * cashing out pays it to an Indonesian bank in rupiah. The user signs the AUSD over to the
  * treasury (ERC-3009, so no MON is needed); the backend then pays the rupiah through Xendit at a
  * fresh `USD/IDR` quote, rounded down. Always rupiah: the family's bank is Indonesian.
+ *
+ * The amount is typed in USD or in rupiah (docs/guides/cash-out.mdx). Typed in rupiah, the AUSD
+ * signed is that figure at the display rate, rounded down, so the bank gets about what was typed.
  */
 export function CashoutScreen() {
   const router = useRouter();
@@ -49,6 +57,7 @@ export function CashoutScreen() {
   const credit = useCredit();
   const { rate } = useFx("USD/IDR");
   const backend = useBackend();
+  const [unit, setUnit] = useState<Unit>("USD");
   const [amount, setAmount] = useState("0");
   const [bank, setBank] = useState<Bank>("ID_BCA");
   const [account, setAccount] = useState("");
@@ -58,10 +67,22 @@ export function CashoutScreen() {
   const [signing, setSigning] = useState(false);
 
   const balance = credit.ausdBalance ?? 0n;
-  const ausd = ausdOf(amount);
-  const rupiah = ausd && rate ? baseToQuote(ausd, "AUSD", "IDR", rate, "down") : 0n;
+  const typedRupiah = BigInt(amount.split(".")[0] || "0");
+  const ausd =
+    unit === "USD"
+      ? ausdOf(amount)
+      : rate && typedRupiah > 0n
+        ? quoteToBase(typedRupiah, "IDR", "AUSD", rate, "down")
+        : 0n;
+  const rupiah =
+    unit === "IDR"
+      ? typedRupiah
+      : ausd && rate
+        ? baseToQuote(ausd, "AUSD", "IDR", rate, "down")
+        : 0n;
+  const tooSmallTyped = unit === "IDR" && typedRupiah > 0n && typedRupiah < MIN_CASHOUT;
   const tooMuch = ausd !== null && ausd > balance;
-  const tooSmall = ausd !== null && ausd > 0n && rupiah < MIN_CASHOUT;
+  const tooSmall = tooSmallTyped || (ausd !== null && ausd > 0n && rupiah < MIN_CASHOUT);
   const accountValid = /^\d{6,20}$/.test(account);
   const ready =
     ausd !== null && ausd > 0n && !tooMuch && !tooSmall && accountValid && holder.trim() !== "";
@@ -118,18 +139,36 @@ export function CashoutScreen() {
       <p className="mb-1 text-center text-[13px] text-muted">
         {formatAusd(balance)} USD in your balance
       </p>
+      <Segmented
+        options={UNITS}
+        value={unit}
+        onChange={(next) => {
+          setUnit(next);
+          setAmount("0");
+        }}
+        label="Amount in"
+        variant="period"
+        renderLabel={(u) => UNIT_LABEL[u]}
+        className="mb-1"
+      />
       <Keypad
         value={amount}
-        onChange={setAmount}
-        symbol="$"
-        onQuick={(pct) => setAmount(quickAmount(balance, pct, 6))}
+        onChange={(next) => setAmount(unit === "IDR" ? next.replace(".", "") : next)}
+        symbol={unit === "IDR" ? "Rp" : "$"}
+        onQuick={unit === "USD" ? (pct) => setAmount(quickAmount(balance, pct, 6)) : undefined}
         invalid={tooMuch || tooSmall || ausd === null}
         hint={
           tooSmall ? `The smallest cash out is ${formatIdr(MIN_CASHOUT)}` : "More than your balance"
         }
       />
       <p className="mb-3 text-center text-[13px] text-muted">
-        {rupiah > 0n ? `≈ ${formatIdr(rupiah)} to your bank` : "Paid to your bank in rupiah"}
+        {unit === "IDR"
+          ? ausd && ausd > 0n
+            ? `${formatAusd(ausd)} USD from your balance`
+            : "Paid to your bank in rupiah"
+          : rupiah > 0n
+            ? `≈ ${formatIdr(rupiah)} to your bank`
+            : "Paid to your bank in rupiah"}
       </p>
 
       <Segmented

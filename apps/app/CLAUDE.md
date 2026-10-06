@@ -24,7 +24,7 @@ the shell and the UI kit carried over, every screen and its data layer are Matoc
 | `/topup` | Ringgit (FPX, DuitNow, card) or rupiah (bank, QRIS, card) by country, through Xendit | `/quote`, `/topups` |
 | `/send` | To family, typed in rupiah: from the card (`draw`) or the balance (ERC-3009 via `/sends`) | `useCredit`, `signTransfer` |
 | `/settle` | In local currency, from the balance (permit) or from collateral | `/settlements`, `useCredit` |
-| `/cashout` | Balance to an Indonesian bank in rupiah | `signTransfer`, `/cashouts` |
+| `/cashout` | Balance to an Indonesian bank in rupiah, typed in USD or rupiah | `signTransfer`, `/cashouts` |
 | `/transactions` | History, by card and top-ups | `useMyActivity` |
 | `/credit` | Your record and the link to share it | `useVerifyRecord` |
 | `/verify/[id]` | Public record, no sign-in, nothing personal | `/verify/:wallet` |
