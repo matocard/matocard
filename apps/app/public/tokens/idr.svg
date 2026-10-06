@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="Indonesian rupiah">
+  <title>Indonesian rupiah</title>
+  <defs><clipPath id="c"><circle cx="24" cy="24" r="24"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="48" height="24" fill="#CE1126"/>
+    <rect y="24" width="48" height="24" fill="#FFFFFF"/>
+  </g>
+  <circle cx="24" cy="24" r="23.5" fill="none" stroke="#18161B" stroke-opacity="0.12"/>
+</svg>
