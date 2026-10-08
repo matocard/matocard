@@ -29,6 +29,7 @@ const mom = privateKeyToAccount(generatePrivateKey());
 const xenditCalls: { path: string; body: Record<string, unknown>; headers: Headers }[] = [];
 const decisions = new Map<string, unknown>();
 let diditSessions = 0;
+let rpcRequests = 0;
 const realFetch = globalThis.fetch;
 
 function fakeFetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
@@ -63,6 +64,7 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Promise<R
       ? reply(decisions.get(id))
       : Promise.resolve(new Response("down", { status: 500 }));
   }
+  if (anvil && url.href.startsWith(anvil.rpcUrl)) rpcRequests++;
   return realFetch(input, init);
 }
 
@@ -253,6 +255,20 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
       expiry: expect.stringMatching(/^(0[1-9]|1[0-2])\/\d{2}$/),
       cvv: expect.stringMatching(/^\d{3}$/),
     });
+  });
+
+  test("a returning user's Home loads every time, in one RPC request (#92)", async () => {
+    // Monad's public RPC allows 15 requests a second: 8 separate reads per /me broke the second call
+    for (let i = 0; i < 3; i++) {
+      const before = rpcRequests;
+      const me = await call(siti, "GET", "/me");
+      expect(me.status).toBe(200);
+      expect(me.body.card).toMatchObject({
+        number: expect.any(String),
+        expiry: expect.any(String),
+      });
+      expect(rpcRequests - before).toBe(1);
+    }
   });
 
   test("an account verified onchain without Didit may top up (#68)", async () => {

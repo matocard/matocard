@@ -67,8 +67,14 @@ export function createChain(sql: SQL, config: Config) {
     rpcUrls: { default: { http: [c.rpcUrl] } },
   });
   const account = privateKeyToAccount(c.relayerKey);
-  // Monad makes a block about every 0.4 s; viem's default 4 s poll would idle most of that
-  const client = createPublicClient({ chain, transport: http(c.rpcUrl), pollingInterval: 500 });
+  // Monad makes a block about every 0.4 s; viem's default 4 s poll would idle most of that.
+  // batch: the public RPC allows 15 HTTP requests a second and counts a JSON-RPC batch
+  // as one, so GET /me's 8 reads go out together (#92)
+  const client = createPublicClient({
+    chain,
+    transport: http(c.rpcUrl, { batch: true }),
+    pollingInterval: 500,
+  });
   const wallet = createWalletClient({ account, chain, transport: http(c.rpcUrl) });
   const line = { address: c.creditLine, abi: matoCreditLineAbi } as const;
   const ausd = { address: c.ausd, abi: testAusdAbi } as const;
