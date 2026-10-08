@@ -13,6 +13,7 @@ type Verification = {
   issuing_state?: string;
   document_type?: string;
   document_number?: string;
+  full_name?: string;
 };
 
 /**
@@ -111,7 +112,8 @@ export function createKyc(sql: SQL, chain: Chain, config: Config) {
             await sql`UPDATE users SET kyc_status = 'duplicate' WHERE id = ${user.id}`;
           } else {
             // kyc_status stays pending until the hash is onchain; work() does that
-            await sql`UPDATE users SET identity_hash = ${hash} WHERE id = ${user.id} AND identity_hash IS NULL`;
+            await sql`UPDATE users SET identity_hash = ${hash}, holder_name = ${doc.full_name?.trim() || null}
+                      WHERE id = ${user.id} AND identity_hash IS NULL`;
           }
         }
       });
