@@ -138,7 +138,7 @@ test("a verification in progress says so instead of asking again", () => {
   credit.mockReturnValue(verifiedCredit({ verified: false }));
   me.mockReturnValue(meState({ kyc: "pending" }));
   render(<HomePage />);
-  expect(screen.getByText("Checking your identity")).toBeInTheDocument();
+  expect(screen.getByText("Verification in review")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Verify identity" })).not.toBeInTheDocument();
 });
 
