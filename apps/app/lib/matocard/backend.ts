@@ -71,7 +71,15 @@ export type KycStatus = "none" | "pending" | "approved" | "rejected" | "duplicat
 export type Me = {
   user: { wallet: string; kyc: KycStatus; country: string | null };
   /** Visual only: 16 digits from an HMAC of the wallet, the same every time, no network behind it. */
-  card: { number: string };
+  /** Visual only, no card network behind it (#90). `accountNumber` is display only: money still
+   *  arrives at the account address. `holder` is null until Didit approves, and for demo accounts. */
+  card: {
+    number: string;
+    holder?: string | null;
+    accountNumber?: string;
+    expiry?: string;
+    cvv?: string;
+  };
   verified: boolean;
   score: string;
   ratioBps: string;

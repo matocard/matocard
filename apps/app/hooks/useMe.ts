@@ -37,6 +37,12 @@ export function useMe() {
     country: me ? me.user.country : undefined,
     /** 16 digits, visual only (`/me` derives it from the wallet). */
     cardNumber: me?.card?.number,
+    /** The name off the approved document; null until Didit approves (#90). */
+    cardHolder: me?.card?.holder ?? null,
+    /** 12 digits, display only: money still arrives at the account address. */
+    accountNumber: me?.card?.accountNumber,
+    cardExpiry: me?.card?.expiry,
+    cardCvv: me?.card?.cvv,
     verified: me?.verified,
     score: big(me?.score),
     ratioBps: big(me?.ratioBps),
