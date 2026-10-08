@@ -64,7 +64,7 @@ export async function testChain() {
         (await Bun.file(`${import.meta.dir}/fixtures/multicall3.hex`).text()).trim(),
       ],
     }),
-  }).then((r) => r.json());
+  }).then((r) => r.json() as Promise<{ error?: unknown }>);
   if (planted.error) throw new Error(`anvil_setCode: ${JSON.stringify(planted.error)}`);
   const deploy = Bun.spawnSync(
     ["forge", "script", "script/DeployMatoCreditLine.s.sol", "--rpc-url", rpcUrl, "--broadcast"],
