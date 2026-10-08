@@ -65,14 +65,17 @@ export function createChain(sql: SQL, config: Config) {
     name: "monad",
     nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
     rpcUrls: { default: { http: [c.rpcUrl] } },
+    // the canonical Multicall3, deployed on Monad (and planted on anvil by the tests)
+    contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
   });
   const account = privateKeyToAccount(c.relayerKey);
   // Monad makes a block about every 0.4 s; viem's default 4 s poll would idle most of that.
-  // batch: the public RPC allows 15 HTTP requests a second and counts a JSON-RPC batch
-  // as one, so GET /me's 8 reads go out together (#92)
+  // multicall: the public RPC allows 15 calls a second, counting each call in a JSON-RPC
+  // batch, so GET /me's 8 reads go out as one eth_call to Multicall3 (#92)
   const client = createPublicClient({
     chain,
-    transport: http(c.rpcUrl, { batch: true }),
+    transport: http(c.rpcUrl),
+    batch: { multicall: true },
     pollingInterval: 500,
   });
   const wallet = createWalletClient({ account, chain, transport: http(c.rpcUrl) });

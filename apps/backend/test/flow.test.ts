@@ -29,7 +29,8 @@ const mom = privateKeyToAccount(generatePrivateKey());
 const xenditCalls: { path: string; body: Record<string, unknown>; headers: Headers }[] = [];
 const decisions = new Map<string, unknown>();
 let diditSessions = 0;
-let rpcRequests = 0;
+// JSON-RPC calls sent to anvil, each one inside a batch counted, as Monad's rate limit does
+let rpcCalls = 0;
 const realFetch = globalThis.fetch;
 
 function fakeFetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
@@ -64,7 +65,10 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Promise<R
       ? reply(decisions.get(id))
       : Promise.resolve(new Response("down", { status: 500 }));
   }
-  if (anvil && url.href.startsWith(anvil.rpcUrl)) rpcRequests++;
+  if (anvil && url.href.startsWith(anvil.rpcUrl)) {
+    const sent = JSON.parse(String(init?.body));
+    rpcCalls += Array.isArray(sent) ? sent.length : 1;
+  }
   return realFetch(input, init);
 }
 
@@ -257,17 +261,17 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     });
   });
 
-  test("a returning user's Home loads every time, in one RPC request (#92)", async () => {
-    // Monad's public RPC allows 15 requests a second: 8 separate reads per /me broke the second call
+  test("a returning user's Home loads every time, in one RPC call (#92)", async () => {
+    // Monad's public RPC allows 15 calls a second: 8 separate reads per /me broke the second /me
     for (let i = 0; i < 3; i++) {
-      const before = rpcRequests;
+      const before = rpcCalls;
       const me = await call(siti, "GET", "/me");
       expect(me.status).toBe(200);
       expect(me.body.card).toMatchObject({
         number: expect.any(String),
         expiry: expect.any(String),
       });
-      expect(rpcRequests - before).toBe(1);
+      expect(rpcCalls - before).toBe(1);
     }
   });
 
