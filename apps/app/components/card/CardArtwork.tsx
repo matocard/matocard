@@ -113,8 +113,9 @@ export function CardArtwork({
         </span>
       </span>
 
-      <span className="absolute bottom-[7%] right-[6%] text-[19px] font-semibold italic tracking-[-0.02em] text-white/95">
-        VISA
+      {/* No card network behind this card (#90), so the corner carries Matocard's own name. */}
+      <span className="absolute bottom-[7%] right-[6%] text-[15px] font-semibold tracking-[-0.02em] text-white/95">
+        Matocard
       </span>
     </span>
   );
