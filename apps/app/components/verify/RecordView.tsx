@@ -1,6 +1,6 @@
 "use client";
 import type { VerifyRecord } from "../../lib/matocard/backend";
-import { explorerAddress, explorerTx } from "../../lib/matocard/monad";
+import { explorerTx } from "../../lib/matocard/monad";
 import { formatAusd, formatBps } from "../../lib/matocard/money";
 import { Card, Skeleton } from "../ui";
 
@@ -127,18 +127,6 @@ export function RecordView({
           </ol>
         )}
       </Card>
-
-      <p className="text-center text-[12px] text-muted">
-        Read from the credit line on Monad, not from Matocard's database.{" "}
-        <a
-          className="underline"
-          href={explorerAddress(record.account)}
-          target="_blank"
-          rel="noopener"
-        >
-          Check it yourself
-        </a>
-      </p>
     </div>
   );
 }

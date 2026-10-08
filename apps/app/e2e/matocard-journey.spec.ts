@@ -66,7 +66,6 @@ test("the public record needs no sign-in and reads the live chain", async ({ pag
   await expect(page.getByText("Cycle 3: Repaid on time")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("Score 55")).toBeVisible();
   await expect(page.getByText("111.5%")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Check it yourself" })).toBeVisible();
 });
 
 test("the Credit tab shows your own record and the link to share it", async ({ page }) => {

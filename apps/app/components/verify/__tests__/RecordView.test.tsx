@@ -59,10 +59,6 @@ test("the record shows score, ratio and cycles, each with its proof", () => {
 test("nothing personal: no name or document, only the account", () => {
   const { container } = render(<RecordView record={SITI} loading={false} error={undefined} />);
   expect(container.textContent).not.toMatch(/passport|document|name/i);
-  expect(screen.getByRole("link", { name: "Check it yourself" })).toHaveAttribute(
-    "href",
-    "https://testnet.monadvision.com/address/0xc6E0De07b60a412c1bb990B77612754B9254DBDa",
-  );
 });
 
 test("a down indexer still shows the score, and says the history is catching up", () => {
