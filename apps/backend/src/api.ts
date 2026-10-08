@@ -31,7 +31,14 @@ const SENDS_PER_DAY = 50;
 export const sessionMessage = (wallet: Address, until: number) =>
   `Sign in to Matocard\n${wallet.toLowerCase()}\nuntil ${until}`;
 
-export type User = { id: string; wallet: Address; kyc_status: string; country: string | null };
+export type User = {
+  id: string;
+  wallet: Address;
+  kyc_status: string;
+  country: string | null;
+  holder_name: string | null;
+  created_at: Date;
+};
 
 /**
  * `Authorization: Matocard <wallet>.<until>.<signature>`: the account's own key
@@ -60,8 +67,14 @@ export async function authenticate(sql: SQL, req: Request): Promise<User> {
   const [user] = await sql`
     INSERT INTO users (wallet) VALUES (${wallet.toLowerCase()})
     ON CONFLICT (wallet) DO UPDATE SET wallet = EXCLUDED.wallet
-    RETURNING id, wallet, kyc_status, country`;
+    RETURNING id, wallet, kyc_status, country, holder_name, created_at`;
   return { ...user, wallet: getAddress(user.wallet) } as User;
+}
+
+/** `n` digits from an HMAC of the wallet: the same for a wallet every time, unguessable without the secret. */
+function digits(label: string, wallet: Address, secret: string, n: number): string {
+  const hash = createHmac("sha256", `${label}:${secret}`).update(wallet.toLowerCase()).digest();
+  return (hash.readBigUInt64BE() % 10n ** BigInt(n)).toString().padStart(n, "0");
 }
 
 /**
@@ -70,14 +83,33 @@ export async function authenticate(sql: SQL, req: Request): Promise<User> {
  * no card network uses, with a Luhn check digit so it reads like a card.
  */
 export function cardNumber(wallet: Address, secret: string): string {
-  const hash = createHmac("sha256", `card:${secret}`).update(wallet.toLowerCase()).digest();
-  const body = `9988${(hash.readBigUInt64BE() % 10n ** 11n).toString().padStart(11, "0")}`;
+  const body = `9988${digits("card", wallet, secret, 11)}`;
   // Luhn: double every second digit from the right, the check digit included
   const sum = [...body].reverse().reduce((total, c, i) => {
     const d = Number(c) * (i % 2 === 0 ? 2 : 1);
     return total + (d > 9 ? d - 9 : d);
   }, 0);
   return body + ((10 - (sum % 10)) % 10);
+}
+
+const CARD_YEARS = 5;
+
+/**
+ * The whole card face (#90), all visual like the number. `accountNumber` is for
+ * display only: money still arrives at the wallet address. The expiry counts
+ * from when the account opened, so the demo accounts (verified without Didit) get one too.
+ */
+export function card(user: User, secret: string) {
+  const expires = new Date(user.created_at);
+  expires.setUTCFullYear(expires.getUTCFullYear() + CARD_YEARS);
+  return {
+    number: cardNumber(user.wallet, secret),
+    holder: user.holder_name,
+    accountNumber: digits("account", user.wallet, secret, 12),
+    expiry: `${String(expires.getUTCMonth() + 1).padStart(2, "0")}/${String(expires.getUTCFullYear()).slice(2)}`,
+    // ponytail: on /me with the rest; a separate reveal endpoint if the card ever gets a real issuer
+    cvv: digits("cvv", user.wallet, secret, 3),
+  };
 }
 
 /** ISO 3166-1 alpha-2, such as MY or ID. */
@@ -206,7 +238,7 @@ export function createRoutes(deps: {
     "/me": {
       GET: signedIn(async (user) => ({
         user: { wallet: user.wallet, kyc: user.kyc_status, country: user.country },
-        card: { number: cardNumber(user.wallet, cardSecret) },
+        card: card(user, cardSecret),
         ...(await account(chain, user.wallet)),
       })),
     },
