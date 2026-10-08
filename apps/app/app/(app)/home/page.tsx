@@ -164,6 +164,17 @@ export default function HomePage() {
                 </div>
                 <CopyButton value={me.accountNumber} label="Copy account number" />
               </Card>
+            ) : !me.session ? (
+              // Verified onchain but not signed in to the backend on this device: the name, expiry
+              // and account number come from /me, which needs the one-time signature.
+              <Card className="mx-auto mt-3 flex max-w-[340px] items-center gap-3 px-4 py-3">
+                <p className="min-w-0 flex-1 text-[13px] text-muted">
+                  Confirm it's you to see your name and card details.
+                </p>
+                <ActionPill onClick={signIn} disabled={me.signingIn}>
+                  {me.signingIn ? "Confirming" : "Confirm"}
+                </ActionPill>
+              </Card>
             ) : null}
           </div>
         ) : credit.loading ? null : (

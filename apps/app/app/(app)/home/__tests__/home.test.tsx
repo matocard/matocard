@@ -214,3 +214,11 @@ test("before Didit approves there is no name, and no account row without a numbe
   render(<HomePage />);
   expect(screen.queryByText("Account number")).toBeNull();
 });
+
+test("verified but not signed in on this device: one tap to see the card details", async () => {
+  const signIn = vi.fn();
+  me.mockReturnValue(meState({ session: null, signIn }));
+  render(<HomePage />);
+  await userEvent.click(screen.getByRole("button", { name: "Confirm" }));
+  expect(signIn).toHaveBeenCalled();
+});
