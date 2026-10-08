@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { big, getMe, type KycStatus } from "../lib/matocard/backend";
-import { pollInterval } from "../lib/matocard/polling";
+import { POLL_IDLE } from "../lib/matocard/polling";
 import { useSession } from "./useSession";
 
 /**
@@ -10,14 +10,18 @@ import { useSession } from "./useSession";
  * to the chain directly. What only the backend knows is KYC: `none`, `pending` (stays pending until
  * the identity is bound onchain), `approved`, `rejected` or `duplicate`.
  */
+/** How often a pending verification is checked. */
+export const KYC_PENDING_POLL = 30_000;
+
 export function useMe() {
   const { session, signIn, signingIn, error: signInError } = useSession();
   const query = useQuery({
     queryKey: ["matocard", "me", session?.wallet],
     queryFn: () => getMe(session!),
     enabled: Boolean(session),
-    // Poll faster while verification is under way: the worker binds the identity within seconds.
-    refetchInterval: (q) => pollInterval(q.state.data?.user.kyc === "pending"),
+    // `pending` can be hours of manual review at Didit (#89), so it is checked gently: every 30 s,
+    // and again whenever the tab regains focus. The KYC sheet polls on its own while it is open.
+    refetchInterval: (q) => (q.state.data?.user.kyc === "pending" ? KYC_PENDING_POLL : POLL_IDLE),
   });
   const me = query.data;
   return {
