@@ -77,3 +77,14 @@ test("a default is said plainly", () => {
   render(<RecordView record={{ ...SITI, defaulted: true }} loading={false} error={undefined} />);
   expect(screen.getByText("Missed a payment")).toBeInTheDocument();
 });
+
+test("no repayments yet: no History card at all", () => {
+  render(
+    <RecordView
+      record={{ ...SITI, cycles: { counted: "0", repaid: "0" }, history: null, indexer: "ok" }}
+      loading={false}
+      error={undefined}
+    />,
+  );
+  expect(screen.queryByText("History")).toBeNull();
+});

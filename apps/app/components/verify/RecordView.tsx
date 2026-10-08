@@ -133,48 +133,47 @@ export function RecordView({
         </div>
       </Card>
 
-      <Card className="px-5 py-4">
-        <h2 className="text-sm font-medium text-muted">History</h2>
-        {record.history === null ? (
-          <p className="mt-2 text-[13.5px] text-muted">
-            {record.indexer === "unavailable"
-              ? "Your history is updating. Your score above is current."
-              : "Your first repayment will show here."}
-          </p>
-        ) : cycles.length === 0 ? (
-          <p className="mt-2 text-[13.5px] text-muted">Your first repayment will show here.</p>
-        ) : (
-          <ol className="mt-2 divide-y divide-line">
-            {cycles.map((c) => (
-              <li key={c.number} className="flex items-center justify-between gap-3 py-2.5">
-                <div>
-                  <div className="text-[14.5px] font-semibold">
-                    Repayment {c.number}: {OUTCOME[c.outcome] ?? c.outcome}
+      {/* No repayments yet means no card at all; a history that is only updating still says so. */}
+      {cycles.length === 0 && record.indexer !== "unavailable" ? null : (
+        <Card className="px-5 py-4">
+          <h2 className="text-sm font-medium text-muted">History</h2>
+          {cycles.length === 0 ? (
+            <p className="mt-2 text-[13.5px] text-muted">
+              Your history is updating. Your score above is current.
+            </p>
+          ) : (
+            <ol className="mt-2 divide-y divide-line">
+              {cycles.map((c) => (
+                <li key={c.number} className="flex items-center justify-between gap-3 py-2.5">
+                  <div>
+                    <div className="text-[14.5px] font-semibold">
+                      Repayment {c.number}: {OUTCOME[c.outcome] ?? c.outcome}
+                    </div>
+                    <div className="text-[12.5px] text-muted">
+                      {date(c.openedAt)}
+                      {c.closedAt ? ` to ${date(c.closedAt)}` : ""} · up to{" "}
+                      {formatAusd(BigInt(c.peakDrawn))} USD
+                    </div>
                   </div>
-                  <div className="text-[12.5px] text-muted">
-                    {date(c.openedAt)}
-                    {c.closedAt ? ` to ${date(c.closedAt)}` : ""} · up to{" "}
-                    {formatAusd(BigInt(c.peakDrawn))} USD
+                  <div className="shrink-0 text-right text-[12.5px]">
+                    {c.scoreAfter !== null ? (
+                      <div className="whitespace-nowrap font-semibold">Score {c.scoreAfter}</div>
+                    ) : null}
+                    <a
+                      className="underline"
+                      href={explorerTx(c.closeTxHash ?? c.openTxHash)}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Receipt
+                    </a>
                   </div>
-                </div>
-                <div className="shrink-0 text-right text-[12.5px]">
-                  {c.scoreAfter !== null ? (
-                    <div className="whitespace-nowrap font-semibold">Score {c.scoreAfter}</div>
-                  ) : null}
-                  <a
-                    className="underline"
-                    href={explorerTx(c.closeTxHash ?? c.openTxHash)}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    Receipt
-                  </a>
-                </div>
-              </li>
-            ))}
-          </ol>
-        )}
-      </Card>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
