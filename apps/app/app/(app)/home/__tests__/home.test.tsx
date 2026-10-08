@@ -191,3 +191,26 @@ test("once there is a deposit, the top-up prompt is gone", () => {
   render(<HomePage />);
   expect(screen.queryByText("Top up to get your limit")).toBeNull();
 });
+
+test("the card carries the holder's name, expiry, and an account number to copy", () => {
+  me.mockReturnValue(
+    meState({
+      cardHolder: "SITI AMINAH",
+      accountNumber: "482019375516",
+      cardExpiry: "10/31",
+      cardCvv: "417",
+    }),
+  );
+  render(<HomePage />);
+  expect(screen.getAllByText("SITI AMINAH").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("10/31").length).toBeGreaterThan(0);
+  expect(screen.getByText("4820 1937 5516")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Copy account number" })).toBeInTheDocument();
+  // The CVV stays masked until the eye is tapped.
+  expect(screen.queryByText("417")).toBeNull();
+});
+
+test("before Didit approves there is no name, and no account row without a number", () => {
+  render(<HomePage />);
+  expect(screen.queryByText("Account number")).toBeNull();
+});
