@@ -51,6 +51,21 @@ export async function testChain() {
     if (i === 50) throw new Error("anvil did not start");
     await Bun.sleep(100);
   }
+  // Multicall3 at its canonical address, as on Monad: the backend batches its reads through it
+  const planted = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "anvil_setCode",
+      params: [
+        "0xcA11bde05977b3631167028862bE2a173976CA11",
+        (await Bun.file(`${import.meta.dir}/fixtures/multicall3.hex`).text()).trim(),
+      ],
+    }),
+  }).then((r) => r.json());
+  if (planted.error) throw new Error(`anvil_setCode: ${JSON.stringify(planted.error)}`);
   const deploy = Bun.spawnSync(
     ["forge", "script", "script/DeployMatoCreditLine.s.sol", "--rpc-url", rpcUrl, "--broadcast"],
     { cwd: CONTRACTS, env: { ...process.env, WALLET_PK: DEPLOYER_PK, AUSD_ADDRESS: "" } },
