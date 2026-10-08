@@ -5,6 +5,7 @@ import { CardArtwork } from "../../../components/card/CardArtwork";
 import { KycSheet } from "../../../components/card/KycSheet";
 import { AvailableHero } from "../../../components/home/AvailableHero";
 import { BalanceSection } from "../../../components/home/BalanceSection";
+import { FirstTopUp } from "../../../components/home/FirstTopUp";
 import { LimitBreakdown } from "../../../components/home/LimitBreakdown";
 import { OwedCard } from "../../../components/home/OwedCard";
 import { VerifyCard } from "../../../components/home/VerifyCard";
@@ -160,6 +161,10 @@ export default function HomePage() {
             onVerify={verify}
           />
         )}
+
+        {verified && credit.collateral?.value === 0n && !held ? (
+          <FirstTopUp className="mb-[22px]" onTopUp={() => nav.forward("/topup")} />
+        ) : null}
 
         {owes && credit.drawn !== undefined ? (
           <OwedCard

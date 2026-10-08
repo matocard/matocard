@@ -84,9 +84,9 @@ test("the headline is what the card can spend, in rupiah, with the AUSD row unde
   expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
 });
 
-test("the limit is explained: collateral, score, ratio, limit", () => {
+test("the limit is explained: deposit, score, deposit needed, limit", () => {
   render(<HomePage />);
-  const card = screen.getByText("Why your limit is this").closest("div") as HTMLElement;
+  const card = screen.getByText("How your limit is worked out").closest("div") as HTMLElement;
   expect(within(card).getByText("150.00 USD")).toBeInTheDocument();
   expect(within(card).getByText("0 of 100")).toBeInTheDocument();
   expect(within(card).getByText("150%")).toBeInTheDocument();
@@ -172,4 +172,22 @@ test("a signed-in account that has not said where it lives is asked, and the ans
   await userEvent.click(screen.getByRole("button", { name: "Malaysia" }));
   expect(setCountry).toHaveBeenCalledWith(expect.objectContaining({ wallet: "0xA11CE" }), "MY");
   expect(refresh).toHaveBeenCalled();
+});
+
+test("with no deposit yet, Home says to top up and Send stays off", async () => {
+  credit.mockReturnValue(
+    verifiedCredit({
+      available: 0n,
+      limit: 0n,
+      collateral: { value: 0n, shares: 0n, pendingShares: 0n, pendingUntil: 0n },
+    }),
+  );
+  render(<HomePage />);
+  expect(screen.getByText("Top up to get your limit")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+});
+
+test("once there is a deposit, the top-up prompt is gone", () => {
+  render(<HomePage />);
+  expect(screen.queryByText("Top up to get your limit")).toBeNull();
 });
