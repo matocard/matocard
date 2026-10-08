@@ -89,6 +89,29 @@
                 "pattern": "^9988[0-9]{12}$",
                 "description": "16 digits, the same for a wallet every time; group them in fours",
                 "examples": ["9988301477215569"]
+              },
+              "holder": {
+                "type": ["string", "null"],
+                "description": "The full name on the document Didit approved (read off the document, not typed). `null` until then, and for the demo accounts verified without Didit",
+                "examples": ["SITI AMINAH"]
+              },
+              "accountNumber": {
+                "type": "string",
+                "pattern": "^[0-9]{12}$",
+                "description": "12 digits, the same for a wallet every time. Display only: money still arrives at the wallet address, `/sends` does not take it",
+                "examples": ["482019375516"]
+              },
+              "expiry": {
+                "type": "string",
+                "pattern": "^(0[1-9]|1[0-2])/[0-9]{2}$",
+                "description": "`MM/YY`, five years from when the account opened",
+                "examples": ["10/31"]
+              },
+              "cvv": {
+                "type": "string",
+                "pattern": "^[0-9]{3}$",
+                "description": "3 digits, the same for a wallet every time. Hide it behind a tap to reveal",
+                "examples": ["417"]
               }
             }
           },

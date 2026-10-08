@@ -107,6 +107,7 @@ const approvedDecision = (documentNumber: string) => ({
       issuing_state: "IDN",
       document_type: "Passport",
       document_number: documentNumber,
+      full_name: "Siti Aminah ",
     },
   ],
 });
@@ -245,7 +246,13 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     });
     const me = (await call(siti, "GET", "/me")).body;
     expect(me.user.country).toBe("MY");
-    expect(me.card.number).toMatch(/^9988\d{12}$/);
+    expect(me.card).toMatchObject({
+      number: expect.stringMatching(/^9988\d{12}$/),
+      holder: null, // until Didit approves a document
+      accountNumber: expect.stringMatching(/^\d{12}$/),
+      expiry: expect.stringMatching(/^(0[1-9]|1[0-2])\/\d{2}$/),
+      cvv: expect.stringMatching(/^\d{3}$/),
+    });
   });
 
   test("an account verified onchain without Didit may top up (#68)", async () => {
@@ -264,6 +271,7 @@ describe.skipIf(!hasDatabase || !hasAnvil)("the demo, end to end", () => {
     const me = await call(siti, "GET", "/me");
     expect(me.body.user.kyc).toBe("approved");
     expect(me.body.verified).toBe(true);
+    expect(me.body.card).toMatchObject({ holder: "Siti Aminah" });
     await work();
     const drips = await db.sql`SELECT count(*)::int AS n FROM relayer_txs WHERE kind = 'drip'`;
     expect(drips[0].n).toBe(1);

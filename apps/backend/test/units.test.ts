@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { cardNumber, createRoutes } from "../src/api";
+import { card, cardNumber, createRoutes } from "../src/api";
 import { identityHash } from "../src/kyc";
 import { methodOf } from "../src/payments";
 import { reconcile } from "../src/reconcile";
@@ -109,6 +109,19 @@ test("the card number: 16 digits, private prefix, Luhn-valid, one per wallet", (
   expect(cardNumber(a.toLowerCase() as never, "s")).toBe(n);
   expect(cardNumber(b, "s")).not.toBe(n);
   expect(cardNumber(a, "other")).not.toBe(n);
+});
+
+test("the card face: derived per wallet, expiry five years from the account's start", () => {
+  const user = (wallet: string) =>
+    ({ wallet, holder_name: "Siti", created_at: new Date("2026-10-08T00:00:00Z") }) as never;
+  const c = card(user("0xC0519BE562f0De7E32e9A48e50AdecBAde605aAD"), "s");
+  expect(c).toMatchObject({ holder: "Siti", expiry: "10/31" });
+  expect(c.accountNumber).toMatch(/^\d{12}$/);
+  expect(c.cvv).toMatch(/^\d{3}$/);
+  expect(card(user("0xC0519BE562f0De7E32e9A48e50AdecBAde605aAD"), "s")).toEqual(c);
+  expect(card(user("0xc6E0De07b60a412c1bb990B77612754B9254DBDa"), "s").accountNumber).not.toBe(
+    c.accountNumber,
+  );
 });
 
 test("the Dockerfile copies every workspace's package.json, or the frozen install fails", async () => {
