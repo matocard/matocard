@@ -1,14 +1,47 @@
 "use client";
+import Image from "next/image";
 import type { VerifyRecord } from "../../lib/matocard/backend";
 import { explorerTx } from "../../lib/matocard/monad";
 import { formatAusd, formatBps } from "../../lib/matocard/money";
 import { Card, Skeleton } from "../ui";
 
+/** The ratio's range (PLAN §6.3): 150% with no record, 80% at a perfect score. */
+const MAX_RATIO = 15_000n;
+const MIN_RATIO = 8_000n;
+
+/** Where the ratio sits between 150% and 80%, as a filled track with a marker. */
+function RatioTrack({ ratioBps }: { ratioBps: bigint }) {
+  const span = Number(MAX_RATIO - MIN_RATIO);
+  const done = Math.min(Math.max(Number(MAX_RATIO - ratioBps) / span, 0), 1);
+  return (
+    <div
+      className="mt-3"
+      role="img"
+      aria-label={`Deposit needed ${formatBps(ratioBps)}, of 150% down to 80%`}
+    >
+      <div className="relative h-1.5 rounded-full bg-line">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-ink transition-[width] duration-700 ease-out"
+          style={{ width: `${done * 100}%` }}
+        />
+        <div
+          className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card bg-ink shadow-sm transition-[left] duration-700 ease-out"
+          style={{ left: `${done * 100}%` }}
+        />
+      </div>
+      <div className="mt-1.5 flex justify-between text-[11.5px] text-faint">
+        <span>150%</span>
+        <span>80%</span>
+      </div>
+    </div>
+  );
+}
+
 const OUTCOME: Record<string, string> = {
-  Qualified: "Repaid on time",
-  NotQualified: "Repaid, did not count",
+  Qualified: "Paid on time",
+  NotQualified: "Paid, too soon to count",
   Defaulted: "Missed",
-  Open: "Open",
+  Open: "In progress",
 };
 
 const date = (seconds: string | null | undefined) =>
@@ -46,43 +79,58 @@ export function RecordView({
     );
   }
   const cycles = record.history?.cycles ?? [];
+  const ratio = BigInt(record.ratioBps);
   return (
     <div className="space-y-3">
-      <Card className="px-5 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-[13px] font-medium text-muted">Credit score</div>
-            <div className="mt-1 text-[40px] font-semibold leading-none [font-variant-numeric:tabular-nums]">
-              {record.score}
-              <span className="text-[18px] font-medium text-muted"> / 100</span>
-            </div>
-          </div>
+      <Card className="relative overflow-hidden px-5 py-4">
+        {/* Decoration, so screen readers skip it. The mask fades the photo's grey into the card. */}
+        <Image
+          src="/art/ring.jpg"
+          alt=""
+          aria-hidden="true"
+          width={150}
+          height={150}
+          className="pointer-events-none absolute -right-3 -top-3 select-none opacity-80 [mask-image:radial-gradient(closest-side,#000_50%,transparent)]"
+        />
+        <div className="relative">
           <span
-            className={`rounded-full px-3 py-1 text-[12.5px] font-semibold ${
+            className={`inline-block rounded-full px-3 py-1 text-[12px] font-semibold ${
               record.defaulted ? "bg-neg/10 text-neg" : "bg-pill text-pill-ink"
             }`}
           >
             {record.defaulted
-              ? "Has a default"
+              ? "Missed a payment"
               : record.verified
-                ? "Verified person"
-                : "Not verified"}
+                ? "ID verified"
+                : "ID not verified"}
           </span>
+          <div className="mt-3 text-[13px] font-medium text-muted">Credit score</div>
+          <div className="mt-1 text-[44px] font-semibold leading-none tracking-[-0.02em] [font-variant-numeric:tabular-nums]">
+            {record.score}
+            <span className="text-[18px] font-medium tracking-normal text-muted"> / 100</span>
+          </div>
+          <div className="mt-2 text-[13px] text-muted">
+            Paid on time:{" "}
+            <span className="font-semibold text-ink">
+              {record.cycles.repaid} of {record.cycles.counted}
+            </span>
+          </div>
         </div>
-        <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div>
-            <dt className="text-[12px] text-muted">Repaid on time</dt>
-            <dd className="text-[17px] font-semibold">{record.cycles.repaid}</dd>
+
+        <div className="relative mt-5 border-t border-line pt-4">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[14px]">Deposit needed</span>
+            <span className="text-[14px] font-semibold [font-variant-numeric:tabular-nums]">
+              {formatBps(ratio)}
+            </span>
           </div>
-          <div>
-            <dt className="text-[12px] text-muted">Cycles</dt>
-            <dd className="text-[17px] font-semibold">{record.cycles.counted}</dd>
-          </div>
-          <div>
-            <dt className="text-[12px] text-muted">Collateral ratio</dt>
-            <dd className="text-[17px] font-semibold">{formatBps(BigInt(record.ratioBps))}</dd>
-          </div>
-        </dl>
+          <RatioTrack ratioBps={ratio} />
+          <p className="mt-2 text-[12.5px] text-muted">
+            {ratio <= MIN_RATIO
+              ? "The lowest it goes. Keep paying on time to stay here."
+              : "Drops each time you pay on time, down to 80%."}
+          </p>
+        </div>
       </Card>
 
       <Card className="px-5 py-4">
@@ -90,28 +138,28 @@ export function RecordView({
         {record.history === null ? (
           <p className="mt-2 text-[13.5px] text-muted">
             {record.indexer === "unavailable"
-              ? "The history is catching up. The score above is read from the contract now."
-              : "No cycles yet."}
+              ? "Your history is updating. Your score above is current."
+              : "Your first repayment will show here."}
           </p>
         ) : cycles.length === 0 ? (
-          <p className="mt-2 text-[13.5px] text-muted">No cycles yet.</p>
+          <p className="mt-2 text-[13.5px] text-muted">Your first repayment will show here.</p>
         ) : (
           <ol className="mt-2 divide-y divide-line">
             {cycles.map((c) => (
               <li key={c.number} className="flex items-center justify-between gap-3 py-2.5">
                 <div>
                   <div className="text-[14.5px] font-semibold">
-                    Cycle {c.number}: {OUTCOME[c.outcome] ?? c.outcome}
+                    Repayment {c.number}: {OUTCOME[c.outcome] ?? c.outcome}
                   </div>
                   <div className="text-[12.5px] text-muted">
                     {date(c.openedAt)}
-                    {c.closedAt ? ` to ${date(c.closedAt)}` : ""} · peak{" "}
+                    {c.closedAt ? ` to ${date(c.closedAt)}` : ""} · up to{" "}
                     {formatAusd(BigInt(c.peakDrawn))} USD
                   </div>
                 </div>
-                <div className="text-right text-[12.5px]">
+                <div className="shrink-0 text-right text-[12.5px]">
                   {c.scoreAfter !== null ? (
-                    <div className="font-semibold">Score {c.scoreAfter}</div>
+                    <div className="whitespace-nowrap font-semibold">Score {c.scoreAfter}</div>
                   ) : null}
                   <a
                     className="underline"
@@ -119,7 +167,7 @@ export function RecordView({
                     target="_blank"
                     rel="noopener"
                   >
-                    Proof
+                    Receipt
                   </a>
                 </div>
               </li>
