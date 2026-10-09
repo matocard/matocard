@@ -578,6 +578,87 @@ function ChatDemoSection() {
  * uses, which is what puts the copy in the corner. Below `md` it all returns to
  * normal flow.
  */
+/**
+ * Top up, before spending: money drops into the wallet and stays there (Axel, 10 Oct). The video
+ * has its background removed, so it needs alpha, and no one format carries alpha everywhere:
+ * Chrome and Firefox read VP9 WebM with alpha, while Safari (and every browser on iOS, all WebKit)
+ * only shows alpha in HEVC, and Chrome on a Mac would take HEVC and drop it. So the source is
+ * picked after mount by engine rather than by `<source>` order. A reduced-motion visitor gets the
+ * still poster.
+ */
+function TopUpSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    const webkit = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    setSrc(webkit ? "/topup-card.mov" : "/topup-card.webm");
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+    video.muted = true;
+    void video.play().catch(() => {});
+  }, [src]);
+
+  return (
+    <section className={`${GUTTER} relative overflow-hidden bg-[#F4F0ED] py-16 sm:py-24`}>
+      <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1fr_minmax(0,420px)] md:gap-16">
+        <div className="max-w-xl">
+          <Reveal>
+            <h2
+              className="font-light text-[#18161B]"
+              style={{
+                fontSize: "clamp(2.1rem, 6vw, 4.25rem)",
+                lineHeight: 0.98,
+                letterSpacing: "-0.03em",
+              }}
+            >
+              Top up.
+              <br />
+              It stays yours.
+            </h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <p className="mt-[30px] text-[15px] leading-relaxed text-[#18161B]/60 sm:text-base">
+              Pay in by card or bank. The money waits in your account, earning, and sets how much
+              your card can spend.
+            </p>
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.12} className="mx-auto w-full max-w-[420px]">
+          {src ? (
+            <video
+              ref={videoRef}
+              key={src}
+              src={src}
+              poster="/topup-card-poster.png"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="aspect-[720/1152] w-full"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            // biome-ignore lint/performance/noImgElement: a still frame standing in for the video, same size, before the engine is known
+            <img
+              src="/topup-card-poster.png"
+              alt=""
+              width={360}
+              height={576}
+              className="aspect-[720/1152] w-full"
+            />
+          )}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 function SpendSection() {
   return (
     <section className="relative overflow-hidden py-16 sm:py-24 md:min-h-screen md:pb-0 md:pt-[120px]">
@@ -737,6 +818,7 @@ function Content() {
   return (
     <main className="relative z-[4] overflow-hidden rounded-t-[40px] bg-[#F4F0ED] md:rounded-t-[72px]">
       <ChatDemoSection />
+      <TopUpSection />
       <SpendSection />
       <ReachSection />
       <FeaturesSection />
