@@ -215,7 +215,7 @@ export default function HomePage() {
           />
         ) : null}
 
-        <h2 className="mx-1 mb-2 text-sm font-medium text-muted">Activity</h2>
+        <h2 className="mx-1 mb-2 text-sm font-medium text-muted">History</h2>
         <Card className="px-5 pb-2 pt-1">
           <ActivityList
             items={preview}
