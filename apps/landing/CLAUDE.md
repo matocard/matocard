@@ -48,6 +48,7 @@ Order once unlocked:
 
 ```
 ChatDemoSection    typed transcript, buying a coffee
+TopUpSection       copy left, a wallet filling with cards and coins, background removed
 SpendSection       copy top-left, product shot bleeding off the right
 ReachSection       full-bleed looping ring
 FeaturesSection    four columns, hairline rule, icon card each
@@ -92,6 +93,14 @@ box each plays in. The intro was 29 MB at 46 Mbps for five seconds and stalled t
 hero; keep any new video near 0.5 MB per second of 1080p. Hero and card imagery
 still come from a Higgs CDN with no local fallback: offline, or the day those URLs
 move, those images render empty.
+
+**The top-up video carries alpha, so it has two encodings picked by engine, not by `<source>`.**
+`topup-card.webm` (VP9 with alpha) for Chrome and Firefox, `topup-card.mov` (HEVC with alpha,
+`hevc_videotoolbox -alpha_quality`) for Safari and everything on iOS. Chrome on a Mac would accept
+the HEVC and drop its alpha, so `<source>` order cannot do it. The source was
+`card-animation.mp4` (Axel, 10 Oct), matted frame by frame with rembg `isnet-general-use` joined
+with a colour key on the blue backdrop, since the model alone dropped the falling coins. The video
+shows other banks' and networks' marks (monobank, Mastercard, VISA); Axel chose to keep them.
 
 **Video needs `muted` set through a ref**, not only as a JSX prop. React does not
 reliably reflect it as a DOM attribute, and an unmuted video is blocked from
