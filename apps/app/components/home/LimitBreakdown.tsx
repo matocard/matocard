@@ -35,7 +35,7 @@ export function LimitBreakdown({
     {
       label: "Your deposit",
       value: collateral === undefined ? DASH : `${formatAusd(collateral)} USD`,
-      note: approxLocal(collateral, rate, currency),
+      note: approxLocal(collateral, rate, currency, "nearest"),
     },
     { label: "Credit score", value: score === undefined ? DASH : `${score} of 100` },
     {

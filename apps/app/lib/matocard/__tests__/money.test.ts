@@ -33,6 +33,16 @@ test("ringgit is in sen and reads with two decimals", async () => {
   expect(approxLocal(100_000_000n, "16000", "IDR")).toBe("≈ Rp 1,600,000");
 });
 
+test("a deposit reads back as what was paid in, a limit never more than is there", async () => {
+  const { ausdToLocal } = await import("../money");
+  // 5.59 USD at 17,889 is Rp 99,999.51.
+  expect(ausdToLocal(5_590_000n, "IDR", "17889")).toBe(99_999n);
+  expect(ausdToLocal(5_590_000n, "IDR", "17889", "nearest")).toBe(100_000n);
+  // Exactly half rounds up; just under rounds down.
+  expect(ausdToLocal(500_000n, "IDR", "1", "nearest")).toBe(1n);
+  expect(ausdToLocal(499_999n, "IDR", "1", "nearest")).toBe(0n);
+});
+
 test("where you live picks the currency, the Xendit account and the minimum", async () => {
   const { localFor } = await import("../local");
   expect(localFor("MY")).toMatchObject({

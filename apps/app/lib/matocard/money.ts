@@ -39,18 +39,31 @@ export type LocalCurrency = "IDR" | "MYR";
 export const formatLocal = (amount: bigint, currency: LocalCurrency) =>
   currency === "MYR" ? formatMyr(amount) : formatIdr(amount);
 
-/** AUSD at a `USD/<currency>` rate, in that currency's smallest unit, rounded down. */
-export const ausdToLocal = (amount: bigint, currency: LocalCurrency, rate: string) =>
-  baseToQuote(amount, "AUSD", currency, rate, "down");
+/**
+ * AUSD at a `USD/<currency>` rate, in that currency's smallest unit. Rounded down by default, so
+ * what can be spent never shows more than is there. "nearest" is for money someone put in: a
+ * Rp 100,000 top-up held as AUSD reads back as Rp 100,000, not Rp 99,999.
+ */
+export const ausdToLocal = (
+  amount: bigint,
+  currency: LocalCurrency,
+  rate: string,
+  rounding: "down" | "nearest" = "down",
+) =>
+  rounding === "nearest"
+    ? // Twice the amount, rounded down, then halved rounding up: the nearest unit, exactly.
+      (baseToQuote(amount * 2n, "AUSD", currency, rate, "down") + 1n) / 2n
+    : baseToQuote(amount, "AUSD", currency, rate, "down");
 
 /** "≈ RM 400.00" / "≈ Rp 1,625,050", or null while there is no rate yet (never a guess). */
 export function approxLocal(
   amount: bigint | undefined,
   rate: string | undefined,
   currency: LocalCurrency = "IDR",
+  rounding: "down" | "nearest" = "down",
 ): string | null {
   if (amount === undefined || !rate) return null;
-  return `≈ ${formatLocal(ausdToLocal(amount, currency, rate), currency)}`;
+  return `≈ ${formatLocal(ausdToLocal(amount, currency, rate, rounding), currency)}`;
 }
 
 /** Rupiah only; `approxLocal` with "IDR". */
