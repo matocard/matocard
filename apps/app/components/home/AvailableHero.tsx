@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { EASE_OUT } from "../../lib/ease";
 import { approxLocal, formatAusd, type LocalCurrency } from "../../lib/matocard/money";
 import { STORAGE } from "../../lib/storage";
+import { InfoTip } from "../ui";
 
 type Unit = "local" | "ausd";
 
@@ -63,7 +64,15 @@ export function AvailableHero({
 
   return (
     <div className="py-[26px]">
-      <div className="text-[15px] font-medium text-muted">{issued ? "Available" : "Your card"}</div>
+      <div className="flex items-center gap-1.5 text-[15px] font-medium text-muted">
+        {issued ? "Available" : "Your card"}
+        {issued ? (
+          <InfoTip label="Available">
+            What your card can still spend. It comes from your deposit, and you pay it back when you
+            settle.
+          </InfoTip>
+        ) : null}
+      </div>
       {!issued ? (
         <div className="mt-2 text-[clamp(26px,8vw,34px)] font-semibold leading-tight tracking-[-.02em]">
           Not issued yet

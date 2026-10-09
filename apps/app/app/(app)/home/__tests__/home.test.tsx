@@ -85,6 +85,15 @@ test("the headline is what the card can spend, in rupiah alone", () => {
   expect(screen.queryByText("100.00 AUSD")).toBeNull();
 });
 
+test("the ⓘ beside Available and Balance explains each on tap", async () => {
+  credit.mockReturnValue(verifiedCredit({ ausdBalance: 50_000_000n }));
+  render(<HomePage />);
+  await userEvent.click(screen.getByRole("button", { name: "About Available" }));
+  expect(await screen.findByRole("tooltip")).toHaveTextContent(/you pay it back when you settle/);
+  await userEvent.click(screen.getByRole("button", { name: "About Balance" }));
+  expect(await screen.findByText(/nothing to pay back/)).toBeInTheDocument();
+});
+
 test("the swap button puts AUSD in the headline and back, and remembers it", async () => {
   render(<HomePage />);
   await userEvent.click(screen.getByRole("button", { name: "Show in AUSD" }));
@@ -155,10 +164,11 @@ test("money received shows as a balance, and cashing out is its own row", () => 
   credit.mockReturnValue(verifiedCredit({ ausdBalance: 50_000_000n }));
   render(<HomePage />);
   const balance = screen
-    .getByRole("heading", { name: "Balance" })
+    .getByRole("heading", { name: /^Balance/ })
     .closest("section") as HTMLElement;
   expect(within(balance).getByText("50.00 USD")).toBeInTheDocument();
-  expect(within(balance).getByText("AUSD on Monad")).toBeInTheDocument();
+  expect(within(balance).getByText("AUSD")).toBeInTheDocument();
+  expect(within(balance).queryByText(/Monad/)).toBeNull();
   expect(within(balance).getByText("Rp 800,000")).toBeInTheDocument();
   // Not a link inside the balance: a section of its own.
   expect(within(balance).queryByRole("link")).toBeNull();
