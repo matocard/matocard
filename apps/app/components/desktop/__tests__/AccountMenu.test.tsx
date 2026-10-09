@@ -61,12 +61,12 @@ test("avatar toggles the dropdown, and it offers no setting nothing acts on", as
   expect(screen.queryByText(/reinvest|yield|APY/i)).toBeNull();
 });
 
-test("Activity row opens the activity panel; copy pill writes the address and shows 'Copied'", async () => {
+test("History row opens the activity panel; copy pill writes the address and shows 'Copied'", async () => {
   const user = open();
   await user.click(screen.getByRole("button", { name: "Account" }));
-  await user.click(screen.getByRole("menuitem", { name: /activity/i }));
+  await user.click(screen.getByRole("menuitem", { name: /history/i }));
   expect(openPanel).toHaveBeenCalledWith("activity");
-  // reopen (Activity click closed it) and copy
+  // reopen (History click closed it) and copy
   await user.click(screen.getByRole("button", { name: "Account" }));
   await user.click(screen.getByRole("button", { name: "Copy address" }));
   expect(navigator.clipboard.writeText).toHaveBeenCalledWith("GABCDEF12345678K3X9");
