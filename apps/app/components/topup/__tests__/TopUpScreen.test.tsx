@@ -51,7 +51,7 @@ test("below Rp 10,000 there is nothing to pay", async () => {
 
 test("before paying, it says how much of the top-up can be spent", async () => {
   render(<TopUpScreen />);
-  expect(screen.getByText("The money you add sets how much you can spend.")).toBeInTheDocument();
+  expect(screen.queryByText(/of it$/)).toBeNull();
   await type("2400000");
   // Rp 2,400,000 is 150 USD of deposit; at 150% that is 100 USD to spend.
   expect(screen.getByText("You'll be able to spend Rp 1,600,000 of it")).toBeInTheDocument();
@@ -78,10 +78,11 @@ test("paying locks a fresh USD/IDR quote, starts the top-up and opens the checko
   expect(window.open).toHaveBeenCalledWith("https://checkout.example/p-1", "_blank", "noopener");
 });
 
-test("a card top-up says it waits out a hold", async () => {
+test("the methods carry no explanation lines under them (Axel, 10 Oct)", async () => {
   render(<TopUpScreen />);
   await userEvent.click(screen.getByRole("button", { name: "Card" }));
-  expect(screen.getByText(/counts after a short hold/)).toBeInTheDocument();
+  expect(screen.queryByText(/short hold/)).toBeNull();
+  expect(screen.queryByText(/as soon as it is paid/)).toBeNull();
 });
 
 test("the backend's refusal is shown as it said it", async () => {

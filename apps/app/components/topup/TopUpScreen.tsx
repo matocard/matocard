@@ -138,9 +138,10 @@ export function TopUpScreen() {
             : `The smallest top-up is ${formatLocal(local.minTopUp, local.currency)}`
         }
       />
-      <p className="mb-3 text-center text-[13px] text-muted">
+      {/* Reserves its line while empty, so the methods below do not jump when typing starts. */}
+      <p className="mb-3 min-h-5 text-center text-[13px] text-muted">
         {spendable === undefined
-          ? "The money you add sets how much you can spend."
+          ? null
           : `You'll be able to spend ${approxLocal(spendable, rate, local.currency)} of it`}
       </p>
       <Segmented
@@ -150,13 +151,8 @@ export function TopUpScreen() {
         label="Pay with"
         variant="period"
         renderLabel={(m) => local.methods[m]}
-        className="mb-2"
+        className="mb-3"
       />
-      <p className="mb-3 text-center text-[12px] text-muted">
-        {method === "card"
-          ? "A card top-up counts after a short hold, so a chargeback cannot spend it."
-          : "Counts toward your limit as soon as it is paid."}
-      </p>
       {error ? <p className="mb-2 text-center text-[13px] font-medium text-neg">{error}</p> : null}
       <div className="mt-auto">
         <Button onClick={pay} disabled={busy || fiat === null || fiat < local.minTopUp}>
