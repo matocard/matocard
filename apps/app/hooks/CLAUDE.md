@@ -7,7 +7,7 @@ React hooks that fetch or derive state for screens. Each returns plain values pl
 | --- | --- | --- |
 | `useCredit` | `MatoCreditLine` on Monad (one multicall), AUSD and MON balances | Writes `draw`, `repay` (AUSD permit), `repayFromCollateral`, `withdrawCollateral`: switch to Monad, published gas limit, resolve only after the change reads back. Checked live: Siti reads score 55, limit 134.529147 |
 | `useSession` | the signed backend session in `localStorage` | `signIn()` asks for one signature, kept six days |
-| `useMe` | `GET /me` | KYC, country, card number; polls fast while KYC is pending |
+| `useMe` | `GET /me` | KYC, country, card number; checks every 30 s while KYC is pending, which can be hours of manual review (#89) |
 | `useBackend` | | runs one signed call: signs in if needed, keeps the backend's own error |
 | `useFx` | `POST /quote` | a display rate, shared and refreshed each minute; payments ask for their own |
 | `useMyActivity` | `GET /me/activity` | indexed events plus payments in flight, as `ActivityItem` kinds |

@@ -49,20 +49,16 @@ test("the record shows score, ratio and cycles, each with its proof", () => {
   render(<RecordView record={SITI} loading={false} error={undefined} />);
   expect(screen.getByText("55")).toBeInTheDocument();
   expect(screen.getByText("111.5%")).toBeInTheDocument();
-  expect(screen.getByText("Verified person")).toBeInTheDocument();
-  expect(screen.getByText("Cycle 1: Repaid on time")).toBeInTheDocument();
+  expect(screen.getByText("ID verified")).toBeInTheDocument();
+  expect(screen.getByText("Repayment 1: Paid on time")).toBeInTheDocument();
   expect(screen.getByText("Score 36")).toBeInTheDocument();
-  const proofs = screen.getAllByRole("link", { name: "Proof" });
+  const proofs = screen.getAllByRole("link", { name: "Receipt" });
   expect(proofs[0]).toHaveAttribute("href", "https://testnet.monadvision.com/tx/0x503c");
 });
 
 test("nothing personal: no name or document, only the account", () => {
   const { container } = render(<RecordView record={SITI} loading={false} error={undefined} />);
   expect(container.textContent).not.toMatch(/passport|document|name/i);
-  expect(screen.getByRole("link", { name: "Check it yourself" })).toHaveAttribute(
-    "href",
-    "https://testnet.monadvision.com/address/0xc6E0De07b60a412c1bb990B77612754B9254DBDa",
-  );
 });
 
 test("a down indexer still shows the score, and says the history is catching up", () => {
@@ -74,10 +70,21 @@ test("a down indexer still shows the score, and says the history is catching up"
     />,
   );
   expect(screen.getByText("55")).toBeInTheDocument();
-  expect(screen.getByText(/history is catching up/)).toBeInTheDocument();
+  expect(screen.getByText(/history is updating/)).toBeInTheDocument();
 });
 
 test("a default is said plainly", () => {
   render(<RecordView record={{ ...SITI, defaulted: true }} loading={false} error={undefined} />);
-  expect(screen.getByText("Has a default")).toBeInTheDocument();
+  expect(screen.getByText("Missed a payment")).toBeInTheDocument();
+});
+
+test("no repayments yet: no History card at all", () => {
+  render(
+    <RecordView
+      record={{ ...SITI, cycles: { counted: "0", repaid: "0" }, history: null, indexer: "ok" }}
+      loading={false}
+      error={undefined}
+    />,
+  );
+  expect(screen.queryByText("History")).toBeNull();
 });

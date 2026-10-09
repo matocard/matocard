@@ -5,17 +5,20 @@ import { CardArtwork } from "../../../components/card/CardArtwork";
 import { KycSheet } from "../../../components/card/KycSheet";
 import { AvailableHero } from "../../../components/home/AvailableHero";
 import { BalanceSection } from "../../../components/home/BalanceSection";
+import { FirstTopUp } from "../../../components/home/FirstTopUp";
 import { LimitBreakdown } from "../../../components/home/LimitBreakdown";
 import { OwedCard } from "../../../components/home/OwedCard";
 import { VerifyCard } from "../../../components/home/VerifyCard";
 import { CardFolder } from "../../../components/motion/card-folder";
-import { ActionPill, ActionRow, Card, Toast } from "../../../components/ui";
+import { ActionPill, ActionRow, Card, CopyButton, Toast } from "../../../components/ui";
 import { useCredit } from "../../../hooks/useCredit";
 import { useFx } from "../../../hooks/useFx";
 import { useMe } from "../../../hooks/useMe";
 import { useMyActivity } from "../../../hooks/useMyActivity";
 import { useNav } from "../../../hooks/useNav";
 import { setCountry, startKyc } from "../../../lib/matocard/backend";
+import { groupAccountNumber } from "../../../lib/matocard/format";
+import { compactHolder } from "../../../lib/matocard/holder";
 import { localFor } from "../../../lib/matocard/local";
 
 /** A unix-seconds timestamp as "3 Nov". Formatted after mount only, where the screen renders. */
@@ -128,25 +131,51 @@ export default function HomePage() {
         ) : null}
 
         {verified ? (
-          <div className="mb-[26px] flex justify-center">
-            <CardFolder
-              title=""
-              ariaLabel="Your card"
-              cardNumber={me.cardNumber ?? ""}
-              expiry="••/••"
-              cvv="•••"
-              detailsVisible={cardShown}
-              onDetailsVisibleChange={setCardShown}
-              className="w-full max-w-[340px]"
-              card={
-                <CardArtwork
-                  holder=""
-                  number={me.cardNumber}
-                  expiry="••/••"
-                  detailsVisible={cardShown}
-                />
-              }
-            />
+          <div className="mb-[26px]">
+            <div className="flex justify-center">
+              <CardFolder
+                title={compactHolder(me.cardHolder ?? "")}
+                ariaLabel={me.cardHolder ? `Your card, ${me.cardHolder}` : "Your card"}
+                cardNumber={me.cardNumber ?? ""}
+                expiry={me.cardExpiry ?? "••/••"}
+                // The folder masks the CVV itself until the eye is tapped (#90 asks for that).
+                cvv={me.cardCvv ?? "•••"}
+                detailsVisible={cardShown}
+                onDetailsVisibleChange={setCardShown}
+                className="w-full max-w-[340px]"
+                card={
+                  <CardArtwork
+                    holder={me.cardHolder ?? ""}
+                    number={me.cardNumber}
+                    expiry={me.cardExpiry ?? "••/••"}
+                    detailsVisible={cardShown}
+                  />
+                }
+              />
+            </div>
+            {me.accountNumber ? (
+              <Card className="mx-auto mt-3 flex max-w-[340px] items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] font-medium text-muted">Account number</div>
+                  {/* Grouped to be read; copied raw, because a form rejects the spaces. */}
+                  <div className="mt-0.5 truncate font-mono text-[14px] font-semibold tracking-[0.04em] [font-variant-numeric:tabular-nums]">
+                    {groupAccountNumber(me.accountNumber)}
+                  </div>
+                </div>
+                <CopyButton value={me.accountNumber} label="Copy account number" />
+              </Card>
+            ) : !me.session ? (
+              // Verified onchain but not signed in to the backend on this device: the name, expiry
+              // and account number come from /me, which needs the one-time signature.
+              <Card className="mx-auto mt-3 flex max-w-[340px] items-center gap-3 px-4 py-3">
+                <p className="min-w-0 flex-1 text-[13px] text-muted">
+                  Confirm it's you to see your name and card details.
+                </p>
+                <ActionPill onClick={signIn} disabled={me.signingIn}>
+                  {me.signingIn ? "Confirming" : "Confirm"}
+                </ActionPill>
+              </Card>
+            ) : null}
           </div>
         ) : credit.loading ? null : (
           <VerifyCard
@@ -160,6 +189,10 @@ export default function HomePage() {
             onVerify={verify}
           />
         )}
+
+        {verified && credit.collateral?.value === 0n && !held ? (
+          <FirstTopUp className="mb-[22px]" onTopUp={() => nav.forward("/topup")} />
+        ) : null}
 
         {owes && credit.drawn !== undefined ? (
           <OwedCard

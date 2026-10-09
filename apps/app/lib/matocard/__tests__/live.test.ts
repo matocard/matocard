@@ -84,6 +84,11 @@ describe.skipIf(!LIVE)("live: backend and chain", () => {
     expect(first.user.country).toBe("MY");
     expect(first.card.number).toMatch(/^\d{16}$/);
     expect((await getMe(session)).card.number).toBe(first.card.number);
+    // The rest of the card face (#90): no name before Didit approves.
+    expect(first.card.holder).toBeNull();
+    expect(first.card.accountNumber).toMatch(/^\d{12}$/);
+    expect(first.card.expiry).toMatch(/^(0[1-9]|1[0-2])\/\d{2}$/);
+    expect(first.card.cvv).toMatch(/^\d{3}$/);
   });
 
   test("KYC: a new account gets Didit's hosted flow, and its status turns pending", async () => {

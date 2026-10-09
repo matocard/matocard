@@ -10,6 +10,10 @@ import { Button, Spinner } from "../ui";
  * where you live (it picks the currency you pay in), then verify identity with Didit. One identity,
  * one account (D4), so a document already used elsewhere ends here as `duplicate`.
  *
+ * `pending` can last hours: Didit may send the session to manual review (#89). It is a state of its
+ * own, not a load, so it shows no spinner, and it never starts a new session by itself, because a
+ * new one replaces the stored session and an approval of the old one would then link to nobody.
+ *
  * It sits where the card will be, so the step reads as unlocking the card rather than as a form
  * above it. Wording is Axel's call.
  */
@@ -39,7 +43,11 @@ export function VerifyCard({
     : choosing
       ? ["Where do you live?", "You top up and settle in its money.", null]
       : kyc === "pending"
-        ? ["Checking your identity", "This usually takes a few seconds after you finish.", null]
+        ? [
+            "Verification in review",
+            "We'll unlock your card when it's approved. This can take a few hours.",
+            null,
+          ]
         : kyc === "duplicate"
           ? [
               "This identity already has a card",
@@ -91,9 +99,14 @@ export function VerifyCard({
             {busy ? <Spinner /> : action}
           </Button>
         ) : kyc === "pending" ? (
-          <div className="mt-3 flex items-center gap-2 text-[13px] text-white/80">
-            <Spinner /> Waiting for the result
-          </div>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onVerify}
+            className="mt-3 text-[12.5px] text-white/80 underline underline-offset-2 disabled:opacity-50"
+          >
+            Didn't finish? Start again
+          </button>
         ) : null}
       </div>
     </section>

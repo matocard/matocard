@@ -33,20 +33,23 @@ export function LimitBreakdown({
 }) {
   const rows: { label: string; value: string; note?: string | null }[] = [
     {
-      label: "Collateral",
+      label: "Your deposit",
       value: collateral === undefined ? DASH : `${formatAusd(collateral)} USD`,
       note: approxLocal(collateral, rate, currency),
     },
     { label: "Credit score", value: score === undefined ? DASH : `${score} of 100` },
     {
-      label: "Collateral ratio",
+      label: "Deposit needed",
       value: ratioBps === undefined ? DASH : formatBps(ratioBps),
-      note: "Falls as your score rises, down to 80%",
+      note:
+        ratioBps === undefined
+          ? null
+          : `${formatBps(ratioBps)} of what you can spend. Drops to 80% as you pay on time`,
     },
   ];
   return (
     <Card className={`px-5 py-4 ${className}`}>
-      <h2 className="text-sm font-medium text-muted">Why your limit is this</h2>
+      <h2 className="text-sm font-medium text-muted">How your limit is worked out</h2>
       <dl className="mt-3 divide-y divide-line">
         {rows.map((row) => (
           <div key={row.label} className="flex items-start justify-between gap-4 py-2.5">
@@ -62,7 +65,7 @@ export function LimitBreakdown({
           </div>
         ))}
         <div className="flex items-start justify-between gap-4 py-2.5">
-          <dt className="text-[14.5px] font-semibold">Limit</dt>
+          <dt className="text-[14.5px] font-semibold">Your limit</dt>
           <dd className="text-[14.5px] font-semibold [font-variant-numeric:tabular-nums]">
             {limit === undefined ? DASH : `${formatAusd(limit)} USD`}
           </dd>
@@ -70,7 +73,8 @@ export function LimitBreakdown({
       </dl>
       {yieldEarned !== undefined && yieldEarned > 0n ? (
         <p className="mt-1 text-[12.5px] text-muted">
-          Your collateral has earned {formatAusd(yieldEarned)} USD so far. Interest-free to borrow.
+          Your deposit has earned {formatAusd(yieldEarned)} USD so far. Spending from your limit is
+          interest-free.
         </p>
       ) : null}
       {heldUntil ? (

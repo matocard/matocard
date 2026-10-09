@@ -84,9 +84,9 @@ test("the headline is what the card can spend, in rupiah, with the AUSD row unde
   expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
 });
 
-test("the limit is explained: collateral, score, ratio, limit", () => {
+test("the limit is explained: deposit, score, deposit needed, limit", () => {
   render(<HomePage />);
-  const card = screen.getByText("Why your limit is this").closest("div") as HTMLElement;
+  const card = screen.getByText("How your limit is worked out").closest("div") as HTMLElement;
   expect(within(card).getByText("150.00 USD")).toBeInTheDocument();
   expect(within(card).getByText("0 of 100")).toBeInTheDocument();
   expect(within(card).getByText("150%")).toBeInTheDocument();
@@ -138,7 +138,7 @@ test("a verification in progress says so instead of asking again", () => {
   credit.mockReturnValue(verifiedCredit({ verified: false }));
   me.mockReturnValue(meState({ kyc: "pending" }));
   render(<HomePage />);
-  expect(screen.getByText("Checking your identity")).toBeInTheDocument();
+  expect(screen.getByText("Verification in review")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Verify identity" })).not.toBeInTheDocument();
 });
 
@@ -172,4 +172,53 @@ test("a signed-in account that has not said where it lives is asked, and the ans
   await userEvent.click(screen.getByRole("button", { name: "Malaysia" }));
   expect(setCountry).toHaveBeenCalledWith(expect.objectContaining({ wallet: "0xA11CE" }), "MY");
   expect(refresh).toHaveBeenCalled();
+});
+
+test("with no deposit yet, Home says to top up and Send stays off", async () => {
+  credit.mockReturnValue(
+    verifiedCredit({
+      available: 0n,
+      limit: 0n,
+      collateral: { value: 0n, shares: 0n, pendingShares: 0n, pendingUntil: 0n },
+    }),
+  );
+  render(<HomePage />);
+  expect(screen.getByText("Top up to get your limit")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+});
+
+test("once there is a deposit, the top-up prompt is gone", () => {
+  render(<HomePage />);
+  expect(screen.queryByText("Top up to get your limit")).toBeNull();
+});
+
+test("the card carries the holder's name, expiry, and an account number to copy", () => {
+  me.mockReturnValue(
+    meState({
+      cardHolder: "SITI AMINAH",
+      accountNumber: "482019375516",
+      cardExpiry: "10/31",
+      cardCvv: "417",
+    }),
+  );
+  render(<HomePage />);
+  expect(screen.getAllByText("SITI AMINAH").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("10/31").length).toBeGreaterThan(0);
+  expect(screen.getByText("4820 1937 5516")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Copy account number" })).toBeInTheDocument();
+  // The CVV stays masked until the eye is tapped.
+  expect(screen.queryByText("417")).toBeNull();
+});
+
+test("before Didit approves there is no name, and no account row without a number", () => {
+  render(<HomePage />);
+  expect(screen.queryByText("Account number")).toBeNull();
+});
+
+test("verified but not signed in on this device: one tap to see the card details", async () => {
+  const signIn = vi.fn();
+  me.mockReturnValue(meState({ session: null, signIn }));
+  render(<HomePage />);
+  await userEvent.click(screen.getByRole("button", { name: "Confirm" }));
+  expect(signIn).toHaveBeenCalled();
 });

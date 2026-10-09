@@ -11,3 +11,6 @@ the extension.
 - `chains/`: `monad.svg` (Monad's logomark). The rest go with the earlier screens.
 - `wallets/`: icons on the connect screen.
 - `fonts/`: Switzer, loaded by `lib/fonts.ts`.
+- `art/`: two stills from the video in MotionSites' free "Cast and Render" prompt (off-white
+  sculpture, the app's own greys): `ring.jpg` behind the credit score, `sand.jpg` on Home's first
+  top-up prompt. Decoration only, `alt=""` and `aria-hidden`.
