@@ -80,9 +80,17 @@ company go in with it. Do not leave a real-sounding name on an invented quote.
 Marketing copy is free to be warm, but a number on this page should be one a
 reader could go and check.
 
+## Deploy
+
+Vercel project `matocard-landing` serves `matocard.xyz`. Since 10 Oct it is connected to
+`matocard/matocard` with Root Directory `apps/landing`: every merge to `main` deploys it, every PR
+gets a preview. `vercel.json` skips the build when a commit touches nothing under `apps/landing`,
+the root `package.json` or `bun.lock`. By hand, from the repo root:
+`VERCEL_ORG_ID=team_Xpji0s0ENeGehjBfOqMfCt4d VERCEL_PROJECT_ID=prj_io33yIF1EScwP3ImzF1fPZuZfmws vercel deploy --prod`
+(the root `.vercel` link is the app's project).
+
 **The "Get Matocard" links open the app** in a new tab. All three read `APP_URL`
-from `src/app-url.ts`, currently `https://app.matocard.xyz`, which is not
-deployed yet. Change it there once the app's domain is fixed.
+from `src/app-url.ts`, currently `https://app.matocard.xyz`, which is live.
 
 ## Things that will bite you
 
