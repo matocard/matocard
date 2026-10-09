@@ -30,8 +30,11 @@ implementation.
   after changing a hot path.
 - **Slither fails CI on any finding.** A triaged finding is suppressed on its own line with the
   reason above it, and recorded in `TRUST.md`.
-- **A redeploy moves three places at once**: `packages/contracts/src/addresses.ts`, the indexer's
-  `config.yaml` (address and start block) and the READMEs. The package tests fail if they disagree.
+- **A redeploy moves several places at once**: `packages/contracts/src/addresses.ts`, the indexer's
+  `config.yaml` (address and start block) and its live replay test, the READMEs, and the docs site
+  (`docs/resources/contracts.mdx`). The package tests catch a mismatch between the package, the
+  indexer config and the contracts README; the rest is by hand. A new indexer deployment follows,
+  see `apps/indexer/CLAUDE.md`.
 - `repay`, `repayWithPermit`, `repayFor`, `repayFromCollateral` and `markDefaulted` are never
   paused. Keep it that way.
 - Monad has no global mempool: deploy and run scripts with `--slow`.
