@@ -100,6 +100,14 @@ a mark on a white square, the same as the landing page (Axel, 4 Oct); the JPEG s
 `apps/landing/public`. The favicon is the transparent pair, picked by `prefers-color-scheme` in
 `app/layout.tsx`; there is deliberately no `app/icon.png`. Monad, MON and AUSD marks are in `public/chains/monad.svg` and `public/tokens/`.
 
+## Deploy
+
+Vercel project `matocard-app` (Root Directory `apps/app`), connected to `matocard/matocard` on
+10 Oct: every merge to `main` deploys `app.matocard.xyz`, every PR gets a preview URL.
+`vercel.json` skips the build when a commit touches nothing under `apps/app`, `packages/`, the
+root `package.json` or `bun.lock`, so backend and contract merges do not redeploy the app.
+`vercel deploy --prod` from the repo root still works by hand.
+
 ## Tests
 
 `bun run test` (vitest), `bun run test:live` (against the live backend and chain), `bun run e2e`
