@@ -14,6 +14,8 @@ export const STORAGE = {
   remoteOrigin: "matocard.remote.origin.v1",
   pendingRelease: "matocard.release.pending.v1",
   e2eConnected: "matocard.e2e.connected",
+  /** Home's headline unit, "local" or "ausd": the swap button's last choice on this device. */
+  headlineUnit: "matocard.home.unit",
   /** The signed backend session: `{ wallet, until, signature }`, valid six days. */
   session: "matocard.session.v1",
 } as const;

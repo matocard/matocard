@@ -72,6 +72,7 @@ const meState = (over: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
+  window.localStorage.clear();
   push.mockReset();
   credit.mockReturnValue(verifiedCredit());
   me.mockReturnValue(meState());
@@ -82,6 +83,18 @@ test("the headline is what the card can spend, in rupiah, with the AUSD row unde
   expect(screen.getByText("Available")).toBeInTheDocument();
   expect(screen.getByText("Rp 1,600,000")).toBeInTheDocument();
   expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
+});
+
+test("the swap button puts AUSD in the headline and back, and remembers it", async () => {
+  render(<HomePage />);
+  await userEvent.click(screen.getByRole("button", { name: "Show in AUSD" }));
+  expect(await screen.findByRole("button", { name: "Show in rupiah" })).toBeInTheDocument();
+  // jsdom never finishes the exit animation, so the outgoing figure can linger beside the new one.
+  expect(screen.getAllByText("100.00 AUSD").length).toBeGreaterThan(0);
+  expect(window.localStorage.getItem("matocard.home.unit")).toBe("ausd");
+  await userEvent.click(screen.getByRole("button", { name: "Show in rupiah" }));
+  expect(await screen.findByRole("button", { name: "Show in AUSD" })).toBeInTheDocument();
+  expect(window.localStorage.getItem("matocard.home.unit")).toBe("local");
 });
 
 test("the limit's breakdown lives on the Credit tab, not here", () => {
