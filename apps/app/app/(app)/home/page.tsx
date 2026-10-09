@@ -6,18 +6,16 @@ import { KycSheet } from "../../../components/card/KycSheet";
 import { AvailableHero } from "../../../components/home/AvailableHero";
 import { BalanceSection } from "../../../components/home/BalanceSection";
 import { FirstTopUp } from "../../../components/home/FirstTopUp";
-import { LimitBreakdown } from "../../../components/home/LimitBreakdown";
 import { OwedCard } from "../../../components/home/OwedCard";
 import { VerifyCard } from "../../../components/home/VerifyCard";
 import { CardFolder } from "../../../components/motion/card-folder";
-import { ActionPill, ActionRow, Card, CopyButton, Toast } from "../../../components/ui";
+import { ActionPill, ActionRow, Card, Toast } from "../../../components/ui";
 import { useCredit } from "../../../hooks/useCredit";
 import { useFx } from "../../../hooks/useFx";
 import { useMe } from "../../../hooks/useMe";
 import { useMyActivity } from "../../../hooks/useMyActivity";
 import { useNav } from "../../../hooks/useNav";
 import { setCountry, startKyc } from "../../../lib/matocard/backend";
-import { groupAccountNumber } from "../../../lib/matocard/format";
 import { compactHolder } from "../../../lib/matocard/holder";
 import { localFor } from "../../../lib/matocard/local";
 
@@ -26,7 +24,8 @@ const day = (seconds: bigint) =>
   new Date(Number(seconds) * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 /**
- * Home (PLAN §8): what you can spend, why, what you owe, and what happened. Figures that the
+ * Home (PLAN §8): what you can spend, what you owe, and what happened. Why the limit is what it
+ * is lives on the Credit tab, next to the score that moves it (Axel, 10 Oct). Figures that the
  * user acts on come from the chain (`useCredit`); KYC, country and the card number come from the
  * backend (`useMe`); local-currency figures use one shared display rate (`useFx`) for the
  * currency of where the user lives.
@@ -153,20 +152,10 @@ export default function HomePage() {
                 }
               />
             </div>
-            {me.accountNumber ? (
-              <Card className="mx-auto mt-3 flex max-w-[340px] items-center gap-3 px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-medium text-muted">Account number</div>
-                  {/* Grouped to be read; copied raw, because a form rejects the spaces. */}
-                  <div className="mt-0.5 truncate font-mono text-[14px] font-semibold tracking-[0.04em] [font-variant-numeric:tabular-nums]">
-                    {groupAccountNumber(me.accountNumber)}
-                  </div>
-                </div>
-                <CopyButton value={me.accountNumber} label="Copy account number" />
-              </Card>
-            ) : !me.session ? (
+            {!me.session ? (
               // Verified onchain but not signed in to the backend on this device: the name, expiry
-              // and account number come from /me, which needs the one-time signature.
+              // come from /me, which needs the one-time signature. No account number row: it is
+              // display only and cannot receive money, so copying it would mislead (Axel, 10 Oct).
               <Card className="mx-auto mt-3 flex max-w-[340px] items-center gap-3 px-4 py-3">
                 <p className="min-w-0 flex-1 text-[13px] text-muted">
                   Confirm it's you to see your name and card details.
@@ -205,20 +194,6 @@ export default function HomePage() {
           />
         ) : null}
 
-        {verified ? (
-          <LimitBreakdown
-            className="mb-[22px]"
-            collateral={credit.collateral?.value}
-            score={credit.score}
-            ratioBps={credit.ratioBps}
-            limit={credit.limit}
-            yieldEarned={me.collateral?.yield}
-            heldUntil={held && credit.collateral ? day(credit.collateral.pendingUntil) : null}
-            rate={rate}
-            currency={local.currency}
-          />
-        ) : null}
-
         {/* Money sent to this account (Mom's side of a send) lands here, as AUSD. */}
         {credit.ausdBalance !== undefined && credit.ausdBalance > 0n ? (
           <BalanceSection
@@ -229,7 +204,7 @@ export default function HomePage() {
           />
         ) : null}
 
-        <h2 className="mx-1 mb-2 text-sm font-medium text-muted">Activity</h2>
+        <h2 className="mx-1 mb-2 text-sm font-medium text-muted">History</h2>
         <Card className="px-5 pb-2 pt-1">
           <ActivityList
             items={preview}

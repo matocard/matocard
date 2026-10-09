@@ -56,7 +56,7 @@ test("desktop chrome present: the desktop nav renders alongside the mobile botto
   // Activity is a drawer on desktop by design, so the link addresses the drawer's own URL rather
   // than /transactions, which the (flow) layout would bounce straight back to /home. It sits beside
   // the account menu rather than in the nav landmark, so it is queried outside that scope.
-  expect(screen.getByRole("link", { name: "Activity" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "History" })).toHaveAttribute(
     "href",
     "/home?panel=activity",
   );

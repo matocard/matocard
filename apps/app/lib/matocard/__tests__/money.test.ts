@@ -13,7 +13,7 @@ test("rupiah at the PLAN's rate, rounded down like the backend pays", () => {
   // PLAN §3: 1 USD = 16,000 IDR, so 150 AUSD is Rp 2.4m.
   expect(ausdToIdr(150_000_000n, "16000")).toBe(2_400_000n);
   expect(ausdToIdr(1n, "16000")).toBe(0n);
-  expect(approxIdr(100_000_000n, "16250.5")).toBe("≈ Rp 1,625,050");
+  expect(approxIdr(100_000_000n, "16250.5")).toBe("Rp 1,625,050");
   expect(approxIdr(undefined, "16000")).toBeNull();
   expect(approxIdr(1n, undefined)).toBeNull();
 });
@@ -29,8 +29,18 @@ test("ringgit is in sen and reads with two decimals", async () => {
   expect(formatLocal(60_000n, "MYR")).toBe("RM 600.00");
   // PLAN §3: 1 USD = 4.00 MYR, so 150 AUSD is RM 600 and 100 AUSD is RM 400.
   expect(ausdToLocal(150_000_000n, "MYR", "4")).toBe(60_000n);
-  expect(approxLocal(100_000_000n, "4", "MYR")).toBe("≈ RM 400.00");
-  expect(approxLocal(100_000_000n, "16000", "IDR")).toBe("≈ Rp 1,600,000");
+  expect(approxLocal(100_000_000n, "4", "MYR")).toBe("RM 400.00");
+  expect(approxLocal(100_000_000n, "16000", "IDR")).toBe("Rp 1,600,000");
+});
+
+test("a deposit reads back as what was paid in, a limit never more than is there", async () => {
+  const { ausdToLocal } = await import("../money");
+  // 5.59 USD at 17,889 is Rp 99,999.51.
+  expect(ausdToLocal(5_590_000n, "IDR", "17889")).toBe(99_999n);
+  expect(ausdToLocal(5_590_000n, "IDR", "17889", "nearest")).toBe(100_000n);
+  // Exactly half rounds up; just under rounds down.
+  expect(ausdToLocal(500_000n, "IDR", "1", "nearest")).toBe(1n);
+  expect(ausdToLocal(499_999n, "IDR", "1", "nearest")).toBe(0n);
 });
 
 test("where you live picks the currency, the Xendit account and the minimum", async () => {

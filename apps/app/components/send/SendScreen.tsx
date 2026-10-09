@@ -29,7 +29,7 @@ const SOURCE_LABEL: Record<Source, string> = { card: "From my card", balance: "F
  * balance** sends AUSD already in the account with a signed ERC-3009 transfer that the backend's
  * relayer submits, so it needs no MON (D11).
  *
- * The rupiah converts at the shared display rate and says "≈": the AUSD figure is what leaves.
+ * The rupiah converts at the shared display rate: the AUSD figure is what leaves.
  */
 export function SendScreen() {
   const router = useRouter();
@@ -142,10 +142,11 @@ export function SendScreen() {
             : `Your balance is ${formatAusd(credit.ausdBalance ?? 0n)} USD`
         }
       />
-      <p className="mb-3 text-center text-[13px] text-muted">
+      {/* Reserves its line while empty, so the screen does not jump when typing starts. */}
+      <p className="mb-3 min-h-5 text-center text-[13px] text-muted">
         {ausd > 0n
           ? `They get ${formatAusd(ausd)} USD · AUSD, ${formatIdr(rupiah)} at today's rate`
-          : "They get it in under a second"}
+          : null}
       </p>
 
       {error ? <p className="mb-2 text-center text-[13px] font-medium text-neg">{error}</p> : null}
@@ -153,11 +154,6 @@ export function SendScreen() {
         <Button onClick={send} disabled={sending || !valid || self || ausd === 0n || tooMuch}>
           {sending ? <PendingLabel status="signing" /> : "Send"}
         </Button>
-        <p className="mt-2 text-center text-[12px] text-muted">
-          {source === "card"
-            ? "Paid from your card's limit. Interest-free: settle it by the due date."
-            : "Paid from your balance. No fee."}
-        </p>
       </div>
     </div>
   );

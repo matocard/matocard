@@ -8,6 +8,7 @@ export { badgeForSymbol, CoinBadge, type TokenSym } from "./CoinBadge";
 export { CopyButton } from "./CopyButton";
 export { CountUp } from "./CountUp";
 export { DesktopNav } from "./DesktopNav";
+export { InfoTip } from "./InfoTip";
 export { Keypad } from "./Keypad";
 export { LoadMore } from "./LoadMore";
 export { PageHeader } from "./PageHeader";

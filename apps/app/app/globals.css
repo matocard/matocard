@@ -75,14 +75,15 @@ body {
   [role="button"]:focus-visible,
   [role="menuitem"]:focus-visible,
   [role="tab"]:focus-visible,
-  [tabindex]:focus-visible,
-  input:not([data-amount-input]):focus-visible {
+  [tabindex]:focus-visible {
     outline: 2px solid var(--color-ink);
     outline-offset: 2px;
     box-shadow: 0 0 0 5px rgba(17, 19, 22, 0.12);
   }
-  input[data-amount-input]:focus,
-  input[data-amount-input]:focus-visible {
+  /* Text fields get no ring: each sits in its own bordered field, a ring drew a second box inside
+     it on every tap, and the caret already shows where typing goes (Axel, 10 Oct). */
+  input:focus,
+  input:focus-visible {
     outline: none;
     box-shadow: none;
   }

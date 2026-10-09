@@ -1,11 +1,24 @@
 "use client";
+import { ArrowLeftRight } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
+import { EASE_OUT } from "../../lib/ease";
 import { approxLocal, formatAusd, type LocalCurrency } from "../../lib/matocard/money";
+import { STORAGE } from "../../lib/storage";
+import { InfoTip } from "../ui";
+
+type Unit = "local" | "ausd";
+
+const CURRENCY_NAME: Record<LocalCurrency, string> = { IDR: "rupiah", MYR: "ringgit" };
 
 /**
  * Home's headline: what the card can spend right now (`availableOf`), in the user's own currency
- * first (ringgit for Siti in Kuala Lumpur, rupiah in Indonesia) because that is the money they think in (PLAN §3: headline in local currency with "≈"). The dollar
- * figure sits under it with "AUSD" on the same row: the Agora bounty needs an AUSD balance on
- * screen, and a detail row is the one place the copy rules allow the word.
+ * first (ringgit for Siti in Kuala Lumpur, rupiah in Indonesia) because that is the money they
+ * think in (PLAN §3; no "≈", Axel's call on 9 Oct).
+ *
+ * One figure at a time (Axel, 10 Oct): the swap button beside it rolls the headline to AUSD and
+ * back, which is where the Agora bounty's AUSD balance shows. The choice is kept on this device; reading it back is a convenience, so a
+ * blocked `localStorage` just starts in local currency.
  *
  * An unread figure is a dash. `0` is a claim about someone's money.
  */
@@ -16,16 +29,50 @@ export function AvailableHero({
   issued,
 }: {
   available: bigint | undefined;
-  /** USD to the user's own currency; without it the dollar figure leads. */
+  /** USD to the user's own currency; without it the AUSD figure leads and there is no swap. */
   rate: string | undefined;
   currency: LocalCurrency;
   /** False before identity is verified: there is no card to spend from yet. */
   issued: boolean;
 }) {
+  const reduceMotion = useReducedMotion() ?? false;
+  const [unit, setUnit] = useState<Unit>("local");
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(STORAGE.headlineUnit) === "ausd") setUnit("ausd");
+    } catch {}
+  }, []);
+  const swap = () => {
+    const next: Unit = unit === "local" ? "ausd" : "local";
+    setUnit(next);
+    try {
+      window.localStorage.setItem(STORAGE.headlineUnit, next);
+    } catch {}
+  };
+
   const local = approxLocal(available, rate, currency);
+  const ausd = available === undefined ? "" : `${formatAusd(available)} AUSD`;
+  // No rate yet: AUSD leads, and there is nothing to swap with.
+  const showAusd = unit === "ausd" || !local;
+  const big = showAusd ? ausd : local;
+  const roll = (from: number) => ({
+    initial: { opacity: 0, y: reduceMotion ? 0 : `${from}%`, filter: "blur(4px)" },
+    animate: { opacity: 1, y: "0%", filter: "blur(0px)" },
+    exit: { opacity: 0, y: reduceMotion ? 0 : `${-from}%`, filter: "blur(4px)" },
+    transition: { duration: reduceMotion ? 0.12 : 0.32, ease: EASE_OUT },
+  });
+
   return (
     <div className="py-[26px]">
-      <div className="text-[15px] font-medium text-muted">{issued ? "Available" : "Your card"}</div>
+      <div className="flex items-center gap-1.5 text-[15px] font-medium text-muted">
+        {issued ? "Available" : "Your card"}
+        {issued ? (
+          <InfoTip label="Available">
+            What your card can still spend. It comes from your deposit, and you pay it back when you
+            settle.
+          </InfoTip>
+        ) : null}
+      </div>
       {!issued ? (
         <div className="mt-2 text-[clamp(26px,8vw,34px)] font-semibold leading-tight tracking-[-.02em]">
           Not issued yet
@@ -33,14 +80,32 @@ export function AvailableHero({
       ) : available === undefined ? (
         <div className="mt-2 text-[clamp(32px,12vw,54px)] font-semibold leading-none">—</div>
       ) : (
-        <>
-          <div className="mt-2 whitespace-nowrap text-[clamp(30px,10vw,50px)] font-semibold leading-none tracking-[-.02em] [font-variant-numeric:tabular-nums]">
-            {local ?? `${formatAusd(available)} USD`}
+        <div className="mt-2 flex items-center gap-3">
+          <div className="relative overflow-hidden whitespace-nowrap text-[clamp(30px,10vw,50px)] font-semibold leading-[1.1] tracking-[-.02em] [font-variant-numeric:tabular-nums]">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div key={big} {...roll(60)}>
+                {big}
+              </motion.div>
+            </AnimatePresence>
           </div>
-          <div className="mt-2 text-[14px] text-muted [font-variant-numeric:tabular-nums]">
-            {formatAusd(available)} USD · AUSD
-          </div>
-        </>
+          {local ? (
+            <motion.button
+              type="button"
+              onClick={swap}
+              aria-label={showAusd ? `Show in ${CURRENCY_NAME[currency]}` : "Show in AUSD"}
+              whileTap={{ scale: 0.9 }}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+            >
+              <motion.span
+                animate={{ rotate: showAusd ? 180 : 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.32, ease: EASE_OUT }}
+                className="flex"
+              >
+                <ArrowLeftRight size={17} strokeWidth={2} aria-hidden="true" />
+              </motion.span>
+            </motion.button>
+          ) : null}
+        </div>
       )}
     </div>
   );

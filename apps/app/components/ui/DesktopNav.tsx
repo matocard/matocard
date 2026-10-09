@@ -90,7 +90,7 @@ export function DesktopNav({ account }: { account?: ReactNode }) {
 
         <div className="ml-auto flex items-center gap-2.5">
           <Item href="/home?panel=activity" active={false}>
-            Activity
+            History
           </Item>
           {account}
         </div>

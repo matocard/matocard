@@ -5,7 +5,7 @@ import HomePage from "../page";
 
 /**
  * Home on Matocard's own data: the chain (`useCredit`), the backend (`useMe`) and one display rate
- * (`useFx`). What these pin is PLAN §3 step 4: the headline in rupiah with the AUSD row under it,
+ * (`useFx`). What these pin is PLAN §3 step 4: the headline in rupiah, AUSD one swap away,
  * the limit always explained, and debt in its dollar value with a way to settle.
  */
 
@@ -72,25 +72,43 @@ const meState = (over: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
+  window.localStorage.clear();
   push.mockReset();
   credit.mockReturnValue(verifiedCredit());
   me.mockReturnValue(meState());
 });
 
-test("the headline is what the card can spend, in rupiah, with the AUSD row under it", () => {
+test("the headline is what the card can spend, in rupiah alone", () => {
   render(<HomePage />);
   expect(screen.getByText("Available")).toBeInTheDocument();
-  expect(screen.getByText("≈ Rp 1,600,000")).toBeInTheDocument();
-  expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
+  expect(screen.getByText("Rp 1,600,000")).toBeInTheDocument();
+  expect(screen.queryByText("100.00 AUSD")).toBeNull();
 });
 
-test("the limit is explained: deposit, score, deposit needed, limit", () => {
+test("the ⓘ beside Available and Balance explains each on tap", async () => {
+  credit.mockReturnValue(verifiedCredit({ ausdBalance: 50_000_000n }));
   render(<HomePage />);
-  const card = screen.getByText("How your limit is worked out").closest("div") as HTMLElement;
-  expect(within(card).getByText("150.00 USD")).toBeInTheDocument();
-  expect(within(card).getByText("0 of 100")).toBeInTheDocument();
-  expect(within(card).getByText("150%")).toBeInTheDocument();
-  expect(within(card).getByText("100.00 USD")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "About Available" }));
+  expect(await screen.findByRole("tooltip")).toHaveTextContent(/you pay it back when you settle/);
+  await userEvent.click(screen.getByRole("button", { name: "About Balance" }));
+  expect(await screen.findByText(/nothing to pay back/)).toBeInTheDocument();
+});
+
+test("the swap button puts AUSD in the headline and back, and remembers it", async () => {
+  render(<HomePage />);
+  await userEvent.click(screen.getByRole("button", { name: "Show in AUSD" }));
+  expect(await screen.findByRole("button", { name: "Show in rupiah" })).toBeInTheDocument();
+  // jsdom never finishes the exit animation, so the outgoing figure can linger beside the new one.
+  expect(screen.getAllByText("100.00 AUSD").length).toBeGreaterThan(0);
+  expect(window.localStorage.getItem("matocard.home.unit")).toBe("ausd");
+  await userEvent.click(screen.getByRole("button", { name: "Show in rupiah" }));
+  expect(await screen.findByRole("button", { name: "Show in AUSD" })).toBeInTheDocument();
+  expect(window.localStorage.getItem("matocard.home.unit")).toBe("local");
+});
+
+test("the limit's breakdown lives on the Credit tab, not here", () => {
+  render(<HomePage />);
+  expect(screen.queryByText("How your limit is worked out")).toBeNull();
 });
 
 test("nothing owed: Send and Top up, no Settle", async () => {
@@ -116,7 +134,7 @@ test("an unread figure is a dash, never a zero", () => {
   credit.mockReturnValue(verifiedCredit({ available: undefined }));
   render(<HomePage />);
   expect(screen.getByText("—")).toBeInTheDocument();
-  expect(screen.queryByText(/0\.00 USD · AUSD/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/0\.00 AUSD/)).not.toBeInTheDocument();
 });
 
 test("before verification, the card is not issued and the next step is offered", async () => {
@@ -146,11 +164,12 @@ test("money received shows as a balance, and cashing out is its own row", () => 
   credit.mockReturnValue(verifiedCredit({ ausdBalance: 50_000_000n }));
   render(<HomePage />);
   const balance = screen
-    .getByRole("heading", { name: "Balance" })
+    .getByRole("heading", { name: /^Balance/ })
     .closest("section") as HTMLElement;
   expect(within(balance).getByText("50.00 USD")).toBeInTheDocument();
-  expect(within(balance).getByText("AUSD on Monad")).toBeInTheDocument();
-  expect(within(balance).getByText("≈ Rp 800,000")).toBeInTheDocument();
+  expect(within(balance).getByText("AUSD")).toBeInTheDocument();
+  expect(within(balance).queryByText(/Monad/)).toBeNull();
+  expect(within(balance).getByText("Rp 800,000")).toBeInTheDocument();
   // Not a link inside the balance: a section of its own.
   expect(within(balance).queryByRole("link")).toBeNull();
   expect(screen.getByRole("link", { name: /To your bank/ })).toHaveAttribute("href", "/cashout");
@@ -159,8 +178,8 @@ test("money received shows as a balance, and cashing out is its own row", () => 
 test("someone in Malaysia reads the headline in ringgit", () => {
   me.mockReturnValue(meState({ country: "MY" }));
   render(<HomePage />);
-  expect(screen.getByText("≈ RM 400.00")).toBeInTheDocument();
-  expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
+  expect(screen.getByText("RM 400.00")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Show in AUSD" })).toBeInTheDocument();
 });
 
 test("a signed-in account that has not said where it lives is asked, and the answer is saved", async () => {
@@ -192,7 +211,7 @@ test("once there is a deposit, the top-up prompt is gone", () => {
   expect(screen.queryByText("Top up to get your limit")).toBeNull();
 });
 
-test("the card carries the holder's name, expiry, and an account number to copy", () => {
+test("the card carries the holder's name and expiry, and no account number", () => {
   me.mockReturnValue(
     meState({
       cardHolder: "SITI AMINAH",
@@ -204,8 +223,8 @@ test("the card carries the holder's name, expiry, and an account number to copy"
   render(<HomePage />);
   expect(screen.getAllByText("SITI AMINAH").length).toBeGreaterThan(0);
   expect(screen.getAllByText("10/31").length).toBeGreaterThan(0);
-  expect(screen.getByText("4820 1937 5516")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Copy account number" })).toBeInTheDocument();
+  // The account number is display only and cannot receive money, so it is not shown.
+  expect(screen.queryByText("Account number")).toBeNull();
   // The CVV stays masked until the eye is tapped.
   expect(screen.queryByText("417")).toBeNull();
 });

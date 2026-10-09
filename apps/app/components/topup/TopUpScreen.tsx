@@ -9,7 +9,7 @@ import { useMe } from "../../hooks/useMe";
 import { useMyActivity } from "../../hooks/useMyActivity";
 import { getQuote, startTopUp } from "../../lib/matocard/backend";
 import { localFor } from "../../lib/matocard/local";
-import { formatAusd, formatLocal } from "../../lib/matocard/money";
+import { approxLocal, formatLocal } from "../../lib/matocard/money";
 import { Button, Card, Keypad, Segmented, Spinner } from "../ui";
 import { SubHeader } from "../ui/SubHeader";
 
@@ -23,8 +23,8 @@ const METHODS: readonly Method[] = ["bank", "qr", "card"];
  * collateral that earns. Bank and QR count at once; a card waits out a hold first, which the
  * contract enforces so a chargeback cannot spend money that never arrived (D5).
  *
- * The quote is fresh at the moment of paying (60-second lock); the ≈ figure before that uses the
- * shared display rate and says so with "≈".
+ * The quote is fresh at the moment of paying (60-second lock); the figure before that uses the
+ * shared display rate.
  */
 export function TopUpScreen() {
   const router = useRouter();
@@ -50,6 +50,10 @@ export function TopUpScreen() {
     rate && fiat !== null && fiat > 0n
       ? quoteToBase(fiat, local.currency, "AUSD", rate, "down")
       : undefined;
+  // What this top-up adds to the limit at today's deposit ratio, so a Rp 100,000 top-up that
+  // reads Rp 66,666 on Home is not a surprise.
+  const spendable =
+    ausd !== undefined && credit.ratioBps ? (ausd * 10_000n) / credit.ratioBps : undefined;
 
   const pay = async () => {
     if (fiat === null) return;
@@ -134,10 +138,11 @@ export function TopUpScreen() {
             : `The smallest top-up is ${formatLocal(local.minTopUp, local.currency)}`
         }
       />
-      <p className="mb-3 text-center text-[13px] text-muted">
-        {ausd === undefined
-          ? "Becomes collateral for your card"
-          : `≈ ${formatAusd(ausd)} USD of collateral, held as AUSD`}
+      {/* Reserves its line while empty, so the methods below do not jump when typing starts. */}
+      <p className="mb-3 min-h-5 text-center text-[13px] text-muted">
+        {spendable === undefined
+          ? null
+          : `You'll be able to spend ${approxLocal(spendable, rate, local.currency)} of it`}
       </p>
       <Segmented
         options={METHODS}
@@ -146,13 +151,8 @@ export function TopUpScreen() {
         label="Pay with"
         variant="period"
         renderLabel={(m) => local.methods[m]}
-        className="mb-2"
+        className="mb-3"
       />
-      <p className="mb-3 text-center text-[12px] text-muted">
-        {method === "card"
-          ? "A card top-up counts after a short hold, so a chargeback cannot spend it."
-          : "Counts toward your limit as soon as it is paid."}
-      </p>
       {error ? <p className="mb-2 text-center text-[13px] font-medium text-neg">{error}</p> : null}
       <div className="mt-auto">
         <Button onClick={pay} disabled={busy || fiat === null || fiat < local.minTopUp}>

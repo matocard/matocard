@@ -108,7 +108,7 @@ export function AccountMenu() {
               <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
             </svg>
             <span className="grow">
-              <span className="block text-sm font-semibold">Activity</span>
+              <span className="block text-sm font-semibold">History</span>
               <span className="block text-xs text-muted">Deposits, spending and payments</span>
             </span>
             <svg

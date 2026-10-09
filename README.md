@@ -4,7 +4,7 @@
 
 Built on [Monad](https://monad.xyz) for Monad Metropolis, Track 02: Consumer Products & Payments.
 
-[Website](https://matocard.xyz) · [Docs](https://docs.matocard.xyz) · [API](https://api.matocard.xyz/docs)
+[Website](https://matocard.xyz) · [App](https://app.matocard.xyz) · [Docs](https://docs.matocard.xyz) · [API](https://api.matocard.xyz/docs)
 
 ## The problem
 
@@ -12,7 +12,7 @@ Indonesian migrant workers in Malaysia have no credit history in either country.
 
 ## How it works
 
-1. **Sign up and verify once.** A passkey creates the account; an ID check binds one person to one account.
+1. **Sign up and verify once.** An ID check binds one person to one account.
 2. **Top up.** Money paid in by card or bank transfer becomes collateral, held in a yield vault so it grows.
 3. **Spend or send.** Draw against the limit, for example straight to family in Indonesia. Interest-free.
 4. **Settle on time, get more.** Each cycle repaid on time raises the score, and the score lowers the collateral needed per unit of credit: from 150% for a new account down to 80%.
@@ -37,14 +37,14 @@ All addresses, the contract architecture and the scoring formula are in [contrac
 | Stablecoin | Agora's AUSD on Monad testnet |
 | Collateral yield | MockEarnAUSD stands in for earnAUSD, which is mainnet only |
 | Backend: payments, KYC, relayer, API | Live at [`api.matocard.xyz`](https://api.matocard.xyz/docs) (Swagger). Money in by ringgit (Xendit Malaysia) or rupiah (Xendit Indonesia), out in rupiah; Xendit and Didit in test mode |
-| App | In progress |
+| App | Live at [`app.matocard.xyz`](https://app.matocard.xyz) on Monad testnet: verify, top up, send to family, settle, cash out, and a shareable credit record at `/verify/<account>` |
 | Card | Not issued; a licensed issuer is needed |
 
 ## Repository
 
 ```
 contracts/    Foundry: credit line (UUPS proxy + modules), scoring library, testnet tokens
-apps/         services and the app (api, kyc, payments, relayer, indexer, app)
+apps/         backend (api, kyc, payments, relayer), indexer, the app and the landing page
 packages/     shared TypeScript config and types
 docs/         run records
 ```

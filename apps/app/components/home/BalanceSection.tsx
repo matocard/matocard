@@ -10,7 +10,8 @@ const CARD =
  * Money held in the account (what family sent, or AUSD from the faucet), and, as its own section,
  * the way out of it. Kept apart on purpose: a balance is a fact about the account, cashing out is
  * an action, and a link tucked into the balance row read as part of the figure. The Agora bounty
- * needs AUSD on screen, so it sits on this detail row (PLAN §3).
+ * needs AUSD on screen, so it sits on this detail row (PLAN §3). The ⓘ says how this differs from
+ * the card's Available, which is borrowed (Axel, 10 Oct).
  */
 export function BalanceSection({
   balance,
@@ -25,13 +26,17 @@ export function BalanceSection({
 }) {
   return (
     <div className={className}>
-      <Section title="Balance" className="mb-[22px]">
+      <Section
+        title="Balance"
+        info="Money sent to you. It's yours, with nothing to pay back. Send it on or cash it out to your bank. Held as AUSD."
+        className="mb-[22px]"
+      >
         <div className={CARD}>
           <div className="flex items-center gap-3 py-3.5">
             <CoinBadge token="AUSD" size={32} />
             <div className="min-w-0 flex-1">
               <div className="text-[14px] font-semibold">US dollars</div>
-              <div className="mt-0.5 text-[11.5px] text-muted">AUSD on Monad</div>
+              <div className="mt-0.5 text-[11.5px] text-muted">AUSD</div>
             </div>
             <div className="text-right">
               <div className="text-[14px] font-semibold tabular-nums">

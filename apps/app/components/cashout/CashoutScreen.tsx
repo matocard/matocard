@@ -167,7 +167,7 @@ export function CashoutScreen() {
             ? `${formatAusd(ausd)} USD from your balance`
             : "Paid to your bank in rupiah"
           : rupiah > 0n
-            ? `≈ ${formatIdr(rupiah)} to your bank`
+            ? `${formatIdr(rupiah)} to your bank`
             : "Paid to your bank in rupiah"}
       </p>
 
