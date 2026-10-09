@@ -6,7 +6,6 @@ import { KycSheet } from "../../../components/card/KycSheet";
 import { AvailableHero } from "../../../components/home/AvailableHero";
 import { BalanceSection } from "../../../components/home/BalanceSection";
 import { FirstTopUp } from "../../../components/home/FirstTopUp";
-import { LimitBreakdown } from "../../../components/home/LimitBreakdown";
 import { OwedCard } from "../../../components/home/OwedCard";
 import { VerifyCard } from "../../../components/home/VerifyCard";
 import { CardFolder } from "../../../components/motion/card-folder";
@@ -26,7 +25,8 @@ const day = (seconds: bigint) =>
   new Date(Number(seconds) * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 /**
- * Home (PLAN §8): what you can spend, why, what you owe, and what happened. Figures that the
+ * Home (PLAN §8): what you can spend, what you owe, and what happened. Why the limit is what it
+ * is lives on the Credit tab, next to the score that moves it (Axel, 10 Oct). Figures that the
  * user acts on come from the chain (`useCredit`); KYC, country and the card number come from the
  * backend (`useMe`); local-currency figures use one shared display rate (`useFx`) for the
  * currency of where the user lives.
@@ -202,20 +202,6 @@ export default function HomePage() {
             rate={rate}
             currency={local.currency}
             onSettle={() => nav.forward("/settle")}
-          />
-        ) : null}
-
-        {verified ? (
-          <LimitBreakdown
-            className="mb-[22px]"
-            collateral={credit.collateral?.value}
-            score={credit.score}
-            ratioBps={credit.ratioBps}
-            limit={credit.limit}
-            yieldEarned={me.collateral?.yield}
-            heldUntil={held && credit.collateral ? day(credit.collateral.pendingUntil) : null}
-            rate={rate}
-            currency={local.currency}
           />
         ) : null}
 

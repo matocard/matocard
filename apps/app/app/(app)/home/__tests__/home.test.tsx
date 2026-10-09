@@ -84,13 +84,9 @@ test("the headline is what the card can spend, in rupiah, with the AUSD row unde
   expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
 });
 
-test("the limit is explained: deposit, score, deposit needed, limit", () => {
+test("the limit's breakdown lives on the Credit tab, not here", () => {
   render(<HomePage />);
-  const card = screen.getByText("How your limit is worked out").closest("div") as HTMLElement;
-  expect(within(card).getByText("150.00 USD")).toBeInTheDocument();
-  expect(within(card).getByText("0 of 100")).toBeInTheDocument();
-  expect(within(card).getByText("150%")).toBeInTheDocument();
-  expect(within(card).getByText("100.00 USD")).toBeInTheDocument();
+  expect(screen.queryByText("How your limit is worked out")).toBeNull();
 });
 
 test("nothing owed: Send and Top up, no Settle", async () => {
