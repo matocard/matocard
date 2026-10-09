@@ -20,10 +20,12 @@ Bring two or three concrete options with a recommendation, then wait.
 
 **The blockchain is invisible** (PLAN §3). Judges mark down anything that reveals crypto. Banned on
 user-facing screens: wallet, gas, chain, token, onchain transaction, seed, and AUSD except in a
-detail or breakdown row. Headline amounts are local currency with "≈"; debt is shown in its locked
-dollar value. Never "interest" or "dividend": say "interest-free" and "collateral yield". Always show
-why the limit is what it is (collateral, score, ratio). The Agora bounty needs an AUSD balance on
-screen, on a detail row such as `Balance 50.00 USD · AUSD`.
+detail or breakdown row. Headline amounts are local currency with no "≈" in front (Axel, 10 Oct);
+debt is shown in its locked dollar value. Never "interest" or "dividend": say "interest-free" and
+"collateral yield". Always show why the limit is what it is (collateral, score, ratio); in the app
+that breakdown is on the Credit tab. The Agora bounty needs an AUSD balance on screen: Home's
+headline swaps to AUSD (for example `3.72 AUSD`), and the Balance row reads `AUSD`. Prefer short
+labels with an ⓘ (`InfoTip`) over explanatory lines under them.
 
 ## Who owns what
 

@@ -5,7 +5,7 @@ Non-React code.
 - `wallet.ts` is the seam screens use (`connect`, `getAddress`, `getWalletId`, `disconnect`);
   `wallet-reown.ts` implements it on wagmi core actions, `wallet-e2e.ts` is the Playwright stub.
   `wallet-error.ts` normalises wallet errors.
-- `storage.ts`: every `localStorage` key, prefixed `matocard.`.
+- `storage.ts`: every `localStorage` key, prefixed `matocard.` (Home's AUSD swap is `headlineUnit`).
 - `utils.ts`, `ease.ts`, `fonts.ts`, `activity/map.ts`: formatting and presentation helpers.
 - `matocard/`:
   - `monad.ts`: credit line, AUSD, ABIs and gas limits from `@matocard/contracts`, MonadVision

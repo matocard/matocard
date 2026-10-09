@@ -20,7 +20,7 @@ the shell and the UI kit carried over, every screen and its data layer are Matoc
 | Route | What it does | Data |
 | --- | --- | --- |
 | `/` | Onboarding tour, then connect | none |
-| `/home` | Available in local currency (AUSD on the detail row), sign-in, country, KYC, owed, balance, recent activity, the card | `useCredit`, `useMe`, `useFx`, `useMyActivity` |
+| `/home` | Available in local currency (a swap button turns it to AUSD), sign-in, country, KYC, owed, balance, recent history, the card | `useCredit`, `useMe`, `useFx`, `useMyActivity` |
 | `/topup` | Ringgit (FPX, DuitNow, card) or rupiah (bank, QRIS, card) by country, through Xendit | `/quote`, `/topups` |
 | `/send` | To family, typed in rupiah: from the card (`draw`) or the balance (ERC-3009 via `/sends`) | `useCredit`, `signTransfer` |
 | `/settle` | In local currency, from the balance (permit) or from collateral | `/settlements`, `useCredit` |
@@ -28,7 +28,7 @@ the shell and the UI kit carried over, every screen and its data layer are Matoc
 | `/transactions` | History, by card and top-ups | `useMyActivity` |
 | `/credit` | Your record, why the limit is what it is, and the link to share it | `useVerifyRecord`, `useCredit` |
 | `/verify/[id]` | Public record, no sign-in, nothing personal | `/verify/:wallet` |
-| `/account` | Account and log out | `useWallet` |
+| `/account` | Name and ID verified, Receive money (QR and copy), History, country and currency, log out. No `0x` outside Receive money | `useWallet`, `useMe`, `useCredit` |
 
 Local currency comes from `user.country` (`lib/matocard/local.ts`): `MY` pays in ringgit through
 the Malaysian Xendit account, everyone else in rupiah; cash-outs are always rupiah.
@@ -37,9 +37,10 @@ the Malaysian Xendit account, everyone else in rupiah; cash-outs are always rupi
 
 From PLAN §3 and the root `CLAUDE.md`:
 
-- No wallet, gas, chain, token, seed or onchain words on user-facing screens. AUSD appears only on a
-  detail or breakdown row (the Agora bounty needs it there).
-- Headline amounts in local currency with "≈"; debt in its locked dollar value.
+- No wallet, gas, chain, token, seed or onchain words on user-facing screens. AUSD appears on a
+  detail row or behind Home's swap button (the Agora bounty needs it on screen).
+- Headline amounts in local currency, no "≈"; debt in its locked dollar value.
+- Explain with an ⓘ (`InfoTip`), not with a line of small print under a label or a button.
 - Always show why the limit is what it is: collateral, score, ratio.
 - "Interest-free" and "collateral yield", never "interest" or "dividend".
 - Money is bigint in the smallest unit (AUSD has 6 decimals). Format with `@matocard/core`.
