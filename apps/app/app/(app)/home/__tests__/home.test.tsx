@@ -5,7 +5,7 @@ import HomePage from "../page";
 
 /**
  * Home on Matocard's own data: the chain (`useCredit`), the backend (`useMe`) and one display rate
- * (`useFx`). What these pin is PLAN §3 step 4: the headline in rupiah with the AUSD row under it,
+ * (`useFx`). What these pin is PLAN §3 step 4: the headline in rupiah, AUSD one swap away,
  * the limit always explained, and debt in its dollar value with a way to settle.
  */
 
@@ -78,11 +78,11 @@ beforeEach(() => {
   me.mockReturnValue(meState());
 });
 
-test("the headline is what the card can spend, in rupiah, with the AUSD row under it", () => {
+test("the headline is what the card can spend, in rupiah alone", () => {
   render(<HomePage />);
   expect(screen.getByText("Available")).toBeInTheDocument();
   expect(screen.getByText("Rp 1,600,000")).toBeInTheDocument();
-  expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
+  expect(screen.queryByText("100.00 AUSD")).toBeNull();
 });
 
 test("the swap button puts AUSD in the headline and back, and remembers it", async () => {
@@ -169,7 +169,7 @@ test("someone in Malaysia reads the headline in ringgit", () => {
   me.mockReturnValue(meState({ country: "MY" }));
   render(<HomePage />);
   expect(screen.getByText("RM 400.00")).toBeInTheDocument();
-  expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Show in AUSD" })).toBeInTheDocument();
 });
 
 test("a signed-in account that has not said where it lives is asked, and the answer is saved", async () => {

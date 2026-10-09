@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { EASE_OUT } from "../../lib/ease";
@@ -13,11 +13,10 @@ const CURRENCY_NAME: Record<LocalCurrency, string> = { IDR: "rupiah", MYR: "ring
 /**
  * Home's headline: what the card can spend right now (`availableOf`), in the user's own currency
  * first (ringgit for Siti in Kuala Lumpur, rupiah in Indonesia) because that is the money they
- * think in (PLAN §3; no "≈", Axel's call on 9 Oct). The AUSD figure sits under it, one unit rather
- * than "USD · AUSD" (Axel, 9 Oct): the Agora bounty needs an AUSD balance on screen.
+ * think in (PLAN §3; no "≈", Axel's call on 9 Oct).
  *
- * The swap button beside it trades the two places, with the figures rolling past each other
- * (Axel, 10 Oct). The choice is kept on this device; reading it back is a convenience, so a
+ * One figure at a time (Axel, 10 Oct): the swap button beside it rolls the headline to AUSD and
+ * back, which is where the Agora bounty's AUSD balance shows. The choice is kept on this device; reading it back is a convenience, so a
  * blocked `localStorage` just starts in local currency.
  *
  * An unread figure is a dash. `0` is a claim about someone's money.
@@ -54,7 +53,7 @@ export function AvailableHero({
   const ausd = available === undefined ? "" : `${formatAusd(available)} AUSD`;
   // No rate yet: AUSD leads, and there is nothing to swap with.
   const showAusd = unit === "ausd" || !local;
-  const [big, small] = showAusd ? [ausd, local] : [local, ausd];
+  const big = showAusd ? ausd : local;
   const roll = (from: number) => ({
     initial: { opacity: 0, y: reduceMotion ? 0 : `${from}%`, filter: "blur(4px)" },
     animate: { opacity: 1, y: "0%", filter: "blur(0px)" },
@@ -72,43 +71,32 @@ export function AvailableHero({
       ) : available === undefined ? (
         <div className="mt-2 text-[clamp(32px,12vw,54px)] font-semibold leading-none">—</div>
       ) : (
-        <>
-          <div className="mt-2 flex items-center gap-3">
-            <div className="relative overflow-hidden whitespace-nowrap text-[clamp(30px,10vw,50px)] font-semibold leading-[1.1] tracking-[-.02em] [font-variant-numeric:tabular-nums]">
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.div key={big} {...roll(60)}>
-                  {big}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            {local ? (
-              <motion.button
-                type="button"
-                onClick={swap}
-                aria-label={showAusd ? `Show in ${CURRENCY_NAME[currency]}` : "Show in AUSD"}
-                whileTap={{ scale: 0.9 }}
-                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
-              >
-                <motion.span
-                  animate={{ rotate: showAusd ? 180 : 0 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.32, ease: EASE_OUT }}
-                  className="flex"
-                >
-                  <ArrowUpDown size={17} strokeWidth={2} aria-hidden="true" />
-                </motion.span>
-              </motion.button>
-            ) : null}
+        <div className="mt-2 flex items-center gap-3">
+          <div className="relative overflow-hidden whitespace-nowrap text-[clamp(30px,10vw,50px)] font-semibold leading-[1.1] tracking-[-.02em] [font-variant-numeric:tabular-nums]">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div key={big} {...roll(60)}>
+                {big}
+              </motion.div>
+            </AnimatePresence>
           </div>
-          {small ? (
-            <div className="relative mt-2 overflow-hidden text-[14px] text-muted [font-variant-numeric:tabular-nums]">
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.div key={small} {...roll(-60)}>
-                  {small}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+          {local ? (
+            <motion.button
+              type="button"
+              onClick={swap}
+              aria-label={showAusd ? `Show in ${CURRENCY_NAME[currency]}` : "Show in AUSD"}
+              whileTap={{ scale: 0.9 }}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+            >
+              <motion.span
+                animate={{ rotate: showAusd ? 180 : 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.32, ease: EASE_OUT }}
+                className="flex"
+              >
+                <ArrowLeftRight size={17} strokeWidth={2} aria-hidden="true" />
+              </motion.span>
+            </motion.button>
           ) : null}
-        </>
+        </div>
       )}
     </div>
   );
