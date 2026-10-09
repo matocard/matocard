@@ -981,8 +981,35 @@ export default function App() {
     if (!unlocked || !pendingScroll.current) return;
     const id = pendingScroll.current;
     pendingScroll.current = null;
-    const raf = requestAnimationFrame(() => scrollToSection(id));
-    return () => cancelAnimationFrame(raf);
+    // The sections above it are only just mounting and keep growing as their
+    // media loads, so the first scroll stops short. Once it comes to rest,
+    // aim again until the target sits under the nav (a few tries at most).
+    let timer = 0;
+    let tries = 0;
+    let lastY = -1;
+    const settle = () => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (window.scrollY !== lastY) {
+        lastY = window.scrollY;
+        timer = window.setTimeout(settle, 250);
+        return;
+      }
+      const margin = Number.parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+      if (Math.abs(el.getBoundingClientRect().top - margin) > 4 && tries++ < 3) {
+        scrollToSection(id);
+        lastY = -1;
+        timer = window.setTimeout(settle, 250);
+      }
+    };
+    const raf = requestAnimationFrame(() => {
+      scrollToSection(id);
+      timer = window.setTimeout(settle, 250);
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
   }, [unlocked]);
 
   useEffect(() => {
@@ -1001,9 +1028,17 @@ export default function App() {
     let raf = 0;
     const update = () => {
       raf = 0;
-      const install = document.getElementById(SECTION_STEPS);
-      const top = install ? install.getBoundingClientRect().top : Number.POSITIVE_INFINITY;
-      setActiveTarget(top <= 240 ? SECTION_STEPS : SECTION_FEATURES);
+      // The last section whose top has passed under the nav. FAQ sits at the
+      // very end and may never get that far up, so the bottom of the page is it.
+      const targets = NAV_ITEMS.flatMap((item) => (item.target ? [item.target] : []));
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      let active = SECTION_FEATURES;
+      for (const id of targets) {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top <= 240) active = id;
+      }
+      setActiveTarget(atBottom ? (targets.at(-1) ?? active) : active);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
