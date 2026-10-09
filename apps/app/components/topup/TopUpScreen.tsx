@@ -9,7 +9,7 @@ import { useMe } from "../../hooks/useMe";
 import { useMyActivity } from "../../hooks/useMyActivity";
 import { getQuote, startTopUp } from "../../lib/matocard/backend";
 import { localFor } from "../../lib/matocard/local";
-import { formatAusd, formatLocal } from "../../lib/matocard/money";
+import { approxLocal, formatLocal } from "../../lib/matocard/money";
 import { Button, Card, Keypad, Segmented, Spinner } from "../ui";
 import { SubHeader } from "../ui/SubHeader";
 
@@ -50,6 +50,10 @@ export function TopUpScreen() {
     rate && fiat !== null && fiat > 0n
       ? quoteToBase(fiat, local.currency, "AUSD", rate, "down")
       : undefined;
+  // What this top-up adds to the limit at today's deposit ratio, so a Rp 100,000 top-up that
+  // reads Rp 66,666 on Home is not a surprise.
+  const spendable =
+    ausd !== undefined && credit.ratioBps ? (ausd * 10_000n) / credit.ratioBps : undefined;
 
   const pay = async () => {
     if (fiat === null) return;
@@ -135,9 +139,9 @@ export function TopUpScreen() {
         }
       />
       <p className="mb-3 text-center text-[13px] text-muted">
-        {ausd === undefined
-          ? "Becomes collateral for your card"
-          : `≈ ${formatAusd(ausd)} USD of collateral, held as AUSD`}
+        {spendable === undefined
+          ? "The money you add sets how much you can spend."
+          : `You'll be able to spend ${approxLocal(spendable, rate, local.currency)} of it`}
       </p>
       <Segmented
         options={METHODS}
