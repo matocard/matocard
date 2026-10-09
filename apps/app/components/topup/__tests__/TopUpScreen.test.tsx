@@ -54,14 +54,14 @@ test("before paying, it says how much of the top-up can be spent", async () => {
   expect(screen.getByText("The money you add sets how much you can spend.")).toBeInTheDocument();
   await type("2400000");
   // Rp 2,400,000 is 150 USD of deposit; at 150% that is 100 USD to spend.
-  expect(screen.getByText("You'll be able to spend ≈ Rp 1,600,000 of it")).toBeInTheDocument();
+  expect(screen.getByText("You'll be able to spend Rp 1,600,000 of it")).toBeInTheDocument();
 });
 
 test("a better score means more of the same top-up can be spent", async () => {
   credit.mockReturnValue({ verified: true, ratioBps: 8_000n });
   render(<TopUpScreen />);
   await type("2400000");
-  expect(screen.getByText("You'll be able to spend ≈ Rp 3,000,000 of it")).toBeInTheDocument();
+  expect(screen.getByText("You'll be able to spend Rp 3,000,000 of it")).toBeInTheDocument();
 });
 
 test("paying locks a fresh USD/IDR quote, starts the top-up and opens the checkout", async () => {
@@ -103,7 +103,7 @@ test("in Malaysia it is ringgit: typed in RM, sent in sen, on a USD/MYR quote, b
   render(<TopUpScreen />);
   expect(screen.getByRole("button", { name: "FPX" })).toBeInTheDocument();
   await type("600");
-  expect(screen.getByText("You'll be able to spend ≈ RM 400.00 of it")).toBeInTheDocument();
+  expect(screen.getByText("You'll be able to spend RM 400.00 of it")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "Pay RM 600.00" }));
   await waitFor(() => expect(startTopUp).toHaveBeenCalled());
   expect(getQuote).toHaveBeenCalledWith("USD/MYR");

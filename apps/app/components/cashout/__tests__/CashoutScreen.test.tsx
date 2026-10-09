@@ -46,7 +46,7 @@ beforeEach(() => {
 test("50 USD from the balance pays Rp 800,000 to Mom's bank", async () => {
   render(<CashoutScreen />);
   await type("50");
-  expect(screen.getByText("≈ Rp 800,000 to your bank")).toBeInTheDocument();
+  expect(screen.getByText("Rp 800,000 to your bank")).toBeInTheDocument();
   await fillBank();
   await userEvent.click(screen.getByRole("button", { name: "Cash out" }));
   await waitFor(() => expect(screen.getByText("Rp 800,000 is on its way")).toBeInTheDocument());

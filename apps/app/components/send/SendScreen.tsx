@@ -29,7 +29,7 @@ const SOURCE_LABEL: Record<Source, string> = { card: "From my card", balance: "F
  * balance** sends AUSD already in the account with a signed ERC-3009 transfer that the backend's
  * relayer submits, so it needs no MON (D11).
  *
- * The rupiah converts at the shared display rate and says "≈": the AUSD figure is what leaves.
+ * The rupiah converts at the shared display rate: the AUSD figure is what leaves.
  */
 export function SendScreen() {
   const router = useRouter();

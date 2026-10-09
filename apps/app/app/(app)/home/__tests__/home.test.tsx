@@ -80,7 +80,7 @@ beforeEach(() => {
 test("the headline is what the card can spend, in rupiah, with the AUSD row under it", () => {
   render(<HomePage />);
   expect(screen.getByText("Available")).toBeInTheDocument();
-  expect(screen.getByText("≈ Rp 1,600,000")).toBeInTheDocument();
+  expect(screen.getByText("Rp 1,600,000")).toBeInTheDocument();
   expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
 });
 
@@ -150,7 +150,7 @@ test("money received shows as a balance, and cashing out is its own row", () => 
     .closest("section") as HTMLElement;
   expect(within(balance).getByText("50.00 USD")).toBeInTheDocument();
   expect(within(balance).getByText("AUSD on Monad")).toBeInTheDocument();
-  expect(within(balance).getByText("≈ Rp 800,000")).toBeInTheDocument();
+  expect(within(balance).getByText("Rp 800,000")).toBeInTheDocument();
   // Not a link inside the balance: a section of its own.
   expect(within(balance).queryByRole("link")).toBeNull();
   expect(screen.getByRole("link", { name: /To your bank/ })).toHaveAttribute("href", "/cashout");
@@ -159,7 +159,7 @@ test("money received shows as a balance, and cashing out is its own row", () => 
 test("someone in Malaysia reads the headline in ringgit", () => {
   me.mockReturnValue(meState({ country: "MY" }));
   render(<HomePage />);
-  expect(screen.getByText("≈ RM 400.00")).toBeInTheDocument();
+  expect(screen.getByText("RM 400.00")).toBeInTheDocument();
   expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
 });
 

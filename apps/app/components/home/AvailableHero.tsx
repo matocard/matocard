@@ -3,7 +3,7 @@ import { approxLocal, formatAusd, type LocalCurrency } from "../../lib/matocard/
 
 /**
  * Home's headline: what the card can spend right now (`availableOf`), in the user's own currency
- * first (ringgit for Siti in Kuala Lumpur, rupiah in Indonesia) because that is the money they think in (PLAN §3: headline in local currency with "≈"). The dollar
+ * first (ringgit for Siti in Kuala Lumpur, rupiah in Indonesia) because that is the money they think in (PLAN §3; no "≈", Axel's call on 9 Oct). The dollar
  * figure sits under it in AUSD, one unit rather than "USD · AUSD" (Axel, 9 Oct): the Agora bounty needs an AUSD balance on
  * screen, and a detail row is the one place the copy rules allow the word.
  *

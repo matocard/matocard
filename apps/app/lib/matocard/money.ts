@@ -3,8 +3,7 @@ import { baseToQuote, formatAmount } from "@matocard/core";
 /**
  * Money on screen. Every amount is a bigint in its smallest unit (AUSD: 6 decimals, IDR: whole
  * rupiah) and is never turned into a float. Rupiah figures are what the backend would charge or
- * pay at the same rate (`baseToQuote` from `@matocard/core`), shown with "≈" because the rate is a
- * quote, not a promise.
+ * pay at the same rate (`baseToQuote` from `@matocard/core`); the rate is a quote, not a promise.
  */
 
 /**
@@ -55,7 +54,10 @@ export const ausdToLocal = (
       (baseToQuote(amount * 2n, "AUSD", currency, rate, "down") + 1n) / 2n
     : baseToQuote(amount, "AUSD", currency, rate, "down");
 
-/** "≈ RM 400.00" / "≈ Rp 1,625,050", or null while there is no rate yet (never a guess). */
+/**
+ * "RM 400.00" / "Rp 1,625,050", or null while there is no rate yet (never a guess). No "≈" in
+ * front: Axel's call (9 Oct), it read as uncertain about the user's own money.
+ */
 export function approxLocal(
   amount: bigint | undefined,
   rate: string | undefined,
@@ -63,7 +65,7 @@ export function approxLocal(
   rounding: "down" | "nearest" = "down",
 ): string | null {
   if (amount === undefined || !rate) return null;
-  return `≈ ${formatLocal(ausdToLocal(amount, currency, rate, rounding), currency)}`;
+  return formatLocal(ausdToLocal(amount, currency, rate, rounding), currency);
 }
 
 /** Rupiah only; `approxLocal` with "IDR". */

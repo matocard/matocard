@@ -23,8 +23,8 @@ const METHODS: readonly Method[] = ["bank", "qr", "card"];
  * collateral that earns. Bank and QR count at once; a card waits out a hold first, which the
  * contract enforces so a chargeback cannot spend money that never arrived (D5).
  *
- * The quote is fresh at the moment of paying (60-second lock); the ≈ figure before that uses the
- * shared display rate and says so with "≈".
+ * The quote is fresh at the moment of paying (60-second lock); the figure before that uses the
+ * shared display rate.
  */
 export function TopUpScreen() {
   const router = useRouter();

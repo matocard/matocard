@@ -51,7 +51,7 @@ beforeEach(() => {
 test("the debt is shown in dollars, with what it is in rupiah today", () => {
   render(<SettleScreen />);
   expect(screen.getByText("50.00 USD")).toBeInTheDocument();
-  expect(screen.getByText("≈ Rp 800,000 today")).toBeInTheDocument();
+  expect(screen.getByText("Rp 800,000 today")).toBeInTheDocument();
 });
 
 test("paying in rupiah locks a fresh quote and opens the checkout", async () => {
@@ -93,7 +93,7 @@ test("nothing owed, nothing to settle", () => {
 test("in Malaysia the debt reads in ringgit and settles on a USD/MYR quote", async () => {
   me.mockReturnValue({ country: "MY" });
   render(<SettleScreen />);
-  expect(screen.getByText("≈ RM 200.00 today")).toBeInTheDocument();
+  expect(screen.getByText("RM 200.00 today")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: /Pay in ringgit/ }));
   await waitFor(() => expect(startSettlement).toHaveBeenCalled());
   expect(getQuote).toHaveBeenCalledWith("USD/MYR");
