@@ -4,7 +4,7 @@ import { approxLocal, formatAusd, type LocalCurrency } from "../../lib/matocard/
 /**
  * Home's headline: what the card can spend right now (`availableOf`), in the user's own currency
  * first (ringgit for Siti in Kuala Lumpur, rupiah in Indonesia) because that is the money they think in (PLAN §3: headline in local currency with "≈"). The dollar
- * figure sits under it with "AUSD" on the same row: the Agora bounty needs an AUSD balance on
+ * figure sits under it in AUSD, one unit rather than "USD · AUSD" (Axel, 9 Oct): the Agora bounty needs an AUSD balance on
  * screen, and a detail row is the one place the copy rules allow the word.
  *
  * An unread figure is a dash. `0` is a claim about someone's money.
@@ -38,7 +38,7 @@ export function AvailableHero({
             {local ?? `${formatAusd(available)} USD`}
           </div>
           <div className="mt-2 text-[14px] text-muted [font-variant-numeric:tabular-nums]">
-            {formatAusd(available)} USD · AUSD
+            {formatAusd(available)} AUSD
           </div>
         </>
       )}

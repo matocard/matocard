@@ -81,7 +81,7 @@ test("the headline is what the card can spend, in rupiah, with the AUSD row unde
   render(<HomePage />);
   expect(screen.getByText("Available")).toBeInTheDocument();
   expect(screen.getByText("≈ Rp 1,600,000")).toBeInTheDocument();
-  expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
+  expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
 });
 
 test("the limit is explained: deposit, score, deposit needed, limit", () => {
@@ -116,7 +116,7 @@ test("an unread figure is a dash, never a zero", () => {
   credit.mockReturnValue(verifiedCredit({ available: undefined }));
   render(<HomePage />);
   expect(screen.getByText("—")).toBeInTheDocument();
-  expect(screen.queryByText(/0\.00 USD · AUSD/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/0\.00 AUSD/)).not.toBeInTheDocument();
 });
 
 test("before verification, the card is not issued and the next step is offered", async () => {
@@ -160,7 +160,7 @@ test("someone in Malaysia reads the headline in ringgit", () => {
   me.mockReturnValue(meState({ country: "MY" }));
   render(<HomePage />);
   expect(screen.getByText("≈ RM 400.00")).toBeInTheDocument();
-  expect(screen.getByText("100.00 USD · AUSD")).toBeInTheDocument();
+  expect(screen.getByText("100.00 AUSD")).toBeInTheDocument();
 });
 
 test("a signed-in account that has not said where it lives is asked, and the answer is saved", async () => {
