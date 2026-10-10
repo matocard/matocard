@@ -3,6 +3,7 @@ import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 // Imported so the `declare module "wagmi"` augmentation below has a resolved module to attach to;
 // TypeScript cannot augment a module the file never loads.
 import type { Config } from "wagmi";
+import { passkeyConnector } from "./passkey-connector";
 
 /**
  * The wagmi side of the wallet layer. Module scope on purpose: `WagmiAdapter` and `createAppKit`
@@ -61,7 +62,13 @@ export const metadata = {
 
 /** `ssr: true` is required under the App Router: without it wagmi hydrates from an empty state and
  *  the first client render disagrees with the server's. */
-export const wagmiAdapter = new WagmiAdapter({ networks, projectId, ssr: true });
+export const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId,
+  ssr: true,
+  // The passkey account (#104), the default way in; Reown's wallets stay for those who have one.
+  connectors: [passkeyConnector()],
+});
 
 export const wagmiConfig: Config = wagmiAdapter.wagmiConfig;
 

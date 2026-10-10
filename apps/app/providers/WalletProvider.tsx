@@ -12,6 +12,8 @@ type Ctx = {
   hydrated: boolean;
   isConnected: boolean;
   connect: () => Promise<void>;
+  /** The passkey account (#104): "create" makes a new passkey, "signin" uses one already made. */
+  connectPasskey: (mode: "create" | "signin") => Promise<void>;
   disconnect: () => Promise<void>;
 };
 export const WalletContext = createContext<Ctx | null>(null);
@@ -71,6 +73,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const remember = useCallback((addr: string, name: string) => {
+    setAddress(addr);
+    setWalletName(name);
+    window.localStorage.setItem(KEY, addr);
+    window.localStorage.setItem(NAME_KEY, name);
+    window.localStorage.setItem(ID_KEY, wallet.getWalletId());
+  }, []);
+
+  const connectPasskey = useCallback(
+    async (mode: "create" | "signin") => {
+      const { address: addr, name } = await wallet.connectPasskey(mode);
+      remember(addr, name);
+    },
+    [remember],
+  );
+
   const connect = useCallback(async () => {
     const { address: addr, name } = await wallet.connect();
     setAddress(addr);
@@ -97,6 +115,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         hydrated: address !== undefined,
         isConnected: !!address,
         connect,
+        connectPasskey,
         disconnect,
       }}
     >

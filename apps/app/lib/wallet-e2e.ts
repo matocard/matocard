@@ -37,6 +37,8 @@ export async function connect(): Promise<{ address: string; name: string }> {
   return { address: E2E_ADDRESS, name: E2E_WALLET_NAME };
 }
 
+export const connectPasskey = (_mode: "create" | "signin") => connect();
+
 export async function getAddress(): Promise<string> {
   requireConnected();
   return E2E_ADDRESS;

@@ -17,7 +17,7 @@ export async function connectWallet(page: Page): Promise<void> {
   // shown. `goto` resolves on HTML load, well before hydration flips the landing past its `null`
   // SSR shell, so a one-shot `isVisible()` right after `goto` reads false even when the button is
   // about to appear (no stored session, the common case): race whichever settles first instead.
-  const connect = page.getByRole("button", { name: "Connect wallet" });
+  const connect = page.getByRole("button", { name: "Get started" });
   const showsButton = await Promise.race([
     connect.waitFor({ state: "visible" }).then(() => true),
     page

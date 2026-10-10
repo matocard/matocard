@@ -1,5 +1,6 @@
 import { getAppKit } from "./matocard/appkit";
 import { monadTestnet, wagmiConfig } from "./matocard/wagmi";
+import { STORAGE } from "./storage";
 import { toWalletError, USER_CLOSED_MODAL, WalletError } from "./wallet-error";
 
 /**
@@ -116,6 +117,67 @@ export async function connect(): Promise<{ address: string; name: string }> {
   } catch (e) {
     throw toWalletError(e);
   }
+}
+
+/**
+ * Opens the passkey account (#104): a new passkey for "create", the device's own for "signin".
+ * Goes through wagmi like any wallet, so the rest of the app cannot tell the two apart.
+ */
+export async function connectPasskey(
+  mode: "create" | "signin",
+): Promise<{ address: string; name: string }> {
+  try {
+    const { connect: wagmiConnect, getAccount, disconnect: wagmiDisconnect } = await actions();
+    const { PASSKEY_CONNECTOR_ID, setPasskeyMode } = await import("./matocard/passkey-connector");
+    const connector = wagmiConfig.connectors.find((c) => c.id === PASSKEY_CONNECTOR_ID);
+    if (!connector) throw new WalletError("Passkeys are not available here.");
+    // A wallet left connected from before would answer instead of the passkey.
+    if (getAccount(wagmiConfig).address) await wagmiDisconnect(wagmiConfig);
+    setPasskeyMode(mode);
+    const { accounts } = await wagmiConnect(wagmiConfig, { connector });
+    await signBackendSession(accounts[0]);
+    return { address: accounts[0], name: "Passkey" };
+  } catch (e) {
+    throw toPasskeyError(e);
+  }
+}
+
+/**
+ * The backend session `useSession` would otherwise ask for with a "Confirm" button. The key is
+ * already open from the Face ID prompt that just happened, so this signs with no second prompt.
+ * Best effort: if it fails, Home still offers Confirm.
+ */
+async function signBackendSession(address: string): Promise<void> {
+  try {
+    const { openAccount } = await import("./passkey");
+    const { sessionMessage, SESSION_SECONDS } = await import("./matocard/backend");
+    const account = openAccount();
+    if (!account?.signMessage) return;
+    const until = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+    const signature = await account.signMessage({ message: sessionMessage(address, until) });
+    window.localStorage.setItem(
+      STORAGE.session,
+      JSON.stringify({ wallet: address, until, signature }),
+    );
+  } catch {
+    // Home's Confirm covers it.
+  }
+}
+
+/** Cancelling Face ID reads as closing the picker: quiet, not an error. */
+function toPasskeyError(e: unknown): WalletError {
+  const text = `${e instanceof Error ? e.message : ""} ${
+    e instanceof Error && e.cause instanceof Error ? `${e.cause.name} ${e.cause.message}` : ""
+  }`;
+  if (/NotAllowedError|AbortError|cancel/i.test(text)) {
+    return new WalletError("The user closed the modal.", USER_CLOSED_MODAL);
+  }
+  if (/PRF/i.test(text)) {
+    return new WalletError(
+      "This device's passkeys can't open an account. Try iCloud Keychain, Google Password Manager or 1Password.",
+    );
+  }
+  return toWalletError(e);
 }
 
 /**

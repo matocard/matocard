@@ -18,4 +18,6 @@ export const STORAGE = {
   headlineUnit: "matocard.home.unit",
   /** The signed backend session: `{ wallet, until, signature }`, valid six days. */
   session: "matocard.session.v1",
+  /** The passkey account: `{ credentialId, address }`, both public. The key is never stored. */
+  passkey: "matocard.passkey.v1",
 } as const;

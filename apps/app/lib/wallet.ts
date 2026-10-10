@@ -5,7 +5,7 @@ export { USER_CLOSED_MODAL, WalletError } from "./wallet-error";
 
 // `real` is Reown AppKit (`wallet-reown.ts`); `e2e` is a stub that signs without a prompt.
 //
-// Four functions. Contract writes do not come through this seam: they are `writeContract` calls in
+// Five functions. Contract writes do not come through this seam: they are `writeContract` calls in
 // `hooks/useCredit.ts`, and signed transfers are `lib/matocard/authorization.ts`.
 
 /**
@@ -17,6 +17,7 @@ export { USER_CLOSED_MODAL, WalletError } from "./wallet-error";
 const E2E = process.env.NEXT_PUBLIC_E2E === "1";
 
 export const connect = E2E ? e2e.connect : real.connect;
+export const connectPasskey = E2E ? e2e.connectPasskey : real.connectPasskey;
 export const getAddress = E2E ? e2e.getAddress : real.getAddress;
 export const getWalletId = E2E ? () => "e2e" : real.getWalletId;
 export const disconnect = E2E ? e2e.disconnect : real.disconnect;

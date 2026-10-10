@@ -6,17 +6,19 @@ const push = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
 const connect = vi.fn();
+const connectPasskey = vi.fn();
 // hydrated: true, address: null, a disconnected-but-hydrated session, so the STE-43 forward guard
 // in Landing doesn't short-circuit these onConnect-flow tests (see app/__tests__/page.test.tsx for
 // the hydration/forward behavior itself).
 vi.mock("../../hooks/useWallet", () => ({
-  useWallet: () => ({ connect, address: null, hydrated: true }),
+  useWallet: () => ({ connect, connectPasskey, address: null, hydrated: true }),
 }));
 
 beforeEach(() => {
   push.mockReset();
   replace.mockReset();
   connect.mockReset();
+  connectPasskey.mockReset();
   localStorage.clear();
   localStorage.setItem("matocard.onboarding.done", "1");
 });
@@ -24,14 +26,14 @@ beforeEach(() => {
 test("navigates to /home after a successful connect", async () => {
   connect.mockResolvedValue(undefined);
   render(<Landing />);
-  fireEvent.click(await screen.findByText("Connect wallet"));
+  fireEvent.click(await screen.findByText("Use a wallet instead"));
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/home"));
 });
 
 test("surfaces a readable message on failure: no [object Object], no navigation", async () => {
   connect.mockRejectedValue(new WalletError("Wallet is locked", 5));
   render(<Landing />);
-  fireEvent.click(await screen.findByText("Connect wallet"));
+  fireEvent.click(await screen.findByText("Use a wallet instead"));
   expect(await screen.findByText("Wallet is locked")).toBeInTheDocument();
   expect(push).not.toHaveBeenCalled();
   expect(replace).not.toHaveBeenCalled();
@@ -40,9 +42,36 @@ test("surfaces a readable message on failure: no [object Object], no navigation"
 test("stays silent when the user just closes the wallet picker", async () => {
   connect.mockRejectedValue(new WalletError("The user closed the modal.", USER_CLOSED_MODAL));
   render(<Landing />);
-  fireEvent.click(await screen.findByText("Connect wallet"));
+  fireEvent.click(await screen.findByText("Use a wallet instead"));
   await waitFor(() => expect(connect).toHaveBeenCalled());
   expect(push).not.toHaveBeenCalled();
+  expect(replace).not.toHaveBeenCalled();
+  expect(screen.queryByText("The user closed the modal.")).not.toBeInTheDocument();
+});
+
+test("Get started makes a new passkey and lands on Home", async () => {
+  connectPasskey.mockResolvedValue(undefined);
+  render(<Landing />);
+  fireEvent.click(await screen.findByText("Get started"));
+  await waitFor(() => expect(replace).toHaveBeenCalledWith("/home"));
+  expect(connectPasskey).toHaveBeenCalledWith("create");
+  expect(connect).not.toHaveBeenCalled();
+});
+
+test("I have an account signs in with a passkey already made", async () => {
+  connectPasskey.mockResolvedValue(undefined);
+  render(<Landing />);
+  fireEvent.click(await screen.findByText("I have an account"));
+  await waitFor(() => expect(connectPasskey).toHaveBeenCalledWith("signin"));
+});
+
+test("cancelling Face ID stays quiet", async () => {
+  connectPasskey.mockRejectedValue(
+    new WalletError("The user closed the modal.", USER_CLOSED_MODAL),
+  );
+  render(<Landing />);
+  fireEvent.click(await screen.findByText("Get started"));
+  await waitFor(() => expect(connectPasskey).toHaveBeenCalled());
   expect(replace).not.toHaveBeenCalled();
   expect(screen.queryByText("The user closed the modal.")).not.toBeInTheDocument();
 });

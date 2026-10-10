@@ -71,12 +71,10 @@ Indexer GraphQL: `apps/indexer/README.md` holds the current URL; it changes on e
 - **`minCycleDuration` is 60 s on testnet.** A draw repaid faster settles the debt and scores
   nothing, silently. Only repaying to zero closes a cycle.
 
-## Open decisions
+## Account layer
 
-- **Account layer.** The app runs Reown AppKit + wagmi + viem (Axel's call, 3 Oct). PLAN D3 and the
-  Agora bounty want Mera passkey onboarding. Mera yields a plain viem `LocalAccount`
-  (`@category-labs/mera/viem`), so it can sit behind wagmi later as a connector. Decide before the
-  user tests on 9 Oct, and fix the app's final domain first: a passkey is bound to its domain.
+Passkey first (#104): Mera derives the account from a passkey behind a wagmi connector, with
+Reown AppKit kept as "Use a wallet instead". `apps/app/CLAUDE.md` has the details.
 
 ## Workspace
 

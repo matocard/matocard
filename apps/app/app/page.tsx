@@ -1,9 +1,6 @@
-/* eslint-disable @next/next/no-img-element -- tiny static icons that must paint the moment
-   they appear; next/image defers them, and one mishandles a local SVG. The biome-ignore
-   comments below have to sit directly above each tag, so a second next-line directive
-   cannot also be there, hence file scope. */
 "use client";
 
+import { Fingerprint } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
@@ -47,10 +44,11 @@ const TOUR: TourScreen[] = [
 
 export default function Landing() {
   const router = useRouter();
-  const { connect, address, hydrated } = useWallet();
+  const { connect, connectPasskey, address, hydrated } = useWallet();
   const [mode, setMode] = useState<"tour" | "connect" | null>(null);
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   // A returning user with a re-verified session skips onboarding entirely (STE-43). The wallet is
   // hydrated (and verified) in WalletProvider, so we only react to it here. `replace`, not `push`,
@@ -81,15 +79,18 @@ export default function Landing() {
   // Keep `/` as a splash/router while WalletProvider re-verifies a saved session.
   if (!hydrated || address || mode === null) return <SplashScreen />;
 
-  async function onConnect() {
+  async function enter(open: () => Promise<void>) {
     setError(null);
+    setBusy(true);
     try {
-      await connect();
+      await open();
       router.replace("/home");
     } catch (e) {
-      // Dismissing the wallet picker (kit code -1) isn't a failure, so stay quiet.
+      // Dismissing the picker or Face ID (code -1) isn't a failure, so stay quiet.
       if (e instanceof WalletError && e.code === USER_CLOSED_MODAL) return;
-      setError(e instanceof Error ? e.message : "Couldn't connect your wallet. Please try again.");
+      setError(e instanceof Error ? e.message : "Couldn't open your card. Please try again.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -103,7 +104,15 @@ export default function Landing() {
   };
 
   if (mode === "connect") {
-    return <ConnectScreen error={error} onBack={() => setMode("tour")} onConnect={onConnect} />;
+    return (
+      <ConnectScreen
+        error={error}
+        busy={busy}
+        onBack={() => setMode("tour")}
+        onPasskey={(m) => void enter(() => connectPasskey(m))}
+        onWallet={() => void enter(connect)}
+      />
+    );
   }
 
   const last = step === TOUR.length - 1;
@@ -183,12 +192,16 @@ function SplashScreen() {
 
 function ConnectScreen({
   error,
+  busy,
   onBack,
-  onConnect,
+  onPasskey,
+  onWallet,
 }: {
   error: string | null;
+  busy: boolean;
   onBack: () => void;
-  onConnect: () => void;
+  onPasskey: (mode: "create" | "signin") => void;
+  onWallet: () => void;
 }) {
   return (
     <main className={`${styles.screen} ${styles.tourScreen} ${styles.connectScreen}`}>
@@ -213,50 +226,35 @@ function ConnectScreen({
         </header>
 
         <section className={styles.tourBody}>
-          <div
-            key="connect-wallet"
-            className={`${styles.visualStage} ${styles.connectVisualStage}`}
-          >
+          <div key="passkey" className={`${styles.visualStage} ${styles.connectVisualStage}`}>
             <div className={styles.connectVisual} aria-hidden="true">
-              <WalletIcon kind="metamask" />
-              <WalletIcon kind="walletconnect" />
-              <WalletIcon kind="ledger" />
-              <WalletIcon kind="rabby" />
+              <span className={styles.passkeyTile}>
+                <Fingerprint size={52} strokeWidth={1.6} />
+              </span>
               <span className={styles.walletShadow} />
             </div>
           </div>
           <div className={styles.tourCopy}>
-            <h1>Connect your wallet</h1>
-            {/* "open your card", not "start earning". The old line promised a yield this product
-                does not pay, on the last screen before somebody decides. It survived the sweep that
-                removed the ported product's name because the name was what the sweep looked for and
-                the promise is not a name. */}
-            <p>Link your wallet to open your card.</p>
+            <h1>Open your card</h1>
+            {/* A passkey (#104, the Agora bounty): Face ID or a fingerprint, nothing to write down. */}
+            <p>Use Face ID or your fingerprint. There is no password to remember.</p>
             <Stepper current={3} total={TOUR.length + 1} />
           </div>
         </section>
         <div className={styles.ctaStack}>
-          <Button onClick={onConnect}>Connect wallet</Button>
+          <Button onClick={() => onPasskey("create")} disabled={busy}>
+            Get started
+          </Button>
+          <Button variant="glass" onClick={() => onPasskey("signin")} disabled={busy}>
+            I have an account
+          </Button>
+          <button type="button" className={styles.walletLink} onClick={onWallet} disabled={busy}>
+            Use a wallet instead
+          </button>
         </div>
         <Toast open={!!error} message={error ?? ""} />
       </div>
     </main>
-  );
-}
-
-function WalletIcon({ kind }: { kind: "metamask" | "walletconnect" | "ledger" | "rabby" }) {
-  const src = {
-    metamask: "/wallets/metamask.png",
-    walletconnect: "/wallets/walletconnect.png",
-    ledger: "/wallets/ledger.png",
-    rabby: "/wallets/rabby.png",
-  }[kind];
-
-  return (
-    <span className={`${styles.walletFloat} ${styles[`wallet${kind}`]}`}>
-      {/* biome-ignore lint/performance/noImgElement: static asset that must paint the moment the step appears; next/image defers it */}
-      <img src={src} alt="" className={styles.walletIconImage} />
-    </span>
   );
 }
 

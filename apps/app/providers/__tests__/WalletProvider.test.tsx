@@ -9,6 +9,7 @@ import { WalletProvider } from "../WalletProvider";
 // override getAddress per-case to a different value or a throw; everything else restores cleanly.
 vi.mock("../../lib/wallet", () => ({
   connect: vi.fn(async () => ({ address: "0xA11CE", name: "Rabby Wallet" })),
+  connectPasskey: vi.fn(async () => ({ address: "0xB0B", name: "Passkey" })),
   disconnect: vi.fn(async () => {}),
   getAddress: vi.fn(async () => "0xA11CE"),
   getWalletId: vi.fn(() => "rabby"),
