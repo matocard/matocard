@@ -19,7 +19,7 @@ the shell and the UI kit carried over, every screen and its data layer are Matoc
 
 | Route | What it does | Data |
 | --- | --- | --- |
-| `/` | Onboarding tour, then connect | none |
+| `/` | Onboarding tour, then a passkey (or a wallet) | none |
 | `/home` | Available in local currency (a swap button turns it to AUSD), sign-in, country, KYC, owed, balance, recent history, the card | `useCredit`, `useMe`, `useFx`, `useMyActivity` |
 | `/topup` | Ringgit (FPX, DuitNow, card) or rupiah (bank, QRIS, card) by country, through Xendit | `/quote`, `/topups` |
 | `/send` | To family, typed in rupiah: from the card (`draw`) or the balance (ERC-3009 via `/sends`) | `useCredit`, `signTransfer` |
@@ -49,9 +49,17 @@ From PLAN §3 and the root `CLAUDE.md`:
 
 ## The wallet layer
 
-`lib/wallet.ts` is the seam: `connect`, `getAddress`, `getWalletId`, `disconnect`. Swapping the
-account layer (for example Mera passkeys behind a wagmi connector) should touch this file and
-`lib/wallet-reown.ts`, not the screens.
+`lib/wallet.ts` is the seam: `connect` (Reown), `connectPasskey`, `getAddress`, `getWalletId`,
+`disconnect`. Screens never talk to a wallet directly.
+
+**Passkey first (#104, the Agora bounty).** "Get started" makes a Mera passkey, "I have an account"
+reuses one; Reown is the "Use a wallet instead" link. `lib/passkey.ts` derives the account from the
+passkey's PRF output (BIP-39 entropy, BIP-32 `m/44'/60'/0'/0/0`) and keeps the key in memory only;
+storage holds the credential id and address (`STORAGE.passkey`). `lib/matocard/passkey-connector.ts`
+is a wagmi connector over that account, so `useCredit`, `authorization.ts`, Send and Cash out sign
+with it unchanged. A reload shows the account at once; the first signature asks for Face ID. A
+passkey is bound to its host: one made on localhost does not open on app.matocard.xyz. It needs an
+authenticator with PRF (iCloud Keychain, Google Password Manager, 1Password).
 
 **Everything from `@reown/*` and `wagmi/actions` is imported dynamically.** `WalletProvider` is a
 client component that Next still evaluates on the server; a static import drags the connector

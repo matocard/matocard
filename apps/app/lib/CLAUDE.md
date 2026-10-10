@@ -2,8 +2,10 @@
 
 Non-React code.
 
-- `wallet.ts` is the seam screens use (`connect`, `getAddress`, `getWalletId`, `disconnect`);
-  `wallet-reown.ts` implements it on wagmi core actions, `wallet-e2e.ts` is the Playwright stub.
+- `wallet.ts` is the seam screens use (`connect`, `connectPasskey`, `getAddress`, `getWalletId`,
+  `disconnect`); `wallet-reown.ts` implements it on wagmi core actions, `wallet-e2e.ts` is the
+  Playwright stub. `passkey.ts` is the Mera account (key in memory only), and
+  `matocard/passkey-connector.ts` puts it behind wagmi.
   `wallet-error.ts` normalises wallet errors.
 - `storage.ts`: every `localStorage` key, prefixed `matocard.` (Home's AUSD swap is `headlineUnit`).
 - `utils.ts`, `ease.ts`, `fonts.ts`, `activity/map.ts`: formatting and presentation helpers.
