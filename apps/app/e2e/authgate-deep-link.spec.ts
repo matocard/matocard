@@ -46,5 +46,5 @@ test("landing forwards a stored session to /home without a second connect", asyn
   await page.goto("/");
   await expect(page).toHaveURL(/\/home$/);
   // Proof it was the auto-forward, not us clicking through onboarding again.
-  await expect(page.getByRole("button", { name: "Connect wallet" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Get started" })).toHaveCount(0);
 });
