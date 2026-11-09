@@ -7,7 +7,7 @@
 | Chain | Monad testnet (`10143`) |
 | Contract | `MatoCreditLine` proxy [`0x39BE…9C59`](https://testnet.monadvision.com/address/0x4D6279c3DD0369e788C33b3aE1297D4E9abbd01a) |
 | Start block | `66922881` (proxy deployment) |
-| GraphQL | `https://indexer.dev.hyperindex.xyz/b5ebb5c/v1/graphql` (Envio Cloud, deployment `bcbf16a`) |
+| GraphQL | `https://indexer.dev.hyperindex.xyz/e358303/v1/graphql` (Envio Cloud, deployment `ae47ac5`) |
 
 ## Entities
 
@@ -48,6 +48,8 @@ bunx envio-cloud deployment promote matocard <commit> matocard
 ```
 
 Every deployment gets a new URL. Update the GraphQL row above and tell the app and API owners when it changes. Check progress with a `_meta { progressBlock isReady }` query: `envio-cloud deployment metrics` has shown 0% for a deployment that was fully synced. A new deployment can also sit at block 0 for well over ten minutes before it starts; `13b09e9` did, then caught up on its own. Give it time before redeploying, and use the self-hosted stack below if it does not move.
+
+Envio Cloud can also remove deployments altogether: around 30 Oct 2026 every deployment disappeared and the endpoint answered 404 (`envio-cloud indexer get matocard` listed none). Pushing `main` to `envio` built a fresh one that synced in under a minute. `envio-cloud login` signs in with the active `gh` account, so log in with `ENVIO_GITHUB_TOKEN=$(gh auth token -u FjrREPO) bunx envio-cloud login`, and pipe `y` into `promote`, which asks for confirmation.
 
 ## Health check
 
